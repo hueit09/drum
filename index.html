@@ -182,6 +182,13 @@ svg.hd .lug{cursor:pointer}
 .rd .n{font-family:var(--mono);font-size:42px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:var(--acc)}
 .rd .n u{text-decoration:none;font-size:14px;font-weight:600;opacity:.55;margin-left:4px}
 .rd .s{font-size:12px;color:var(--dim);margin-top:4px;line-height:1.5}
+.dev{position:relative;width:min(290px,100%);height:26px;margin-top:10px;border-radius:999px;background:var(--sunk)}
+.dev .z{position:absolute;left:50%;top:5px;bottom:5px;width:2px;margin-left:-1px;border-radius:1px;background:var(--line-hi)}
+.dev .m{position:absolute;top:50%;left:50%;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;border-radius:50%;background:var(--faint);box-shadow:var(--sh);transition:left .18s ease,background .18s}
+.nav{display:flex;gap:7px;width:100%;max-width:290px}
+.nav button{flex:1;min-height:42px;font-size:12.5px;font-weight:700;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:12px;transition:transform .1s}
+.nav button:active{transform:scale(.96)}
+.nav #tNextL{background:var(--acc-soft);color:var(--acc)}
 .ent{display:flex;gap:7px;width:100%;max-width:290px}
 .ent input{flex:1;min-width:0;font-family:var(--mono);font-size:21px;font-weight:600;text-align:center;padding:12px;background:var(--sunk);color:var(--fg);border:2px solid var(--line);border-radius:13px;font-variant-numeric:tabular-nums}
 .ent input:focus{border-color:var(--acc);outline:none}
@@ -282,6 +289,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
         <div class="rd">
           <div class="n" id="tN">—<u>Hz</u></div>
           <div class="s" id="tS">目標</div>
+          <div class="dev" id="tDev" hidden><span class="z"></span><span class="m" id="tDevM"></span></div>
         </div>
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ラグ配置図"></svg>
         <div class="ent">
@@ -289,6 +297,10 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
           <button id="tOk" type="button">記録</button>
         </div>
         <div class="vd idle" id="tV">ラグを選んで、測った Hz を入れてください</div>
+        <div class="nav">
+          <button id="tPrev" type="button">← 前のラグ</button>
+          <button id="tNextL" type="button">次のラグ →</button>
+        </div>
         <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
         <div class="st3">
           <div><div class="k2">平均</div><div class="v2" id="sA">—</div></div>
@@ -301,7 +313,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
         <button id="tPlay" type="button">目標音</button>
         <button id="tDrone" type="button" aria-pressed="false">持続</button>
         <button id="tClr" type="button">クリア</button>
-        <button id="tNext" type="button" class="nx">次へ →</button>
+        <button id="tNext" type="button" class="nx">次のヘッドへ →</button>
       </div>
       <div class="mn" id="mn" hidden></div>
     </div>
@@ -385,15 +397,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       <div class="bd">
         <ul>
           <li>ドラムとヘッドを選ぶと、円の中央に目標ラグ値が出ます。</li>
-          <li>円周のラグをタップして、測った Hz を入れて記録。自動で次のラグに進みます。</li>
-          <li>進む順番は<strong>対角線</strong>です（8本なら 1→5→2→6→3→7→4→8）。円の中の破線がその順路です。一方向に回して締めるとヘッドが片寄るので、必ず向かい合うラグを交互に追ってください。番号はラグの物理的な位置なので、現場のボルトとそのまま対応します。</li>
+          <li>円周のラグをタップするか「次のラグ」で選び、測った Hz を入れて記録します。<strong>記録しても勝手に次へは進みません</strong>。そのラグの誤差が消えるまで同じラグで測り直し、納得したら自分で次へ進んでください。</li>
+          <li>「次のラグ」は<strong>対角線</strong>の順に進みます（8本なら 1→5→2→6→3→7→4→8）。円の中の破線がその順路です。一方向に回して締めるとヘッドが片寄るので、必ず向かい合うラグを交互に追ってください。番号はラグの物理的な位置なので、現場のボルトとそのまま対応します。</li>
+          <li>中央の大きい数字は、選んでいるラグの<strong>測定値</strong>です。まだ測っていないラグでは目標値が紫で出ます。その下の帯が目標からのずれで、真ん中の線に丸が重なれば合っています（端まで振れた状態で±8%）。</li>
           <li>ラグの色は目標との差です。緑は ±1.5% 以内、黄は ±3.5% 以内、赤はそれより外。</li>
           <li>ばらつきが小さいほど、ヘッドが均等に張れています。平均が目標に乗っていても、ばらつきが大きければ鳴りは濁ります。</li>
           <li>耳で合わせるなら「持続」。目標音が鳴り続けるので、弾いた音と重ねてうなりが消えるところを探せます。うなりの速さがそのままずれの大きさです。</li>
-          <li>「次へ」で同じドラムの裏面、その次のドラムへと順に進みます。</li>
+          <li>「次のヘッドへ」で同じドラムの裏面、その次のドラムへと順に進みます。</li>
           <li>測定値はこの端末にだけ残ります。</li>
         </ul>
-        <p><strong>マイクで測る</strong>は、このページをウェブサイトとして開いたときだけ動きます。読み取りは FFT でスペクトルの最強ピークを拾う方式で、探す範囲は目標の前後5半音に絞ってあります。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。しきい値は暗騒音から自動で決まります。</p>
+        <p><strong>マイクで測る</strong>をオンにすると、弾くたびに選んでいるラグの値が更新されます。ラグは自動で進まないので、合うまで同じラグを弾き続けられます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。打撃を拾うしきい値は暗騒音から自動で決まります。</p>
+        <p>読み取りは FFT でスペクトルの最強ピークを拾う方式です。探す範囲は<strong>目標の1オクターブ下から5度上まで</strong>。緩んだ状態から締め上げる途中は目標を大きく下回るので、下側を広く取ってあります。</p>
         <p>低い音ほど部屋の影響を受けます。響きの大きい部屋では、16" フロアやバスドラムのような低い太鼓で、弾いた音ではなく部屋の共鳴を拾うことがあります。おおむね 140Hz 以上は安定しますが、それより下は読みが揺れたら手入力に切り替えてください。</p>
       </div>
     </details>
@@ -444,6 +458,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
   };
 
+  // タムの呼び名（高→低）。本数で使う組が変わる
+  var TOMN={1:["ハイタム"],2:["ハイタム","フロアタム"],3:["ハイタム","ロータム","フロアタム"],
+            4:["テンタム","ハイタム","ロータム","フロアタム"],
+            5:["テンタム","ハイタム","ロータム","フロアタム","フロア2"]};
+  function renameToms(list){
+    var ts=list.filter(function(d){return d.kind==="tom";});
+    var nm=TOMN[ts.length]||TOMN[5];
+    ts.forEach(function(d,i){d.name=nm[i]||("タム "+(i+1));});
+    return list;
+  }
+
   function lugsFor(k,d){return k==="kick"?(d>=20?10:8):k==="snare"?10:(d<14?6:8);}
   function rangeFor(d){
     if(!(d>0)) return null;
@@ -484,9 +509,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     out.push({id:"kick",kind:"kick",name:"キック",dia:p.kick[0],dep:p.kick[1],lugs:lugsFor("kick",p.kick[0]),iv:IV_K,deg:0});
     out.push({id:"snare",kind:"snare",name:"スネア",dia:p.snare[0],dep:p.snare[1],lugs:lugsFor("snare",p.snare[0]),iv:IV_S,deg:0});
     p.toms.forEach(function(t,i){
-      out.push({id:"t"+i,kind:"tom",name:"タム "+(i+1),dia:t[0],dep:t[1],lugs:lugsFor("tom",t[0]),iv:IV_T,deg:0});
+      out.push({id:"t"+i,kind:"tom",name:"",dia:t[0],dep:t[1],lugs:lugsFor("tom",t[0]),iv:IV_T,deg:0});
     });
-    return out;
+    return renameToms(out);
   }
 
   var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"recipe",theme:"auto",
@@ -509,6 +534,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
       if(typeof sv.tid==="string") st.tid=sv.tid;
       if(sv.thead==="top"||sv.thead==="bot") st.thead=sv.thead;
+      renameToms(st.drums);
     }
   }catch(e){}
   function save(){try{localStorage.setItem("tuning4",JSON.stringify(st));}catch(e){}}
@@ -709,7 +735,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var c=calc(st.live,st.mode,st.voic,st.nudge,d), tg=st.thead==="top"?c.top:c.bot;
     mic.an.getFloatTimeDomainData(mic.buf);
     var ds=dsample(mic.buf,ac.sampleRate,4000);
-    var r=detect(ds.d,ds.sr,Math.max(35,tg*0.75),Math.min(460,tg*1.34));
+    // 緩い状態から締め上げる途中は目標を大きく下回るので、下側を1オクターブ取る
+    // （以前は上下5半音だけで、低い側が範囲外になり拾えなかった）
+    var r=detect(ds.d,ds.sr,Math.max(30,tg*0.5),Math.min(600,tg*1.5));
     if(r&&r.hz>0&&isFinite(r.hz)){ elIn.value=(Math.round(r.hz*10)/10).toFixed(1); commit(); }
   }
 
@@ -722,7 +750,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elV=E("tV"),elTN=E("tN"),elTS=E("tS"),elPresets=E("presets"),
       elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),elMic=E("tMic"),
-      elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB");
+      elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),elDev=E("tDev"),elDevM=E("tDevM");
   var lug=0;
 
   [["auto","◐","自動"],["light","☀","ライト"],["dark","☾","ダーク"]].forEach(function(p){
@@ -781,9 +809,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   E("tomUp").addEventListener("click",function(){
     var ts=toms(); if(ts.length>=5) return;
     var last=ts[ts.length-1], i=ts.length, dia=Math.min(18,(last?last.dia:14)+2);
-    st.drums.push({id:"t"+i,kind:"tom",name:"タム "+(i+1),dia:dia,dep:last?last.dep:14,
+    st.drums.push({id:"t"+i,kind:"tom",name:"",dia:dia,dep:last?last.dep:14,
                    lugs:lugsFor("tom",dia),iv:IV_T,deg:0});
-    save();render();
+    renameToms(st.drums); save(); render();
   });
   E("tomDn").addEventListener("click",function(){
     var ts=toms(); if(ts.length<=1) return;
@@ -791,9 +819,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     st.drums=st.drums.filter(function(d){return d!==g;});
     delete st.meas[g.id+"|top"]; delete st.meas[g.id+"|bot"];
     if(st.tid===g.id) st.tid=st.drums[st.drums.length-1].id;
-    save();render();
+    renameToms(st.drums); save(); render();
   });
   E("tClr").addEventListener("click",function(){delete st.meas[st.tid+"|"+st.thead];lug=0;save();render();});
+  E("tPrev").addEventListener("click",function(){
+    var d=byId(st.tid); if(!d) return;
+    lug=prevLug(lug,d.lugs); render(); if(!mic.on) elIn.focus();
+  });
+  E("tNextL").addEventListener("click",function(){
+    var d=byId(st.tid); if(!d) return;
+    lug=nextLug(lug,d.lugs); render(); if(!mic.on) elIn.focus();
+  });
   E("tPlay").addEventListener("click",function(){
     var d=byId(st.tid); if(!d) return;
     var c=calc(st.live,st.mode,st.voic,st.nudge,d);
@@ -832,6 +868,10 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var o=order(n),at=o.indexOf(cur);
     return at<0?o[0]:o[(at+1)%n];
   }
+  function prevLug(cur,n){
+    var o=order(n),at=o.indexOf(cur);
+    return at<0?o[0]:o[(at-1+n)%n];
+  }
   function measOf(id,h){
     var a=st.meas[id+"|"+h];
     return Object.prototype.toString.call(a)==="[object Array]"?a:[];
@@ -843,7 +883,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     a.length=n;
     a[lug]=(isFinite(v)&&v>0)?Math.round(v*10)/10:null;
     st.meas[d.id+"|"+st.thead]=a;
-    lug=nextLug(lug,n);
+    // 自動では進めない。誤差が消えるまで同じラグで測り直す
     elIn.value=""; save(); render();
     if(!mic.on) elIn.focus();
   }
@@ -1093,10 +1133,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
     var tgt=st.thead==="top"?cc.top:cc.bot, n=d.lugs, arr=measOf(d.id,st.thead);
     var nt=noteOf(tgt,flat), ctr=tgt/R, cn=noteOf(ctr,flat);
-    elTN.textContent=String(tgt);
-    var u=document.createElement("u"); u.textContent="Hz"; elTN.appendChild(u);
-    elTS.textContent=d.name+" "+d.dia+'" ／ '+(st.thead==="top"?"打面":"裏面")
-      +(nt?"　"+nt.name+" "+cts(nt.cents):"")+"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）";
 
     function cl(v){
       if(!(v>0)) return "none";
@@ -1139,12 +1175,24 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     });
 
     var cur=arr[lug];
+    // 大きい数字はそのラグの測定値。未測定なら目標値をアクセント色で出す
+    elTN.textContent=cur>0?cur.toFixed(1):String(tgt);
+    var u=document.createElement("u"); u.textContent="Hz"; elTN.appendChild(u);
+    elTN.style.color=cur>0?CO[cl(cur)]:ACC;
+    elTS.textContent="目標 "+tgt+" Hz"+(nt?"　"+nt.name+" "+cts(nt.cents):"")
+      +"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）";
+    if(cur>0){
+      elDev.hidden=false;
+      var pr=Math.max(-1,Math.min(1,(cur-tgt)/(tgt*0.08)));
+      elDevM.style.left=(50+pr*46).toFixed(1)+"%";
+      elDevM.style.background=CO[cl(cur)];
+    } else elDev.hidden=true;
     elIn.placeholder="ラグ "+(lug+1)+" の Hz";
     if(cur>0){
       var df=cur-tgt;
       elV.className="vd "+cl(cur);
-      elV.textContent="ラグ "+(lug+1)+"　"+cur.toFixed(1)+" Hz　"
-        +(Math.abs(df)<0.05?"ぴったり":(df>0?"+"+df.toFixed(1)+" Hz ぶん緩める":df.toFixed(1)+" Hz ぶん締める"));
+      elV.textContent="ラグ "+(lug+1)+"　"+(Math.abs(df)<0.5?"ぴったり"
+        :(df>0?"+"+df.toFixed(1)+" Hz　緩める":df.toFixed(1)+" Hz　締める"));
     } else {
       elV.className="vd idle";
       elV.textContent=mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください";
