@@ -195,6 +195,7 @@ th.on{color:var(--acc)}
 .fi label{font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--faint)}
 .fi input{width:100%;min-width:0;font-family:var(--mono);font-size:16px;font-weight:700;padding:12px 6px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums;text-align:center;transition:border-color .2s}
 .fi input:focus{border-color:var(--acc);outline:none}
+.exp{width:100%;min-height:150px;font-family:var(--mono);font-size:10.5px;line-height:1.75;padding:12px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;resize:vertical;white-space:pre}
 .rr{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint)}
 
 /* ─── tuner ─── */
@@ -413,6 +414,16 @@ footer b{font-family:var(--mono);font-weight:700}
       </div>
     </div>
     <div class="cards" id="kitList"></div>
+    <div class="pane" style="margin-top:11px">
+      <div class="row">
+        <div class="cap">測定データ<span class="note">先生に送る用。押すとクリップボードに入ります</span></div>
+        <div class="tl" style="justify-content:flex-start">
+          <button id="kExp" type="button">書き出す</button>
+          <button id="kWipe" type="button">測定値を全消去</button>
+        </div>
+      </div>
+      <textarea id="kOut" class="exp" hidden readonly aria-label="書き出した測定データ"></textarea>
+    </div>
   </div>
 
   <div class="refs">
@@ -1330,6 +1341,60 @@ footer b{font-family:var(--mono);font-weight:700}
     });
   }
 
+  // 端末に溜まった測定値を、そのまま送れる文章にする
+  function exportText(){
+    var L=[],d2=new Date();
+    function p2(x){return (x<10?"0":"")+x;}
+    L.push("TAUT v1.0　"+d2.getFullYear()+"-"+p2(d2.getMonth()+1)+"-"+p2(d2.getDate()));
+    L.push("キー "+keyName(st.live)+"　タム"+(st.voic==="low"?"低め":"高め")
+      +(st.nudge?"　"+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":""));
+    L.push("");
+    var any=false;
+    st.drums.forEach(function(d){
+      var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+      var t=measOf(d.id,"top"),b=measOf(d.id,"bot"),f=st.meas[d.id+"|fund"];
+      var ta=avgOf(t),ba=avgOf(b);
+      if(!(ta>0)&&!(ba>0)&&!(f>0)) return;
+      any=true;
+      L.push(d.name+"　"+d.dia+"×"+d.dep+'"　'+d.lugs+"ラグ");
+      function line(lbl,arr,av,tg){
+        if(!(av>0)) return;
+        var v=arr.filter(function(x){return x>0;});
+        var sp=v.length>1?(Math.max.apply(null,v)-Math.min.apply(null,v)):0;
+        L.push("  "+lbl+" 平均"+av.toFixed(1)+" 目標"+tg+" 差"+(av-tg>=0?"+":"")+(av-tg).toFixed(1)
+          +" ばらつき"+sp.toFixed(1)+"  ["+arr.map(function(x){return x>0?x:"-";}).join(" ")+"]");
+      }
+      line("打面",t,ta,c.top);
+      line("裏面",b,ba,c.bot);
+      if(f>0) L.push("  実音 "+f.toFixed(1)+" 予測"+c.fund.toFixed(1)+" 差"
+        +(function(){var e=Math.round(1200*Math.log2(f/c.fund));return (e>=0?"+":"−")+Math.abs(e);})()+"¢"
+        +(d.rcal>0?"  実測R "+d.rcal.toFixed(3):""));
+      L.push("");
+    });
+    if(!any) L.push("（まだ測定データがありません）");
+    return L.join("\n");
+  }
+  E("kExp").addEventListener("click",function(){
+    var b=this,txt=exportText(),out=E("kOut");
+    out.hidden=false; out.value=txt;
+    function done(msg){b.textContent=msg;setTimeout(function(){b.textContent="書き出す";},1800);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){done("コピーしました");},
+        function(){out.select();done("下を長押しでコピー");});
+    } else { out.select(); done("下を長押しでコピー"); }
+  });
+  E("kWipe").addEventListener("click",function(){
+    var b=this;
+    if(b.dataset.armed!=="1"){
+      b.dataset.armed="1"; b.textContent="もう一度押すと消去";
+      setTimeout(function(){b.dataset.armed="0";b.textContent="測定値を全消去";},3500);
+      return;
+    }
+    b.dataset.armed="0"; b.textContent="測定値を全消去";
+    st.meas={}; st.drums.forEach(function(d){delete d.rcal;});
+    lug=0; E("kOut").hidden=true; save(); render();
+  });
+
   function cssv(n){
     var v=getComputedStyle(document.documentElement).getPropertyValue(n);
     return (v&&v.trim())||"#888888";
@@ -1530,7 +1595,7 @@ footer b{font-family:var(--mono);font-weight:700}
   if(st.view==="tune") micStart();
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-021132";
+  var BUILD="20261021-021649";
   function checkUpdate(){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
