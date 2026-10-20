@@ -204,6 +204,7 @@ svg.hd .lug{cursor:pointer}
 .vd.idle{background:var(--sunk);color:var(--faint);font-weight:500}
 .lvl{height:5px;border-radius:999px;background:var(--raise);overflow:hidden;width:100%;max-width:300px}
 .lvl i{display:block;height:100%;width:0;background:var(--good);border-radius:999px;transition:width .06s linear}
+.dg{width:100%;max-width:300px;text-align:center;font-size:11.5px;font-weight:700;color:var(--acc);background:var(--acc-soft);border-radius:11px;padding:8px 12px;line-height:1.45}
 .tl{display:flex;gap:6px;flex-wrap:wrap;width:100%;justify-content:center}
 .tl button{font-size:12.5px;font-weight:700;min-height:42px;padding:9px 16px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:999px;transition:transform .1s}
 .tl button:active:not(:disabled){transform:scale(.95)}
@@ -297,11 +298,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       <div class="tgt" id="tS">目標</div>
       <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
       <div class="vd idle" id="tV">ラグを選んでください</div>
+      <div class="dg" id="tDg" hidden></div>
       <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
       <div class="tl">
         <button id="tPlay" type="button">目標音</button>
         <button id="tDrone" type="button" aria-pressed="false">持続</button>
         <button id="tClr" type="button">クリア</button>
+        <button id="tCal" type="button" hidden>補正を解除</button>
         <button id="tNext" type="button" class="nx">次へ →</button>
       </div>
       <div class="mn" id="mn" hidden></div>
@@ -377,9 +380,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       <div class="bd">
         <p>表裏を追い込んだら、ヘッドの切替を<strong>実音</strong>にしてヘッドの中央を叩いてください。実際に出ている音が記録され、予測値との差がセントで出ます。レシピ画面の「実音」表示も実測値に切り替わります。</p>
         <p>ここで出している予測値は早見表から逆算した推定にすぎません。実音は表裏ヘッドの連成振動と胴の共鳴で決まるので、本来は計算で確定できない値です。<strong>実測を貯めることが、この推定が妥当かどうかを確かめる唯一の方法</strong>です。</p>
-        <p>表裏のラグ平均と実音の実測が揃うと、そのドラムの<strong>実測 R</strong> も出ます。</p>
+        <p>表裏のラグ平均と実音の実測が揃うと、そのドラムの<strong>実測 R</strong> が出て、<strong>そのままレシピに反映されます</strong>。</p>
         <p><code>R = √(打面平均 × 裏面平均) ÷ 実音</code></p>
-        <p>早見表から出た基準値は 1.73 です。手持ちのキットで繰り返し 1.73 から外れるなら、そのシェルや深さではこの定数がずれているということです。胴が深いドラム、厚いシェル、特殊なヘッドで差が出るはずなので、気づいたら教えてください。レシピ側に反映します。</p>
+        <p>早見表から出た基準値は 1.73 です。この R は「ラグ値と実際に鳴る音の関係」を表していて、胴の深さ・シェルの厚み・ヘッドの種類で変わります。実測値が 1.73 と違ったということは、<strong>そのドラムは予測とは違う高さで鳴っていた</strong>ということです。</p>
+        <p>そこで、そのドラムの目標ラグ値を実測 R で引き直します。新しい目標に合わせ直せば、狙ったキーの音が実際に出るようになります。補正したドラムにはレシピ画面に「実測で補正」と出ます。外したいときはチューナーの「補正を解除」で基準の 1.73 に戻ります。</p>
+        <p>補正は<strong>ドラム1台ごと</strong>です。他の太鼓には影響しません。キットのプリセットを読み直すと補正も消えます。</p>
+        <p>測り直すたびに R は更新されます。同じ値に落ち着けばそれがそのドラムの定数です。大きくばらつく場合は実音の読みが部屋の共鳴を拾っている可能性があるので、「補正を解除」して測り直してください。</p>
       </div>
     </details>
 
@@ -567,10 +573,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var i=VC[voic].s+Math.max(0,toms().indexOf(d));
     return i<SER.length?SER[i]:SER[SER.length-1]*Math.pow(2,-(i-SER.length+1)*3/12);
   }
+  // 実音の実測から逆算した、そのドラム固有の R。無ければ早見表の 1.73
+  function rOf(d){ return (d.rcal>=1.40&&d.rcal<=2.10)?d.rcal:R; }
   function calc(ki,mode,voic,nudge,d){
     var b=baseFund(voic,d);
     var f=b*Math.pow(2,(offs(ki,mode)+nudge+scaleShift(b,GB,d.deg||0))/12);
-    var g=f*R, h=Math.pow(2,d.iv/24);
+    var g=f*rOf(d), h=Math.pow(2,d.iv/24);
     return {top:Math.round(g/h),bot:Math.round(g*h),fund:f};
   }
   function partsOf(ki,mode,voic,nudge){
@@ -769,7 +777,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
       elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),elChips=E("chips"),
       elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
-      elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV");
+      elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
   var lug=0, edit=null, inT=0;
 
   // 口径・ラグ数はその場で直す。タブを移動しない
@@ -881,6 +889,10 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   E("tClr").addEventListener("click",function(){
     delete st.meas[st.tid+"|"+st.thead]; lug=0; elIn.value=""; save(); render();
   });
+  elCal.addEventListener("click",function(){
+    var d=byId(st.tid); if(!d) return;
+    delete d.rcal; save(); render();
+  });
   E("tPlay").addEventListener("click",function(){
     var d=byId(st.tid); if(!d) return;
     var c=calc(st.live,st.mode,st.voic,st.nudge,d);
@@ -937,6 +949,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var v=parseFloat(elIn.value), val=(isFinite(v)&&v>0)?Math.round(v*10)/10:null;
     if(st.thead==="fund"){
       if(val) st.meas[d.id+"|fund"]=val; else delete st.meas[d.id+"|fund"];
+      // 測った実音をレシピに戻す。表裏のラグ平均が揃っていれば R を更新する
+      var nr=impliedR(d);
+      if(nr>=1.40&&nr<=2.10) d.rcal=nr; else if(!val) delete d.rcal;
       save(); render(); return;
     }
     var n=d.lugs,a=measOf(d.id,st.thead).slice();
@@ -956,6 +971,18 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   function impliedR(d){
     var t=avgOf(measOf(d.id,"top")), b=avgOf(measOf(d.id,"bot")), f=st.meas[d.id+"|fund"];
     return (t>0&&b>0&&f>0)?Math.sqrt(t*b)/f:null;
+  }
+  // 測った値から言えることを一行で返す
+  function diag(d,head){
+    var all=measOf(d.id,head), n=d.lugs, got=all.filter(function(x){return x>0;}), i;
+    if(!got.length) return null;
+    if(got.length<n) return "あと "+(n-got.length)+" 本";
+    var av=avgOf(all), sp=Math.max.apply(null,got)-Math.min.apply(null,got), mx=0, mi=-1;
+    for(i=0;i<n;i++) if(all[i]>0&&Math.abs(all[i]-av)>mx){mx=Math.abs(all[i]-av);mi=i;}
+    if(sp/av<=0.015) return "揃いました　平均 "+av.toFixed(1)+" Hz　ばらつき "+sp.toFixed(1)+" Hz";
+    if(mi>=0&&mx/av>0.025)
+      return "ラグ "+(mi+1)+" が平均から "+(all[mi]>av?"+":"−")+mx.toFixed(1)+" Hz　ここを直す";
+    return "ばらつき "+sp.toFixed(1)+" Hz　もう一周";
   }
 
   /* ---------- render ---------- */
@@ -1010,7 +1037,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
 
   function rRecipe(){
     var flat=!!FLATK[rootOf(st.live,st.mode)];
-    var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg;});
+    var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg&&!(d.rcal>0);});
     var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.voic==="low")||(offs(st.live,st.mode)===-2&&st.voic==="high"));
     elBand.innerHTML="";
     var tg=document.createElement("span");
@@ -1022,6 +1049,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       : keyName(st.live)+" ／ 基準レシピを "+(dd===0?"そのまま":(dd>0?"+":"−")+Math.abs(dd)+"半音")
         +" 移調"+(stock?"":"、音の高さを調整")+"した値です。";
     elBand.appendChild(tx);
+    var ncal=st.drums.filter(function(x){return x.rcal>0;}).length;
+    if(ncal){
+      var t2=document.createElement("span");
+      t2.className="tag a"; t2.textContent="実測で補正 "+ncal+"台";
+      elBand.appendChild(t2);
+    }
 
     elCards.innerHTML="";
     partsOf(st.live,st.mode,st.voic,st.nudge).forEach(function(p,i){
@@ -1313,9 +1346,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var mn2=cur>0?noteOf(cur,flat):null;
     if(cur>0) tline("実測 ",cur.toFixed(1)+" Hz",mn2?"　"+mn2.name+" "+cts(mn2.cents):"",0);
     if(isF){
-      tline("予測 ",tgt.toFixed(1)+" Hz",nt?"　"+nt.name+" "+cts(nt.cents):"",cur>0);
+      tline("狙い ",tgt.toFixed(1)+" Hz",nt?"　"+nt.name+" "+cts(nt.cents):"",cur>0);
       var ir=impliedR(d);
-      if(ir) tline("実測 R ",ir.toFixed(3),"　（基準 1.73）",1);
+      if(ir) tline("実測 R ",ir.toFixed(3),"　（早見表 1.73）",1);
     } else {
       tline("目標 ",tgt+" Hz",(nt?"　"+nt.name+" "+cts(nt.cents):"")
         +"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）",cur>0);
@@ -1340,13 +1373,25 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
         ? (mic.on?"ヘッドの中央を叩いてください":"実音を測って入力してください")
         : (mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください");
     }
+
+    // 測った値から言えることを返す
+    var dmsg=null;
+    if(isF){
+      if(d.rcal>0) dmsg="実測 R "+d.rcal.toFixed(3)+" でこのドラムの目標ラグ値を補正しました"
+        +"（早見表の 1.73 から "+(d.rcal>R?"上":"下")+"に "
+        +Math.abs(Math.round(1200*Math.log2(d.rcal/R)))+" セント相当）。狙いの音が出る値に動いています。";
+      else if(cur>0) dmsg="打面と裏面のラグを全部測ると、このドラムの R を割り出してレシピに反映できます。";
+    } else dmsg=diag(d,st.thead);
+    elDg.hidden=!dmsg;
+    if(dmsg) elDg.textContent=dmsg;
+    elCal.hidden=!(isF&&d.rcal>0);
   }
 
   render();
   if(st.view==="tune") micStart();
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-005916";
+  var BUILD="20261021-012242";
   function checkUpdate(){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
