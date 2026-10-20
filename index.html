@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EEF1F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0E16" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-title" content="チューニング">
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}</style>
+<title>チューニングレシピ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<style>
+/* Light tokens on :root; dark under the media query (unless forced light) and under [data-theme=dark]. */
+:root{
+  --bg:#EEF1F7; --card:#FFFFFF; --sunk:#F4F6FA; --raise:#E4E9F1;
+  --line:#DCE1EA; --line-hi:#B9C2D0;
+  --fg:#141A24; --dim:#5A6574; --faint:#8A95A4;
+  --acc:#5B4BE0; --acc-soft:#E9E6FD; --acc-fg:#FFFFFF;
+  --top:#B4590B; --top-soft:#FDEEDC; --bot:#0A6A86; --bot-soft:#DEF1F8;
+  --good:#17824C; --good-soft:#DFF3E7; --close:#8C6004; --close-soft:#FBF0D8;
+  --off:#C0352F; --off-soft:#FBE4E3;
+  --kick:#6A33D6; --kick-soft:#EDE6FC;
+  --snare:#C02B55; --snare-soft:#FCE4EB;
+  --tom:#0A7558; --tom-soft:#DDF2EB;
+  --sh:0 1px 2px rgba(20,26,36,.06),0 3px 10px rgba(20,26,36,.05);
+  --sh-lift:0 2px 4px rgba(20,26,36,.08),0 8px 20px rgba(20,26,36,.09);
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  --sans:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B0E16; --card:#161B27; --sunk:#111622; --raise:#212838;
+  --line:#28303F; --line-hi:#414B5E;
+  --fg:#EAEEF6; --dim:#97A2B3; --faint:#6B7687;
+  --acc:#8D7CFF; --acc-soft:#241F45; --acc-fg:#0B0E16;
+  --top:#FFA94D; --top-soft:#30220F; --bot:#4FD0EC; --bot-soft:#0F2B34;
+  --good:#38D98A; --good-soft:#0E2D1F; --close:#FFC53D; --close-soft:#2F2611;
+  --off:#FF7B78; --off-soft:#331A1A;
+  --kick:#A78BFA; --kick-soft:#231C3D; --snare:#FB7FA0; --snare-soft:#331A24;
+  --tom:#3FD9A4; --tom-soft:#0D2C25;
+  --sh:0 1px 2px rgba(0,0,0,.4); --sh-lift:0 2px 8px rgba(0,0,0,.5);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0B0E16; --card:#161B27; --sunk:#111622; --raise:#212838;
+  --line:#28303F; --line-hi:#414B5E;
+  --fg:#EAEEF6; --dim:#97A2B3; --faint:#6B7687;
+  --acc:#8D7CFF; --acc-soft:#241F45; --acc-fg:#0B0E16;
+  --top:#FFA94D; --top-soft:#30220F; --bot:#4FD0EC; --bot-soft:#0F2B34;
+  --good:#38D98A; --good-soft:#0E2D1F; --close:#FFC53D; --close-soft:#2F2611;
+  --off:#FF7B78; --off-soft:#331A1A;
+  --kick:#A78BFA; --kick-soft:#231C3D; --snare:#FB7FA0; --snare-soft:#331A24;
+  --tom:#3FD9A4; --tom-soft:#0D2C25;
+  --sh:0 1px 2px rgba(0,0,0,.4); --sh-lift:0 2px 8px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 60px}
+button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cap{font-size:11.5px;font-weight:700;letter-spacing:.02em;color:var(--dim)}
+.note{font-size:11px;font-weight:400;color:var(--faint)}
+
+header{display:flex;align-items:flex-start;gap:12px;padding-block:20px 14px}
+header .ht{flex:1;min-width:0}
+header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.01em}
+header p{margin:2px 0 0;font-size:12.5px;color:var(--dim)}
+.thm{flex:none;display:flex;gap:2px;background:var(--sunk);padding:3px;border-radius:999px;border:1px solid var(--line)}
+.thm button{width:34px;height:30px;border:0;background:transparent;border-radius:999px;font-size:14px;line-height:1;display:grid;place-items:center;color:var(--faint)}
+.thm button[aria-pressed="true"]{background:var(--card);color:var(--acc);box-shadow:var(--sh)}
+
+.tabs{display:flex;gap:3px;background:var(--sunk);padding:4px;border-radius:14px;border:1px solid var(--line);margin-bottom:14px}
+.tab{flex:1;padding:11px 4px;border:0;background:transparent;color:var(--dim);border-radius:10px;font-size:14px;font-weight:700;transition:background .15s,color .15s,box-shadow .15s}
+.tab[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);box-shadow:var(--sh-lift)}
+
+.pane{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:15px;margin-bottom:12px;box-shadow:var(--sh)}
+.row{display:grid;gap:8px}
+.row>.cap{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+@media (min-width:560px){.keys{grid-template-columns:repeat(12,1fr)}}
+.k{font-family:var(--mono);font-size:13.5px;font-weight:600;min-height:46px;padding:6px 1px;text-align:center;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:12px;transition:background .14s,color .14s,border-color .14s,transform .1s}
+.k:active{transform:scale(.94)}
+.k[data-on="1"]{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-soft)}
+.k[data-live="1"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc);box-shadow:var(--sh-lift)}
+.picked{display:flex;gap:6px;flex-wrap:wrap}
+.pk{display:flex;align-items:center;border-radius:999px;background:var(--sunk);border:2px solid transparent;overflow:hidden}
+.pk[data-live="1"]{background:var(--acc-soft);border-color:var(--acc)}
+.pk b{font-family:var(--mono);font-size:13px;font-weight:600;padding:8px 4px 8px 14px;color:var(--dim);cursor:pointer}
+.pk[data-live="1"] b{color:var(--acc)}
+.pk button{background:none;border:0;padding:8px 12px 8px 4px;font-size:15px;line-height:1;color:var(--faint)}
+.pk button:hover{color:var(--off)}
+
+.segs{display:flex;gap:4px;flex-wrap:wrap}
+.sg{flex:1 1 0;min-width:0;font-size:13.5px;font-weight:700;min-height:44px;padding:8px 10px;text-align:center;white-space:nowrap;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:12px;transition:background .14s,color .14s,border-color .14s,transform .1s}
+.sg:active{transform:scale(.96)}
+.sg[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc);box-shadow:var(--sh-lift)}
+.sg small{font-size:9.5px;font-weight:700;letter-spacing:.03em;opacity:.7;margin-left:6px}
+
+.step{display:inline-flex;align-items:center;gap:5px}
+.step button{width:40px;height:40px;flex:none;font-size:19px;font-weight:700;background:var(--sunk);border:0;border-radius:12px;line-height:1;color:var(--acc);transition:transform .1s}
+.step button:active:not(:disabled){transform:scale(.9)}
+.step button:disabled{opacity:.3;cursor:default;color:var(--faint)}
+.step .v{font-family:var(--mono);font-size:13px;font-weight:600;min-width:76px;text-align:center;color:var(--dim);font-variant-numeric:tabular-nums}
+
+.band{display:flex;flex-wrap:wrap;align-items:center;gap:7px 11px;padding:11px 14px;margin-bottom:12px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12.5px;color:var(--dim);box-shadow:var(--sh)}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.tag.a{background:var(--good-soft);color:var(--good)}
+.tag.b{background:var(--raise);color:var(--dim)}
+
+.cards{display:grid;gap:9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 14px;display:grid;gap:11px;box-shadow:var(--sh)}
+.card.gap{margin-top:11px}
+.ch{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:999px;font-size:15px;font-weight:700;letter-spacing:.01em}
+.badge i{width:7px;height:7px;border-radius:50%;flex:none}
+.badge.kick{background:var(--kick-soft);color:var(--kick)} .badge.kick i{background:var(--kick)}
+.badge.snare{background:var(--snare-soft);color:var(--snare)} .badge.snare i{background:var(--snare)}
+.badge.tom{background:var(--tom-soft);color:var(--tom)} .badge.tom i{background:var(--tom)}
+.ch .sz{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--faint)}
+.pitch{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pitch .pv{display:grid;justify-items:end;line-height:1.3}
+.pitch .pv b{font-family:var(--mono);font-size:14.5px;font-weight:600}
+.pitch .pv span{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums}
+
+.hh{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media (max-width:430px){.hh{grid-template-columns:1fr}}
+.h{border-radius:13px;padding:10px 13px;display:grid;gap:3px;min-width:0}
+.h.t{background:var(--top-soft)} .h.b{background:var(--bot-soft)}
+.h .hl{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.04em}
+.h.t .hl{color:var(--top)} .h.b .hl{color:var(--bot)}
+.h .hl button{margin-left:auto;background:none;border:0;padding:2px 5px;font-size:15px;line-height:1;opacity:.55;border-radius:7px}
+.h .hl button:hover,.h .hl button.on{opacity:1}
+.h .big{font-family:var(--mono);font-size:29px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.h.t .big{color:var(--top)} .h.b .big{color:var(--bot)}
+.h .big u{text-decoration:none;font-size:12px;font-weight:600;margin-left:4px;opacity:.6}
+.h .nn{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums;opacity:.85}
+.h .nn i{font-style:normal;font-weight:500;opacity:.6}
+.h .cc{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--fg);opacity:.55;font-variant-numeric:tabular-nums}
+
+.cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.cf label{font-size:11px;font-weight:700;color:var(--faint);white-space:nowrap}
+.cf select{font-family:var(--sans);font-size:13px;font-weight:500;padding:9px 10px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:11px;max-width:100%}
+.cf .go{margin-left:auto;font-size:12.5px;font-weight:700;padding:9px 17px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .1s}
+.cf .go:active{transform:scale(.95)}
+.warn{display:flex;gap:9px;align-items:baseline;padding:9px 12px;border-radius:12px;background:var(--off-soft);color:var(--off);font-size:12px;line-height:1.5}
+.warn b{font-size:10.5px;font-weight:700;flex:none;letter-spacing:.03em}
+
+.sx{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:13px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:12.5px;width:100%;min-width:340px}
+th,td{padding:9px 11px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--faint);font-weight:600;font-family:var(--sans)}
+td:first-child{font-weight:700;color:var(--fg);font-family:var(--sans)}
+th.on,td.on{background:var(--acc-soft)}
+th.on{color:var(--acc);font-weight:700}
+
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.fi{display:grid;gap:4px;min-width:0}
+.fi label{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--faint)}
+.fi input{width:100%;min-width:0;font-family:var(--mono);font-size:16px;font-weight:600;padding:11px 6px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:11px;font-variant-numeric:tabular-nums;text-align:center}
+.rr{margin-left:auto;font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--faint)}
+
+.dr{display:flex;gap:5px;flex-wrap:wrap}
+.dr button{font-size:13px;font-weight:700;min-height:42px;padding:8px 14px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:12px;transition:transform .1s}
+.dr button:active{transform:scale(.95)}
+.dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
+.dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
+.dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
+.dial{display:grid;justify-items:center;gap:13px;padding:10px 0 2px}
+svg.hd{width:100%;max-width:290px;height:auto;display:block;touch-action:manipulation}
+svg.hd .lug{cursor:pointer}
+.rd{display:grid;justify-items:center;text-align:center}
+.rd .n{font-family:var(--mono);font-size:42px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:var(--acc)}
+.rd .n u{text-decoration:none;font-size:14px;font-weight:600;opacity:.55;margin-left:4px}
+.rd .s{font-size:12px;color:var(--dim);margin-top:4px;line-height:1.5}
+.ent{display:flex;gap:7px;width:100%;max-width:290px}
+.ent input{flex:1;min-width:0;font-family:var(--mono);font-size:21px;font-weight:600;text-align:center;padding:12px;background:var(--sunk);color:var(--fg);border:2px solid var(--line);border-radius:13px;font-variant-numeric:tabular-nums}
+.ent input:focus{border-color:var(--acc);outline:none}
+.ent button{flex:none;padding:0 21px;background:var(--acc);color:var(--acc-fg);border:0;border-radius:13px;font-size:14px;font-weight:700;box-shadow:var(--sh-lift);transition:transform .1s}
+.ent button:active{transform:scale(.96)}
+.vd{font-size:13.5px;font-weight:700;padding:11px 16px;border-radius:13px;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;width:100%;max-width:290px;line-height:1.4}
+.vd.good{background:var(--good-soft);color:var(--good)}
+.vd.close{background:var(--close-soft);color:var(--close)}
+.vd.off{background:var(--off-soft);color:var(--off)}
+.vd.idle{background:var(--sunk);color:var(--faint);font-weight:500}
+.lvl{height:6px;border-radius:999px;background:var(--raise);overflow:hidden;width:100%;max-width:290px}
+.lvl i{display:block;height:100%;width:0;background:var(--good);border-radius:999px;transition:width .06s linear}
+.st3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%}
+.st3 div{background:var(--sunk);border-radius:13px;padding:10px 6px;display:grid;gap:2px;text-align:center}
+.st3 .k2{font-size:10.5px;font-weight:700;color:var(--faint)}
+.st3 .v2{font-family:var(--mono);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.tl{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.tl button{font-size:12.5px;font-weight:700;min-height:42px;padding:9px 16px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:999px;transition:transform .1s}
+.tl button:active:not(:disabled){transform:scale(.95)}
+.tl button[aria-pressed="true"]{background:var(--good-soft);color:var(--good);border-color:var(--good)}
+.tl button:disabled{opacity:.4;cursor:default}
+.tl .nx{margin-left:auto;background:var(--acc-soft);color:var(--acc)}
+.mn{margin-top:11px;padding:11px 14px;border-radius:13px;background:var(--acc-soft);font-size:12.5px;line-height:1.65;color:var(--fg)}
+.mn strong{font-weight:700}
+
+.refs{margin-top:32px;display:grid;gap:9px}
+details{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+summary{padding:13px 15px;cursor:pointer;font-size:14px;font-weight:700;list-style:none;display:flex;align-items:center;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";width:20px;height:20px;flex:none;border-radius:50%;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;font-size:14px;font-weight:700;line-height:1}
+details[open] summary::before{content:"−"}
+.bd{padding:0 15px 15px;font-size:13.5px;color:var(--dim);display:grid;gap:10px;line-height:1.8}
+.bd p{margin:0}
+.bd strong{color:var(--fg);font-weight:700}
+.bd ul{margin:0;padding-left:1.15em;display:grid;gap:7px}
+.bd a{color:var(--acc);font-weight:500}
+.bd code{font-family:var(--mono);font-size:12.5px;background:var(--sunk);padding:2px 7px;border-radius:7px;color:var(--fg)}
+footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="ht">
+      <h1>チューニングレシピ</h1>
+      <p>曲のキーからラグ値を出して、ラグごとに追い込むための道具です。</p>
+    </div>
+    <div class="thm" id="thm" role="group" aria-label="配色"></div>
+  </header>
+
+  <div class="tabs" role="group" aria-label="表示">
+    <button class="tab" type="button" data-v="recipe" aria-pressed="true">レシピ</button>
+    <button class="tab" type="button" data-v="tune" aria-pressed="false">チューナー</button>
+    <button class="tab" type="button" data-v="kit" aria-pressed="false">キット</button>
+  </div>
+
+  <div class="pane" id="keyPane">
+    <div class="row">
+      <div class="cap">調</div>
+      <div class="segs" id="modes" role="group" aria-label="メジャーかマイナー"></div>
+    </div>
+    <div class="row">
+      <div class="cap">キー<span class="note">タップで追加。複数選ぶと下に比較が出ます</span></div>
+      <div class="keys" id="keys" role="group" aria-label="キー"></div>
+      <div class="picked" id="picked" hidden></div>
+    </div>
+    <div class="row">
+      <div class="cap">タムの高さ<span class="note">キックに対してタム群が乗る位置</span></div>
+      <div class="segs" id="voics" role="group" aria-label="タムの高さ"></div>
+    </div>
+    <div class="row">
+      <div class="cap">キット全体を上下</div>
+      <div class="step">
+        <button id="dn" type="button" aria-label="半音下げる">−</button>
+        <span class="v" id="nv">±0 半音</span>
+        <button id="up" type="button" aria-label="半音上げる">＋</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vRecipe">
+    <div class="band" id="band"></div>
+    <div class="cards" id="cards"></div>
+    <div id="cmpWrap" hidden>
+      <div class="cap" style="margin:24px 0 8px 3px">キー比較 ／ 打面ラグ値</div>
+      <div class="pane" style="padding:5px"><div class="sx"><table id="cmp"></table></div></div>
+    </div>
+  </div>
+
+  <div id="vTune" hidden>
+    <div class="pane">
+      <div class="row"><div class="cap">ドラム</div><div class="dr" id="drums" role="group" aria-label="ドラム"></div></div>
+      <div class="row"><div class="cap">ヘッド</div><div class="segs" id="heads" role="group" aria-label="ヘッド"></div></div>
+    </div>
+    <div class="pane">
+      <div class="dial">
+        <div class="rd">
+          <div class="n" id="tN">—<u>Hz</u></div>
+          <div class="s" id="tS">目標</div>
+        </div>
+        <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ラグ配置図"></svg>
+        <div class="ent">
+          <input id="tIn" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
+          <button id="tOk" type="button">記録</button>
+        </div>
+        <div class="vd idle" id="tV">ラグを選んで、測った Hz を入れてください</div>
+        <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
+        <div class="st3">
+          <div><div class="k2">平均</div><div class="v2" id="sA">—</div></div>
+          <div><div class="k2">ばらつき</div><div class="v2" id="sS">—</div></div>
+          <div><div class="k2">測定済み</div><div class="v2" id="sD">—</div></div>
+        </div>
+      </div>
+      <div class="tl">
+        <button id="tMic" type="button" aria-pressed="false">マイクで測る</button>
+        <button id="tPlay" type="button">目標音</button>
+        <button id="tDrone" type="button" aria-pressed="false">持続</button>
+        <button id="tClr" type="button">クリア</button>
+        <button id="tNext" type="button" class="nx">次へ →</button>
+      </div>
+      <div class="mn" id="mn" hidden></div>
+    </div>
+  </div>
+
+  <div id="vKit" hidden>
+    <div class="pane">
+      <div class="row">
+        <div class="cap">プリセット<span class="note">読み込んだあと自由に書き換えられます</span></div>
+        <div class="segs" id="presets"></div>
+      </div>
+      <div class="row">
+        <div class="cap">タムの本数</div>
+        <div class="step">
+          <button id="tomDn" type="button" aria-label="減らす">−</button>
+          <span class="v" id="tomN">4 本</span>
+          <button id="tomUp" type="button" aria-label="増やす">＋</button>
+        </div>
+      </div>
+    </div>
+    <div class="cards" id="kitList"></div>
+  </div>
+
+  <div class="refs">
+    <div class="cap" style="padding-left:3px">リファレンス</div>
+
+    <details>
+      <summary>測り方</summary>
+      <div class="bd">
+        <ul>
+          <li>ラグ値は、フープから 2〜3cm 内側を軽く弾いて測った値です。チューニングアプリのラグモードを使います。</li>
+          <li>叩き方は<strong>指で軽く弾く（デコピン）</strong>。マレットだと裏面・シェル・部屋まで鳴ってしまい、狙ったヘッドの端の振動が読めません。弱く短い打撃ほど、張力そのものの値が素直に出ます。</li>
+          <li>読みが揺れるときは、ヘッドの中央に指先をそっと触れる（押し込まない）。他の太鼓もミュートすると安定します。</li>
+          <li>スネアはスナッピーを外し、タムはノーミュートで測ります。</li>
+          <li>対角線の順に少しずつ締め、全ラグを2〜3周して揃えます。</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>ラグ値と中央のピッチ</summary>
+      <div class="bd">
+        <p>フープ際を弾いたときに出る音と、中央を叩いたときに出る音は違います。中央は膜全体がゆっくり振動するので、ラグ値より低く出ます。</p>
+        <p>土台にしているのは「タムのサイズと音域・表裏の音程差 早見表」です。あの表は完全4度から均等まで全列で <code>√(打面 × 裏面) ÷ 基音</code> が 1.73 でほぼ一定になります。表裏を同じ値に張った場合、2枚は同じ状態なので各ヘッドの中央＝ドラムの実音。つまり</p>
+        <p><code>中央 ＝ ラグ値 ÷ 1.73</code></p>
+        <p>となります。この定義だと、ドラムの実音はちょうど表裏2つの中央ピッチの相乗平均になり、早見表とも矛盾しません。括弧内の数字はこの式で出しています。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>キーと音の決まり方</summary>
+      <div class="bd">
+        <p>キーを選ぶと各ドラムの実音が決まり、指定した表裏の音程差でラグ値に振り分けられます。</p>
+        <p><code>打面 = 実音 × 1.73 ÷ √比</code>　<code>裏面 = 実音 × 1.73 × √比</code></p>
+        <p>この式で早見表の全列が 1Hz 以内で再現できます。<strong>表裏の音程差を変えても実音は動きません</strong>。裏を高くしても、低くしても、表と同じ値にしても使えるのはこのためです。</p>
+        <p>マイナーキーは平行調のメジャーと同じチューニングになります。E♭m は G♭、C#m は E と同じです。使う音が同じなので、鳴り自体を変える必要がありません。</p>
+        <p>各ドラムの「実音」はスケールの音の中で上下できます。タムの並びを変えたいとき、特定の太鼓だけ合わなく感じるときに動かしてください。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>実音の確かさ</summary>
+      <div class="bd">
+        <p>表裏のラグ値から実音を厳密に計算することはできません。実音は表裏ヘッドの連成振動と胴の共鳴で決まるので、差音でも倍音比でも出ません。ここで出しているのは早見表から逆算した推定値です。</p>
+        <p>タムについては、この式で出した音が選んだキーのスケール音にほぼ誤差なく乗ります。ずれは最大7セント程度です。</p>
+        <p>キックとスネアは <span class="tag b">参考</span> と表示されます。式のもとになった早見表が 10〜16 インチのタムのデータなので、バスドラムや裏を大きく張るスネアでは誤差が大きくなります。</p>
+        <p>実際の音は<strong>チューニングアプリの実音測定モード</strong>で確かめてください。周波数と音名の対応は <a href="https://tomari.org/main/java/oto.html" target="_blank" rel="noopener">tomari.org の音階周波数表</a>（A4=440Hz 平均律）が使えます。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>口径と深さ</summary>
+      <div class="bd">
+        <p>口径は<strong>実用レンジの判定</strong>に使います。早見表の口径別の帯（10"=196–277、12"=165–233、14"=123–174、16"=104–147 Hz）を対数補間して目安を出し、打面ラグがそこから外れると注意が出ます。<strong>標準ラグ数</strong>の初期値も口径から決まります。</p>
+        <p>深さは記録用です。早見表が口径別のデータなので、深さを計算に入れる根拠がありません。実際には深い胴ほど低めに落ち着くので、同じ口径でレンジの下寄りを狙うときの判断材料として見てください。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>チューナーの使い方</summary>
+      <div class="bd">
+        <ul>
+          <li>ドラムとヘッドを選ぶと、円の中央に目標ラグ値が出ます。</li>
+          <li>円周のラグをタップして、測った Hz を入れて記録。自動で次のラグに進みます。</li>
+          <li>ラグの色は目標との差です。緑は ±1.5% 以内、黄は ±3.5% 以内、赤はそれより外。</li>
+          <li>ばらつきが小さいほど、ヘッドが均等に張れています。平均が目標に乗っていても、ばらつきが大きければ鳴りは濁ります。</li>
+          <li>耳で合わせるなら「持続」。目標音が鳴り続けるので、弾いた音と重ねてうなりが消えるところを探せます。うなりの速さがそのままずれの大きさです。</li>
+          <li>「次へ」で同じドラムの裏面、その次のドラムへと順に進みます。</li>
+          <li>測定値はこの端末にだけ残ります。</li>
+        </ul>
+        <p><strong>マイクで測る</strong>は、このページをウェブサイトとして開いたときだけ動きます。読み取りは FFT でスペクトルの最強ピークを拾う方式で、探す範囲は目標の前後5半音に絞ってあります。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。しきい値は暗騒音から自動で決まります。</p>
+        <p>低い音ほど部屋の影響を受けます。響きの大きい部屋では、16" フロアやバスドラムのような低い太鼓で、弾いた音ではなく部屋の共鳴を拾うことがあります。おおむね 140Hz 以上は安定しますが、それより下は読みが揺れたら手入力に切り替えてください。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>ビビリが出たとき</summary>
+      <div class="bd">
+        <p>まず<strong>中央の実測値</strong>を見ます。括弧内の目安より大きく下がっている側のヘッドは、シェルに均等に密着していません。中央に残った微細なシワが叩いた瞬間に波打ってビビリます。</p>
+        <ul>
+          <li>そのヘッドを一度全部緩める</li>
+          <li>手のひらで中央を押し込んでシェルに馴染ませる（シーティング）</li>
+          <li>対角線の順に少しずつ締め直し、目標ラグ値まで戻す</li>
+        </ul>
+        <p>新品のヘッドは張り替え直後に特にこれが必要です。それでも残るなら、フロアのレッグ、テンションボルトの緩み、ラグ内部のスプリング、マウント金具、スネアのスナッピー共鳴を順に疑ってください。叩いた瞬間に手で押さえて止まるかどうかで場所が特定できます。</p>
+      </div>
+    </details>
+  </div>
+
+  <footer>キット構成・口径・深さ・ラグ数は「キット」タブで変更できます。設定と測定値はこの端末に保存されます。</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEYS=["C","D♭","D","E♭","E","F","G♭","G","A♭","A","B♭","B"];
+  // マイナーは慣用的な綴りに（E の平行調は D♭m ではなく C#m）
+  var MKEY=["Cm","C#m","Dm","E♭m","Em","Fm","F#m","Gm","G#m","Am","B♭m","Bm"];
+  var FLATK={1:1,3:1,5:1,6:1,8:1,10:1};
+  var SH=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  var FL=["C","D♭","D","E♭","E","F","G♭","G","A♭","A","B♭","B"];
+  var MAJ=[0,2,4,5,7,9,11];
+  var GB=6, R=1.73;
+
+  // 実測レシピ2本から √(表×裏)/1.73 で逆算した基音（G♭ でのHz）
+  var SER=[174.50,138.5114,116.6141,92.7111,77.7258,61.8956,52.0500];
+  var VC={low:{s:2,kick:39.8844,snare:157.8362},high:{s:1,kick:40.2273,snare:157.8362}};
+  var IV_T=-3, IV_K=0, IV_S=5.4929;
+  var TAB=[[10,196,277],[12,165,233],[14,123,174],[16,104,147]];
+  var IVO=[[6,"増4度（裏が高い）"],[5,"完全4度（裏が高い）"],[4,"長3度（裏が高い）"],[3,"短3度（裏が高い）"],
+           [1,"半音（裏が高い）"],[0,"均等（表と同じ値）"],[-1,"半音下（裏が低い）"],[-3,"短3度下（裏が低い）"],
+           [-4,"長3度下（裏が低い）"],[-5,"完全4度下（裏が低い）"]];
+
+  var PRE={
+    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]]},
+    std:{label:"標準 4点",kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[14,14],[16,16]]},
+    t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]]},
+    cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
+  };
+
+  function lugsFor(k,d){return k==="kick"?(d>=20?10:8):k==="snare"?10:(d<14?6:8);}
+  function rangeFor(d){
+    if(!(d>0)) return null;
+    var a,b,i,t;
+    if(d<=TAB[0][0]){a=TAB[0];b=TAB[1];}
+    else if(d>=TAB[TAB.length-1][0]){a=TAB[TAB.length-2];b=TAB[TAB.length-1];}
+    else for(i=0;i<TAB.length-1;i++){if(d>=TAB[i][0]&&d<=TAB[i+1][0]){a=TAB[i];b=TAB[i+1];break;}}
+    if(!a) return null;
+    t=(Math.log(d)-Math.log(a[0]))/(Math.log(b[0])-Math.log(a[0]));
+    function ip(x,y){return Math.round(Math.exp(Math.log(x)+t*(Math.log(y)-Math.log(x))));}
+    return [ip(a[1],b[1]),ip(a[2],b[2])];
+  }
+  function noteOf(hz,flat){
+    if(!(hz>0)) return null;
+    var n=12*Math.log2(hz/440),r=Math.round(n),c=Math.round((n-r)*100);
+    return {name:(flat?FL:SH)[((r+9)%12+12)%12]+(4+Math.floor((r+9)/12)),cents:c};
+  }
+  function cts(c){return (c>0?"+":c<0?"−":"±")+Math.abs(c)+"¢";}
+  function ivName(v){
+    for(var i=0;i<IVO.length;i++) if(IVO[i][0]===v) return IVO[i][1];
+    return "裏 "+(v>0?"+":"−")+Math.abs(Math.round(v*10)/10)+"半音";
+  }
+  // 平行調は同じ鳴りにする：マイナーは相対メジャーの主音で移調
+  function rootOf(ki,mode){return mode==="minor"?(ki+3)%12:ki;}
+  function offs(ki,mode){var d=rootOf(ki,mode)-GB; if(d>5)d-=12; if(d<-6)d+=12; return d;}
+  // 基準の音からスケール上を steps 段動かしたときの半音数
+  function scaleShift(hz,rootPc,steps){
+    if(!steps||!(hz>0)) return 0;
+    var n=Math.round(12*Math.log2(hz/440)), pc=((n+9)%12+12)%12;
+    var rel=((pc-rootPc)%12+12)%12, idx=0, bd=99, i, d;
+    for(i=0;i<MAJ.length;i++){d=Math.abs(MAJ[i]-rel); if(d<bd){bd=d;idx=i;}}
+    var cur=MAJ[idx], tg=idx+steps, oc=Math.floor(tg/MAJ.length);
+    return MAJ[((tg%MAJ.length)+MAJ.length)%MAJ.length]+12*oc-cur;
+  }
+
+  function buildKit(id){
+    var p=PRE[id], out=[];
+    out.push({id:"kick",kind:"kick",name:"キック",dia:p.kick[0],dep:p.kick[1],lugs:lugsFor("kick",p.kick[0]),iv:IV_K,deg:0});
+    out.push({id:"snare",kind:"snare",name:"スネア",dia:p.snare[0],dep:p.snare[1],lugs:lugsFor("snare",p.snare[0]),iv:IV_S,deg:0});
+    p.toms.forEach(function(t,i){
+      out.push({id:"t"+i,kind:"tom",name:"タム "+(i+1),dia:t[0],dep:t[1],lugs:lugsFor("tom",t[0]),iv:IV_T,deg:0});
+    });
+    return out;
+  }
+
+  var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"recipe",theme:"auto",
+          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
+  try{
+    var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
+    if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
+      st.keys=sv.keys.filter(function(k){return typeof k==="number"&&KEYS[k];});
+      if(!st.keys.length) st.keys=[6];
+      st.live=st.keys.indexOf(sv.live)>=0?sv.live:st.keys[0];
+      if(sv.mode==="major"||sv.mode==="minor") st.mode=sv.mode;
+      if(sv.voic==="low"||sv.voic==="high") st.voic=sv.voic;
+      if(sv.theme==="auto"||sv.theme==="light"||sv.theme==="dark") st.theme=sv.theme;
+      if(typeof sv.nudge==="number"&&Math.abs(sv.nudge)<=2) st.nudge=sv.nudge;
+      if(Object.prototype.toString.call(sv.drums)==="[object Array]"&&sv.drums.length>=3){
+        st.drums=sv.drums;
+        st.drums.forEach(function(d){if(typeof d.deg!=="number") d.deg=0;});
+      }
+      if(PRE[sv.preset]) st.preset=sv.preset;
+      if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
+      if(typeof sv.tid==="string") st.tid=sv.tid;
+      if(sv.thead==="top"||sv.thead==="bot") st.thead=sv.thead;
+    }
+  }catch(e){}
+  function save(){try{localStorage.setItem("tuning4",JSON.stringify(st));}catch(e){}}
+  function byId(id){for(var i=0;i<st.drums.length;i++) if(st.drums[i].id===id) return st.drums[i]; return null;}
+  function toms(){return st.drums.filter(function(d){return d.kind==="tom";});}
+  if(!byId(st.tid)) st.tid=st.drums[2]?st.drums[2].id:"kick";
+
+  function applyTheme(){
+    if(st.theme==="auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme",st.theme);
+  }
+  applyTheme();
+
+  function baseFund(voic,d){
+    if(d.kind==="kick") return VC[voic].kick;
+    if(d.kind==="snare") return VC[voic].snare;
+    var i=VC[voic].s+Math.max(0,toms().indexOf(d));
+    return i<SER.length?SER[i]:SER[SER.length-1]*Math.pow(2,-(i-SER.length+1)*3/12);
+  }
+  function calc(ki,mode,voic,nudge,d){
+    var b=baseFund(voic,d);
+    var f=b*Math.pow(2,(offs(ki,mode)+nudge+scaleShift(b,GB,d.deg||0))/12);
+    var g=f*R, h=Math.pow(2,d.iv/24);
+    return {top:Math.round(g/h),bot:Math.round(g*h),fund:f};
+  }
+  function partsOf(ki,mode,voic,nudge){
+    return st.drums.map(function(d){
+      var c=calc(ki,mode,voic,nudge,d), r=d.kind==="tom"?rangeFor(d.dia):null, w=null;
+      if(r){ if(c.top<r[0]*0.97) w={lo:1,lim:r[0]}; else if(c.top>r[1]*1.03) w={lo:0,lim:r[1]}; }
+      return {d:d,top:c.top,bot:c.bot,fund:c.fund,warn:w};
+    });
+  }
+  function recommend(ki){
+    function miss(v){
+      var n=0;
+      st.drums.forEach(function(d){
+        if(d.kind!=="tom") return;
+        var r=rangeFor(d.dia); if(!r) return;
+        var t=calc(ki,st.mode,v,0,d).top;
+        if(t<r[0]*0.97||t>r[1]*1.03) n++;
+      });
+      return n;
+    }
+    return miss("low")<=miss("high")?"low":"high";
+  }
+  function keyName(i){return st.mode==="minor"?MKEY[i]:KEYS[i];}
+
+  /* ---------- audio ---------- */
+  var ac=null,shot=null,drone=null;
+  function ctx(){
+    if(!ac){var A=window.AudioContext||window.webkitAudioContext; if(!A) return null; ac=new A();}
+    if(ac.state==="suspended") ac.resume();
+    return ac;
+  }
+  function voice(hz,a){
+    var g=a.createGain(),os=[];
+    [[1,1],[2,0.34],[3,0.16]].forEach(function(p){
+      var o=a.createOscillator(),og=a.createGain();
+      o.type="sine"; o.frequency.value=hz*p[0]; og.gain.value=p[1];
+      o.connect(og); og.connect(g); os.push(o);
+    });
+    g.connect(a.destination);
+    return {g:g,os:os};
+  }
+  function ping(hz,btn){
+    var a=ctx(); if(!a||!(hz>0)) return;
+    if(shot){try{shot.os.forEach(function(o){o.stop();});}catch(e){} shot=null;}
+    var v=voice(hz,a),n=a.currentTime;
+    v.g.gain.setValueAtTime(0,n);
+    v.g.gain.linearRampToValueAtTime(0.5,n+0.02);
+    v.g.gain.setValueAtTime(0.5,n+1.4);
+    v.g.gain.linearRampToValueAtTime(0,n+1.8);
+    v.os.forEach(function(o){o.start(n);o.stop(n+1.85);});
+    shot=v;
+    if(btn){btn.classList.add("on");setTimeout(function(){btn.classList.remove("on");},1800);}
+  }
+  function droneOff(){
+    if(!drone) return;
+    try{
+      var n=ac.currentTime, old=drone;
+      old.g.gain.cancelScheduledValues(n);
+      old.g.gain.setTargetAtTime(0,n,0.03);
+      setTimeout(function(){old.os.forEach(function(o){try{o.stop();}catch(e){}});},250);
+    }catch(e){}
+    drone=null;
+  }
+  function droneOn(hz){
+    var a=ctx(); if(!a||!(hz>0)) return;
+    droneOff();
+    var v=voice(hz,a),n=a.currentTime;
+    v.g.gain.setValueAtTime(0,n);
+    v.g.gain.linearRampToValueAtTime(0.32,n+0.05);
+    v.os.forEach(function(o){o.start(n);});
+    drone=v;
+  }
+
+  /* ---------- mic（ウェブサイトとして開いたときのみ） ---------- */
+  var mic={on:false,stream:null,src:null,an:null,buf:null,raf:0,armed:true,last:0,floor:0.002};
+  function dsample(buf,sr,tgt){
+    var f=Math.max(1,Math.floor(sr/tgt)),n=Math.floor(buf.length/f);
+    var o=new Float32Array(n),i,j,s;
+    for(i=0;i<n;i++){s=0;for(j=0;j<f;j++)s+=buf[i*f+j];o[i]=s/f;}
+    return {d:o,sr:sr/f};
+  }
+  function fft(re,im){
+    var n=re.length,i,j=0,k,m,t,wr,wi,tr,ti,sp,ag;
+    for(i=0;i<n-1;i++){
+      if(i<j){t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}
+      k=n>>1; while(k<=j){j-=k;k>>=1;} j+=k;
+    }
+    for(m=1;m<n;m<<=1){
+      sp=m<<1; ag=-Math.PI/m;
+      for(k=0;k<m;k++){
+        wr=Math.cos(ag*k); wi=Math.sin(ag*k);
+        for(i=k;i<n;i+=sp){
+          j=i+m;
+          tr=wr*re[j]-wi*im[j]; ti=wr*im[j]+wi*re[j];
+          re[j]=re[i]-tr; im[j]=im[i]-ti; re[i]+=tr; im[i]+=ti;
+        }
+      }
+    }
+  }
+  // 膜は倍音が整数比にならないので、基本周波数ではなくスペクトルの最強ピークを採る
+  function detect(buf,sr,fmin,fmax){
+    var n=buf.length,i,m=0,v;
+    for(i=0;i<n;i++) m+=buf[i];
+    m/=n;
+    var e=0; for(i=0;i<n;i++){v=buf[i]-m;e+=v*v;}
+    if(Math.sqrt(e/n)<0.0012) return null;
+    var N=1; while(N<n) N<<=1; N<<=1;
+    var re=new Float64Array(N),im=new Float64Array(N);
+    for(i=0;i<n;i++) re[i]=(buf[i]-m)*(0.5-0.5*Math.cos(2*Math.PI*i/(n-1)));
+    fft(re,im);
+    var df=sr/N, lo=Math.max(1,Math.round(fmin/df)), hi=Math.min((N>>1)-2,Math.round(fmax/df));
+    if(hi<=lo) return null;
+    var mag=new Float64Array(hi+3),bi=-1,bv=0;
+    for(i=lo-1;i<=hi+1;i++) mag[i]=Math.sqrt(re[i]*re[i]+im[i]*im[i]);
+    for(i=lo;i<=hi;i++) if(mag[i]>bv){bv=mag[i];bi=i;}
+    if(bi<1||bv<=0) return null;
+    var y1=Math.log(mag[bi-1]+1e-12),y2=Math.log(mag[bi]+1e-12),y3=Math.log(mag[bi+1]+1e-12);
+    var dn=y1-2*y2+y3, dd=dn!==0?0.5*(y1-y3)/dn:0;
+    if(!(dd>-1&&dd<1)) dd=0;
+    return {hz:(bi+dd)*df};
+  }
+  function micMsg(){
+    elMn.hidden=false;
+    elMn.innerHTML='この画面ではマイクを使えません。ページがアプリの中に埋め込まれているあいだは、'
+      +'ブラウザの権限設定にかかわらずマイクが届かないためです。<strong>ウェブサイトとして開いた場合は、このボタンから使えます。</strong>';
+  }
+  function micStop(){
+    mic.on=false;
+    if(mic.raf) cancelAnimationFrame(mic.raf);
+    mic.raf=0;
+    try{if(mic.src) mic.src.disconnect();}catch(e){}
+    try{if(mic.stream) mic.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
+    mic.stream=null;mic.src=null;mic.an=null;
+    elMic.setAttribute("aria-pressed","false"); elMic.textContent="マイクで測る";
+    elDrone.disabled=false; elLvl.hidden=true;
+    render();
+  }
+  function micStart(){
+    var a=ctx();
+    if(!a||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){micMsg();return;}
+    navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})
+      .then(function(s){
+        mic.stream=s; mic.src=a.createMediaStreamSource(s);
+        mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
+        mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
+        mic.on=true; mic.armed=true; mic.last=0; mic.floor=0.002;
+        droneOff(); elDrone.setAttribute("aria-pressed","false");
+        elDrone.textContent="持続"; elDrone.disabled=true;
+        elMic.setAttribute("aria-pressed","true"); elMic.textContent="マイクを止める";
+        elLvl.hidden=false; elMn.hidden=true;
+        render(); micLoop();
+      })
+      .catch(micMsg);
+  }
+  function micLoop(){
+    if(!mic.on) return;
+    mic.raf=requestAnimationFrame(micLoop);
+    var an=mic.an,b=mic.buf; if(!an) return;
+    an.getFloatTimeDomainData(b);
+    var n=b.length,i,s=0;
+    for(i=n-1024;i<n;i++) s+=b[i]*b[i];
+    var rms=Math.sqrt(s/1024), now=(window.performance&&performance.now)?performance.now():Date.now();
+    elLvlB.style.width=Math.min(100,Math.sqrt(rms/0.05)*100).toFixed(0)+"%";
+    // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
+    var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
+    if(mic.armed&&rms>thr&&now-mic.last>650){
+      mic.armed=false; mic.last=now;
+      setTimeout(micGrab,280);
+    } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
+    if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
+  }
+  function micGrab(){
+    if(!mic.on||!mic.an) return;
+    var d=byId(st.tid); if(!d) return;
+    var c=calc(st.live,st.mode,st.voic,st.nudge,d), tg=st.thead==="top"?c.top:c.bot;
+    mic.an.getFloatTimeDomainData(mic.buf);
+    var ds=dsample(mic.buf,ac.sampleRate,4000);
+    var r=detect(ds.d,ds.sr,Math.max(35,tg*0.75),Math.min(460,tg*1.34));
+    if(r&&r.hz>0&&isFinite(r.hz)){ elIn.value=(Math.round(r.hz*10)/10).toFixed(1); commit(); }
+  }
+
+  /* ---------- elements ---------- */
+  var E=function(i){return document.getElementById(i);};
+  var elKeys=E("keys"),elPicked=E("picked"),elModes=E("modes"),elVoics=E("voics"),
+      elCards=E("cards"),elBand=E("band"),elNV=E("nv"),elUp=E("up"),elDn=E("dn"),
+      elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
+      elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),
+      elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
+      elV=E("tV"),elTN=E("tN"),elTS=E("tS"),elPresets=E("presets"),
+      elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),elMic=E("tMic"),
+      elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB");
+  var lug=0;
+
+  [["auto","◐","自動"],["light","☀","ライト"],["dark","☾","ダーク"]].forEach(function(p){
+    var b=document.createElement("button");
+    b.type="button"; b.dataset.thm=p[0]; b.textContent=p[1];
+    b.title="配色 "+p[2]; b.setAttribute("aria-label","配色 "+p[2]);
+    b.addEventListener("click",function(){st.theme=p[0];applyTheme();save();render();});
+    elThm.appendChild(b);
+  });
+  [["major","メジャー"],["minor","マイナー"]].forEach(function(p){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sg"; b.dataset.mode=p[0]; b.textContent=p[1];
+    b.addEventListener("click",function(){st.mode=p[0];st.voic=recommend(st.live);save();render();});
+    elModes.appendChild(b);
+  });
+  KEYS.forEach(function(k,i){
+    var b=document.createElement("button");
+    b.type="button"; b.className="k";
+    b.addEventListener("click",function(){
+      var at=st.keys.indexOf(i);
+      if(at<0){st.keys.push(i);st.keys.sort(function(a,c){return a-c;});st.live=i;}
+      else st.live=i;
+      st.voic=recommend(i); st.nudge=0; save(); render();
+    });
+    elKeys.appendChild(b);
+  });
+  [["low","低め"],["high","高め"]].forEach(function(p){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sg"; b.dataset.voic=p[0];
+    b.innerHTML='<span></span><small hidden>おすすめ</small>';
+    b.firstChild.textContent=p[1];
+    b.addEventListener("click",function(){st.voic=p[0];save();render();});
+    elVoics.appendChild(b);
+  });
+  elUp.addEventListener("click",function(){if(st.nudge<2){st.nudge++;save();render();}});
+  elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
+    t.addEventListener("click",function(){st.view=t.dataset.v;droneOff();save();render();});
+  });
+  ["top","bot"].forEach(function(h){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sg"; b.dataset.head=h;
+    b.textContent=h==="top"?"打面":"裏面";
+    b.addEventListener("click",function(){st.thead=h;lug=0;save();render();});
+    elHeads.appendChild(b);
+  });
+  Object.keys(PRE).forEach(function(id){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sg"; b.dataset.pre=id; b.textContent=PRE[id].label;
+    b.addEventListener("click",function(){
+      st.drums=buildKit(id); st.preset=id; st.meas={};
+      st.tid=st.drums[2].id; lug=0; st.voic=recommend(st.live); save(); render();
+    });
+    elPresets.appendChild(b);
+  });
+  E("tomUp").addEventListener("click",function(){
+    var ts=toms(); if(ts.length>=5) return;
+    var last=ts[ts.length-1], i=ts.length, dia=Math.min(18,(last?last.dia:14)+2);
+    st.drums.push({id:"t"+i,kind:"tom",name:"タム "+(i+1),dia:dia,dep:last?last.dep:14,
+                   lugs:lugsFor("tom",dia),iv:IV_T,deg:0});
+    save();render();
+  });
+  E("tomDn").addEventListener("click",function(){
+    var ts=toms(); if(ts.length<=1) return;
+    var g=ts[ts.length-1];
+    st.drums=st.drums.filter(function(d){return d!==g;});
+    delete st.meas[g.id+"|top"]; delete st.meas[g.id+"|bot"];
+    if(st.tid===g.id) st.tid=st.drums[st.drums.length-1].id;
+    save();render();
+  });
+  E("tClr").addEventListener("click",function(){delete st.meas[st.tid+"|"+st.thead];lug=0;save();render();});
+  E("tPlay").addEventListener("click",function(){
+    var d=byId(st.tid); if(!d) return;
+    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    ping(st.thead==="top"?c.top:c.bot,null);
+  });
+  E("tNext").addEventListener("click",function(){
+    if(st.thead==="top") st.thead="bot";
+    else{
+      st.thead="top";
+      var i=st.drums.indexOf(byId(st.tid));
+      st.tid=st.drums[(i+1)%st.drums.length].id;
+    }
+    lug=0;
+    if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
+    save(); render();
+  });
+  elDrone.addEventListener("click",function(){
+    if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";return;}
+    var d=byId(st.tid); if(!d) return;
+    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    droneOn(st.thead==="top"?c.top:c.bot);
+    elDrone.setAttribute("aria-pressed","true"); elDrone.textContent="止める";
+  });
+  elMic.addEventListener("click",function(){ if(mic.on) micStop(); else micStart(); });
+  E("tOk").addEventListener("click",commit);
+  elIn.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();commit();}});
+
+  function measOf(id,h){
+    var a=st.meas[id+"|"+h];
+    return Object.prototype.toString.call(a)==="[object Array]"?a:[];
+  }
+  function commit(){
+    var d=byId(st.tid); if(!d) return;
+    var v=parseFloat(elIn.value),n=d.lugs,a=measOf(d.id,st.thead).slice();
+    while(a.length<n) a.push(null);
+    a.length=n;
+    a[lug]=(isFinite(v)&&v>0)?Math.round(v*10)/10:null;
+    st.meas[d.id+"|"+st.thead]=a;
+    lug=(lug+1)%n;
+    elIn.value=""; save(); render();
+    if(!mic.on) elIn.focus();
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    Array.prototype.forEach.call(elThm.children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.thm===st.theme?"true":"false");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
+      t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
+    });
+    elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune"; elVK.hidden=st.view!=="kit";
+    elKeyPane.hidden=st.view==="kit";
+
+    Array.prototype.forEach.call(elModes.children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.mode===st.mode?"true":"false");
+    });
+    Array.prototype.forEach.call(elKeys.children,function(b,i){
+      b.textContent=keyName(i);
+      b.dataset.on=st.keys.indexOf(i)>=0?"1":"0";
+      b.dataset.live=i===st.live?"1":"0";
+    });
+    elPicked.hidden=st.keys.length<2;
+    elPicked.innerHTML="";
+    if(st.keys.length>1) st.keys.forEach(function(k){
+      var w=document.createElement("span");
+      w.className="pk"; w.dataset.live=k===st.live?"1":"0";
+      var t=document.createElement("b"); t.textContent=keyName(k);
+      t.addEventListener("click",function(){st.live=k;st.voic=recommend(k);st.nudge=0;save();render();});
+      var x=document.createElement("button");
+      x.type="button"; x.textContent="×"; x.setAttribute("aria-label",keyName(k)+" を外す");
+      x.addEventListener("click",function(){
+        if(st.keys.length<=1) return;
+        st.keys=st.keys.filter(function(v){return v!==k;});
+        if(st.live===k){st.live=st.keys[0];st.voic=recommend(st.live);st.nudge=0;}
+        save();render();
+      });
+      w.appendChild(t); w.appendChild(x); elPicked.appendChild(w);
+    });
+
+    var rec=recommend(st.live);
+    Array.prototype.forEach.call(elVoics.children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.voic===st.voic?"true":"false");
+      b.querySelector("small").hidden=b.dataset.voic!==rec;
+    });
+    elNV.textContent=(st.nudge>0?"+":st.nudge<0?"−":"±")+Math.abs(st.nudge)+" 半音";
+    elUp.disabled=st.nudge>=2; elDn.disabled=st.nudge<=-2;
+
+    if(st.view==="recipe") rRecipe(); else if(st.view==="tune") rTuner(); else rKit();
+  }
+
+  function dfltIv(d){return d.kind==="kick"?IV_K:d.kind==="snare"?IV_S:IV_T;}
+
+  function rRecipe(){
+    var flat=!!FLATK[rootOf(st.live,st.mode)];
+    var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg;});
+    var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.voic==="low")||(offs(st.live,st.mode)===-2&&st.voic==="high"));
+    elBand.innerHTML="";
+    var tg=document.createElement("span");
+    tg.className="tag "+(base?"a":"b"); tg.textContent=base?"実測の基準":"算出";
+    elBand.appendChild(tg);
+    var tx=document.createElement("span"), dd=offs(st.live,st.mode)+st.nudge;
+    tx.textContent=base
+      ? keyName(st.live)+"。実際に張って詰めた基準レシピそのものの値です。"
+      : keyName(st.live)+" ／ 基準レシピを "+(dd===0?"そのまま":(dd>0?"+":"−")+Math.abs(dd)+"半音")
+        +" 移調"+(stock?"":"、音の高さを調整")+"した値です。";
+    elBand.appendChild(tx);
+
+    elCards.innerHTML="";
+    partsOf(st.live,st.mode,st.voic,st.nudge).forEach(function(p,i){
+      var d=p.d, card=document.createElement("div");
+      card.className="card"+(i===2?" gap":"");
+
+      var ch=document.createElement("div"); ch.className="ch";
+      var bdg=document.createElement("span"); bdg.className="badge "+d.kind;
+      bdg.appendChild(document.createElement("i"));
+      bdg.appendChild(document.createTextNode(d.name));
+      var sz=document.createElement("span"); sz.className="sz"; sz.textContent=d.dia+"×"+d.dep+" inch";
+      ch.appendChild(bdg); ch.appendChild(sz);
+
+      var pw=document.createElement("div"); pw.className="pitch";
+      var pv=document.createElement("div"); pv.className="pv";
+      var fn=noteOf(p.fund,flat);
+      var pb=document.createElement("b"); pb.textContent="実音 "+(fn?fn.name:"—");
+      var ps=document.createElement("span"); ps.textContent=p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
+      pv.appendChild(pb); pv.appendChild(ps);
+      var stp=document.createElement("div"); stp.className="step";
+      [["−",-1],["＋",1]].forEach(function(o){
+        var b=document.createElement("button");
+        b.type="button"; b.textContent=o[0];
+        b.setAttribute("aria-label",d.name+"の実音を"+(o[1]>0?"上げる":"下げる"));
+        b.addEventListener("click",function(){
+          d.deg=Math.max(-7,Math.min(7,(d.deg||0)+o[1])); save(); render();
+        });
+        stp.appendChild(b);
+      });
+      pw.appendChild(pv); pw.appendChild(stp);
+      ch.appendChild(pw); card.appendChild(ch);
+
+      var hh=document.createElement("div"); hh.className="hh";
+      [["t","打面",p.top],["b","裏面",p.bot]].forEach(function(c){
+        var box=document.createElement("div"); box.className="h "+c[0];
+        var hl=document.createElement("div"); hl.className="hl";
+        var lt=document.createElement("span"); lt.textContent=c[1]; hl.appendChild(lt);
+        var pl=document.createElement("button");
+        pl.type="button"; pl.textContent="♪";
+        pl.setAttribute("aria-label",d.name+" "+c[1]+"の音を鳴らす");
+        pl.addEventListener("click",function(){ping(c[2],pl);});
+        hl.appendChild(pl);
+        var bn=document.createElement("div"); bn.className="big"; bn.textContent=c[2];
+        var u=document.createElement("u"); u.textContent="Hz"; bn.appendChild(u);
+        var nn=document.createElement("div"); nn.className="nn";
+        var n1=noteOf(c[2],flat);
+        nn.textContent=n1?n1.name+" ":"";
+        var ic=document.createElement("i"); ic.textContent=n1?cts(n1.cents):""; nn.appendChild(ic);
+        var cc=document.createElement("div"); cc.className="cc";
+        var cen=c[2]/R, n2=noteOf(cen,flat);
+        cc.textContent="（中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"")+"）";
+        box.appendChild(hl); box.appendChild(bn); box.appendChild(nn); box.appendChild(cc);
+        hh.appendChild(box);
+      });
+      card.appendChild(hh);
+
+      var cf=document.createElement("div"); cf.className="cf";
+      var lb=document.createElement("label"); lb.textContent="表裏の差";
+      lb.setAttribute("for","iv-"+d.id);
+      var sel=document.createElement("select"); sel.id="iv-"+d.id;
+      var opts=IVO.slice(),has=false,j;
+      for(j=0;j<opts.length;j++) if(opts[j][0]===d.iv) has=true;
+      if(!has) opts.unshift([d.iv,"既定 "+ivName(d.iv)]);
+      opts.forEach(function(o){
+        var op=document.createElement("option");
+        op.value=String(o[0]); op.textContent=o[1];
+        if(o[0]===d.iv) op.selected=true;
+        sel.appendChild(op);
+      });
+      sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
+      var go=document.createElement("button");
+      go.type="button"; go.className="go"; go.textContent="合わせる";
+      go.addEventListener("click",function(){st.tid=d.id;st.thead="top";st.view="tune";lug=0;save();render();});
+      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(go);
+      card.appendChild(cf);
+
+      if(p.warn){
+        var w=document.createElement("div"); w.className="warn";
+        var wb=document.createElement("b"); wb.textContent=p.warn.lo?"張力低め":"張力高め";
+        var wt=document.createElement("span");
+        wt.textContent=p.warn.lo
+          ? d.dia+'" の目安（'+p.warn.lim+"Hz 以上）を下回ります。シワが残るようなら実音を一段上げてください。"
+          : d.dia+'" の目安（'+p.warn.lim+"Hz 以下）を超えます。張りすぎが気になるなら一段下げてください。";
+        w.appendChild(wb); w.appendChild(wt); card.appendChild(w);
+      }
+      elCards.appendChild(card);
+    });
+
+    if(st.keys.length<2) elCmpW.hidden=true;
+    else{
+      elCmpW.hidden=false;
+      var h="<thead><tr><th>ドラム</th>";
+      st.keys.forEach(function(k){h+='<th class="'+(k===st.live?"on":"")+'">'+keyName(k)+"</th>";});
+      h+='</tr><tr><th style="font-weight:400">タムの高さ</th>';
+      st.keys.forEach(function(k){
+        h+='<th class="'+(k===st.live?"on":"")+'" style="font-weight:400">'
+          +((k===st.live?st.voic:recommend(k))==="low"?"低":"高")+"</th>";
+      });
+      h+="</tr></thead><tbody>";
+      st.drums.forEach(function(d){
+        h+="<tr><td>"+d.name+"</td>";
+        st.keys.forEach(function(k){
+          var on=k===st.live;
+          h+='<td class="'+(on?"on":"")+'">'
+            +calc(k,st.mode,on?st.voic:recommend(k),on?st.nudge:0,d).top+"</td>";
+        });
+        h+="</tr>";
+      });
+      elCmp.innerHTML=h+"</tbody>";
+    }
+  }
+
+  function rKit(){
+    Array.prototype.forEach.call(elPresets.children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.pre===st.preset?"true":"false");
+    });
+    elTomN.textContent=toms().length+" 本";
+    elKit.innerHTML="";
+    st.drums.forEach(function(d){
+      var c=document.createElement("div"); c.className="card";
+      var kh=document.createElement("div"); kh.className="ch";
+      var bdg=document.createElement("span"); bdg.className="badge "+d.kind;
+      bdg.appendChild(document.createElement("i"));
+      bdg.appendChild(document.createTextNode(d.name));
+      var rr=document.createElement("span"); rr.className="rr";
+      var r=d.kind==="tom"?rangeFor(d.dia):null;
+      rr.textContent=r?("実用 "+r[0]+"–"+r[1]+" Hz"):"";
+      kh.appendChild(bdg); kh.appendChild(rr); c.appendChild(kh);
+
+      var g=document.createElement("div"); g.className="g3";
+      function f(lbl,val,mn,mx,sp,fn){
+        var w=document.createElement("div"); w.className="fi";
+        var l=document.createElement("label"); l.textContent=lbl;
+        var inp=document.createElement("input");
+        inp.type="number"; inp.value=val; inp.min=mn; inp.max=mx; inp.step=sp;
+        inp.addEventListener("change",function(){
+          var v=parseFloat(inp.value);
+          if(isFinite(v)) fn(Math.max(mn,Math.min(mx,v)));
+          save(); render();
+        });
+        w.appendChild(l); w.appendChild(inp); return w;
+      }
+      g.appendChild(f("口径 inch",d.dia,4,30,0.5,function(v){
+        if(d.lugs===lugsFor(d.kind,d.dia)) d.lugs=lugsFor(d.kind,v);
+        d.dia=v;
+      }));
+      g.appendChild(f("深さ inch",d.dep,2,30,0.5,function(v){d.dep=v;}));
+      g.appendChild(f("ラグ数",d.lugs,4,12,1,function(v){d.lugs=Math.round(v);}));
+      c.appendChild(g);
+      elKit.appendChild(c);
+    });
+  }
+
+  function cssv(n){
+    var v=getComputedStyle(document.documentElement).getPropertyValue(n);
+    return (v&&v.trim())||"#888888";
+  }
+
+  function rTuner(){
+    var d=byId(st.tid);
+    if(!d){st.tid=st.drums[0].id; d=st.drums[0];}
+    elDrums.innerHTML="";
+    st.drums.forEach(function(x){
+      var b=document.createElement("button");
+      b.type="button"; b.textContent=x.name; b.dataset.kind=x.kind;
+      b.setAttribute("aria-pressed",x.id===d.id?"true":"false");
+      b.addEventListener("click",function(){
+        st.tid=x.id; lug=0;
+        if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
+        save(); render();
+      });
+      elDrums.appendChild(b);
+    });
+    Array.prototype.forEach.call(elHeads.children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.head===st.thead?"true":"false");
+    });
+
+    var flat=!!FLATK[rootOf(st.live,st.mode)];
+    var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var tgt=st.thead==="top"?cc.top:cc.bot, n=d.lugs, arr=measOf(d.id,st.thead);
+    var nt=noteOf(tgt,flat), ctr=tgt/R, cn=noteOf(ctr,flat);
+    elTN.textContent=String(tgt);
+    var u=document.createElement("u"); u.textContent="Hz"; elTN.appendChild(u);
+    elTS.textContent=d.name+" "+d.dia+'" ／ '+(st.thead==="top"?"打面":"裏面")
+      +(nt?"　"+nt.name+" "+cts(nt.cents):"")+"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）";
+
+    function cl(v){
+      if(!(v>0)) return "none";
+      var r=Math.abs(v-tgt)/tgt;
+      return r<=0.015?"good":r<=0.035?"close":"off";
+    }
+    var CO={good:cssv("--good"),close:cssv("--close"),off:cssv("--off"),none:cssv("--raise")};
+    var CARD=cssv("--card"), LINE=cssv("--line"), LHI=cssv("--line-hi"), SUNK=cssv("--sunk"),
+        FGT=cssv("--fg"), DIM=cssv("--dim"), FAINT=cssv("--faint"), ACC=cssv("--acc");
+    var ps=[],i;
+    ps.push('<circle cx="100" cy="100" r="90" fill="none" stroke="'+LINE+'" stroke-width="1"/>');
+    ps.push('<circle cx="100" cy="100" r="71" fill="'+SUNK+'" stroke="'+LINE+'" stroke-width="1.5"/>');
+    ps.push('<circle cx="100" cy="100" r="53" fill="none" stroke="'+LINE+'" stroke-width="1" stroke-dasharray="2 5"/>');
+    for(i=0;i<n;i++){
+      var a=(-90+360*i/n)*Math.PI/180, x=100+83*Math.cos(a), y=100+83*Math.sin(a);
+      var k=cl(arr[i]), on=i===lug;
+      ps.push('<g class="lug" data-l="'+i+'" role="button" tabindex="0" aria-label="ラグ'+(i+1)+'">');
+      if(on) ps.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="15.5" fill="none" stroke="'+ACC+'" stroke-width="2.5"/>');
+      ps.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="12" fill="'+CO[k]+'" stroke="'+(k==="none"?LHI:CO[k])+'" stroke-width="1"/>');
+      ps.push('<text x="'+x.toFixed(1)+'" y="'+(y+4).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="'+(k==="none"?DIM:CARD)+'">'+(i+1)+"</text></g>");
+    }
+    var vs=arr.filter(function(v){return v>0;});
+    if(vs.length){
+      var av=vs.reduce(function(s,v){return s+v;},0)/vs.length;
+      ps.push('<text x="100" y="97" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="23" font-weight="700" fill="'+FGT+'">'+av.toFixed(1)+"</text>");
+      ps.push('<text x="100" y="114" text-anchor="middle" font-family="M PLUS Rounded 1c, sans-serif" font-size="9.5" font-weight="700" fill="'+FAINT+'">平均 Hz</text>');
+    } else ps.push('<text x="100" y="105" text-anchor="middle" font-family="M PLUS Rounded 1c, sans-serif" font-size="12" font-weight="500" fill="'+FAINT+'">ラグをタップ</text>');
+    elSVG.innerHTML=ps.join("");
+    Array.prototype.forEach.call(elSVG.querySelectorAll(".lug"),function(g){
+      function pick(){lug=parseInt(g.dataset.l,10);render();if(!mic.on)elIn.focus();}
+      g.addEventListener("click",pick);
+      g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}});
+    });
+
+    var cur=arr[lug];
+    elIn.placeholder="ラグ "+(lug+1)+" の Hz";
+    if(cur>0){
+      var df=cur-tgt;
+      elV.className="vd "+cl(cur);
+      elV.textContent="ラグ "+(lug+1)+"　"+cur.toFixed(1)+" Hz　"
+        +(Math.abs(df)<0.05?"ぴったり":(df>0?"+"+df.toFixed(1)+" Hz ぶん緩める":df.toFixed(1)+" Hz ぶん締める"));
+    } else {
+      elV.className="vd idle";
+      elV.textContent=mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください";
+    }
+    var sA=E("sA"),sS=E("sS"),sD=E("sD");
+    if(vs.length){
+      var a2=vs.reduce(function(s,v){return s+v;},0)/vs.length;
+      var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs),sp=mx-mn;
+      sA.textContent=a2.toFixed(1); sA.style.color=CO[cl(a2)];
+      sS.textContent=sp.toFixed(1);
+      sS.style.color=sp/tgt<=0.015?CO.good:sp/tgt<=0.035?CO.close:CO.off;
+    } else {sA.textContent="—";sA.style.color="";sS.textContent="—";sS.style.color="";}
+    sD.textContent=vs.length+" / "+n;
+  }
+
+  render();
+  if(window.matchMedia){
+    try{
+      window.matchMedia("(prefers-color-scheme:dark)")
+        .addEventListener("change",function(){if(st.theme==="auto") render();});
+    }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
