@@ -178,8 +178,7 @@ th.on{color:var(--acc);font-weight:700}
 .dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
 .dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
-.pane.tune{justify-items:center;gap:9px;padding:11px}
-svg.hd{width:100%;max-width:252px;height:auto;display:block;touch-action:manipulation;margin:-2px 0;overflow:visible}
+svg.hd{width:100%;max-width:262px;height:auto;display:block;touch-action:manipulation;margin:2px 0;overflow:visible}
 svg.hd .lug{cursor:pointer}
 .editor{display:flex;align-items:center;gap:6px;width:100%;max-width:300px;padding:6px;border-radius:999px;background:var(--acc-soft)}
 .editor .el{font-size:11.5px;font-weight:700;color:var(--acc);padding-left:9px;white-space:nowrap}
@@ -192,15 +191,28 @@ svg.hd .lug{cursor:pointer}
 .opt{margin-top:-4px}
 .opt .row{gap:7px}
 .opt .bd{padding:0 13px 13px;display:grid;gap:12px}
-.chips{display:flex;align-items:center;gap:7px;justify-content:center}
-.chip{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--sunk);color:var(--dim);border:1px solid var(--line);transition:transform .1s}
-.chip:active{transform:scale(.95)}
-.tgt{text-align:center;font-size:12px;color:var(--dim);line-height:1.55}
-.tgt b{font-family:var(--mono);font-weight:600;color:var(--fg)}
-.ctx{width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border:0;border-radius:999px;background:var(--acc-soft);color:var(--acc);font-size:12.5px;font-weight:700;transition:transform .12s}
-.ctx:active{transform:scale(.97)}
-.ctx::after{content:"▾";font-size:11px;opacity:.7;transition:transform .2s}
-.ctx[aria-expanded="true"]::after{transform:rotate(180deg)}
+.chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
+.chip{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:7px 13px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .1s,border-color .15s}
+.chip:active{transform:scale(.93)}
+.chip::after{content:"▾";margin-left:5px;font-size:9px;opacity:.5}
+.tgt{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--dim);padding:7px 2px;white-space:nowrap}
+.tgt b{font-weight:700;color:var(--fg)}
+/* キー設定は開閉式 */
+.keyp{padding:0;gap:0}
+.keyp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:13px 15px;font-size:13px;font-weight:700;color:var(--acc)}
+.keyp>summary::-webkit-details-marker{display:none}
+.keyp>summary::before{content:"";width:8px;height:8px;flex:none;border-radius:50%;background:var(--acc)}
+.keyp>summary::after{content:"▾";margin-left:auto;font-size:12px;opacity:.65;transition:transform .2s}
+.keyp[open]>summary::after{transform:rotate(180deg)}
+.keyp[open]>summary{border-bottom:1px solid var(--line)}
+.kb{display:grid;gap:15px;padding:14px}
+
+/* チューナーはカードを外して図を主役にする */
+.tune{display:grid;justify-items:center;gap:10px;padding:2px 0 4px}
+.tune .dr{overflow-x:auto;flex-wrap:nowrap;width:100%;justify-content:flex-start;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tune .dr::-webkit-scrollbar{display:none}
+.tune .dr button{flex:none}
+.tune .segs{width:100%;max-width:300px}
 
 /* アニメーション */
 @media (prefers-reduced-motion:no-preference){
@@ -266,7 +278,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     <button class="tab" type="button" data-v="kit" aria-pressed="false">キット</button>
   </div>
 
-  <div class="pane" id="keyPane">
+  <details class="pane keyp" id="keyPane">
+    <summary id="keySum">キー</summary>
+    <div class="kb">
     <div class="row">
       <div class="cap">調</div>
       <div class="segs" id="modes" role="group" aria-label="メジャーかマイナー"></div>
@@ -288,7 +302,8 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
         <button id="up" type="button" aria-label="半音上げる">＋</button>
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <div id="vRecipe">
     <div class="band" id="band"></div>
@@ -300,14 +315,14 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   </div>
 
   <div id="vTune" hidden>
-    <div class="pane tune">
-      <button class="ctx" id="tCtx" type="button" aria-expanded="false"></button>
+    <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
       <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
       <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
       <div class="chips" id="chips">
         <button class="chip" id="tDia" type="button">—</button>
         <button class="chip" id="tLugs" type="button">—</button>
+        <span class="tgt" id="tS"></span>
       </div>
       <div class="editor" id="tEdit" hidden>
         <span class="el" id="tEdL">口径</span>
@@ -316,9 +331,8 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
         <button id="tEdUp" type="button" aria-label="増やす">＋</button>
         <button id="tEdOk" type="button" class="ok">完了</button>
       </div>
-      <div class="tgt" id="tS">目標</div>
-      <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
       <div class="dg" id="tDg" hidden></div>
+      <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz" hidden>
       <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
       <div class="tl">
         <button id="tPlay" type="button">目標音</button>
@@ -551,7 +565,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   }
 
   var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"recipe",theme:"auto",
-          adv:"manual",ord:"x",
+          adv:"manual",ord:"x",keyOpen:true,
           drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
@@ -563,6 +577,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       if(sv.voic==="low"||sv.voic==="high") st.voic=sv.voic;
       if(sv.theme==="auto"||sv.theme==="light"||sv.theme==="dark") st.theme=sv.theme;
       if(sv.adv==="manual"||sv.adv==="auto") st.adv=sv.adv;
+      st.keyOpen=!!sv.keyOpen;
       if(sv.ord==="x"||sv.ord==="cw") st.ord=sv.ord;
       if(typeof sv.nudge==="number"&&Math.abs(sv.nudge)<=2) st.nudge=sv.nudge;
       if(Object.prototype.toString.call(sv.drums)==="[object Array]"&&sv.drums.length>=3){
@@ -793,22 +808,23 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
-      elTS=E("tS"),elCtx=E("tCtx"),elPresets=E("presets"),
+      elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
       elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),elChips=E("chips"),
       elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
-  var lug=0, edit=null, inT=0, keyOpen=false, pop=false, zoom=false;
+  var lug=0, edit=null, inT=0, pop=false, zoom=false;
 
   function anim(el,cls,ms){
     if(!el) return;
     el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls);
     setTimeout(function(){el.classList.remove(cls);},ms);
   }
-  // キーやタムの高さはチューナーからも開ける。どの数字がどこから来たか見えるように
-  elCtx.addEventListener("click",function(){
-    keyOpen=!keyOpen; render();
-    if(keyOpen) anim(elKeyPane,"drop",260);
+  // キー設定は開閉式。どちらのタブからでも同じものを開く
+  elKeyPane.open=!!st.keyOpen;
+  elKeyPane.addEventListener("toggle",function(){
+    st.keyOpen=elKeyPane.open; save();
+    if(elKeyPane.open) anim(elKeyPane,"drop",260);
   });
 
   // 口径・ラグ数はその場で直す。タブを移動しない
@@ -879,7 +895,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
     t.addEventListener("click",function(){
-      st.view=t.dataset.v; droneOff(); edit=null; keyOpen=false;
+      st.view=t.dataset.v; droneOff(); edit=null;
       if(st.view!=="tune") micStop();
       save(); render();
       anim(st.view==="recipe"?elVR:st.view==="tune"?elVT:elVK,"swap",280);
@@ -1009,7 +1025,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     if(got.length<n) return "あと "+(n-got.length)+" 本";
     var av=avgOf(all), sp=Math.max.apply(null,got)-Math.min.apply(null,got), mx=0, mi=-1;
     for(i=0;i<n;i++) if(all[i]>0&&Math.abs(all[i]-av)>mx){mx=Math.abs(all[i]-av);mi=i;}
-    if(sp/av<=0.015) return "揃いました　平均 "+av.toFixed(1)+" Hz　ばらつき "+sp.toFixed(1)+" Hz";
+    if(sp/av<=0.015) return "揃いました　平均 "+av.toFixed(1)+" Hz　中央の目安 "+(av/R).toFixed(1)+" Hz";
     if(mi>=0&&mx/av>0.025)
       return "ラグ "+(mi+1)+" が平均から "+(all[mi]>av?"+":"−")+mx.toFixed(1)+" Hz　ここを直す";
     return "ばらつき "+sp.toFixed(1)+" Hz　もう一周";
@@ -1024,7 +1040,10 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune"; elVK.hidden=st.view!=="kit";
-    elKeyPane.hidden=st.view==="recipe"?false:(st.view==="tune"?!keyOpen:true);
+    elKeyPane.hidden=st.view==="kit";
+    elKeySum.textContent=keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
+      +" ・ タム"+(st.voic==="low"?"低め":"高め")
+      +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
 
     Array.prototype.forEach.call(elModes.children,function(b){
       b.setAttribute("aria-pressed",b.dataset.mode===st.mode?"true":"false");
@@ -1165,7 +1184,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       var go=document.createElement("button");
       go.type="button"; go.className="go"; go.textContent="合わせる";
       go.addEventListener("click",function(){
-        st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null; keyOpen=false;
+        st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null;
         zoom=true; save(); render(); micStart();
         anim(elVT,"enter-right",340);
       });
@@ -1359,6 +1378,15 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       ps.push('<circle'+(hit?' class="dot-on"':'')+' cx="'+dx.toFixed(1)+'" cy="126" r="'+(hit?3.8:1.8)+'" fill="'
         +(hit?CO[cl(cur)]:HINK)+'" opacity="'+(hit?1:(j===9?0.5:0.2))+'"/>');
     }
+    // 何をすればいいかを一語で
+    if(cur>0){
+      var act=isF?(function(){
+          var c2=Math.round(1200*Math.log2(cur/tgt));
+          return "予測より "+(c2>0?"+":c2<0?"−":"±")+Math.abs(c2)+"¢";
+        })():(Math.abs(dv)<0.5?"合致":(dv>0?"ゆるめる":"しめる"));
+      ps.push('<text x="100" y="146" text-anchor="middle" font-family="M PLUS Rounded 1c, sans-serif" font-size="'
+        +(isF?10:12)+'" font-weight="700" fill="'+CO[cl(cur)]+'">'+act+'</text>');
+    }
     elSVG.innerHTML=ps.join("");
     Array.prototype.forEach.call(elSVG.querySelectorAll(".lug"),function(g){
       function pick(){lug=parseInt(g.dataset.l,10);edit=null;render();}
@@ -1377,25 +1405,14 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     elLugs.textContent=n+" ラグ";
 
     elTS.innerHTML="";
-    function tline(lead,strong,tail,dim){
-      var w=document.createElement("div");
-      if(dim) w.style.opacity=".55";
-      w.appendChild(document.createTextNode(lead));
-      var b2=document.createElement("b"); b2.textContent=strong; w.appendChild(b2);
-      if(tail) w.appendChild(document.createTextNode(tail));
-      elTS.appendChild(w);
-    }
-    var mn2=cur>0?noteOf(cur,flat):null;
-    if(cur>0) tline("実測 ",cur.toFixed(1)+" Hz",mn2?"　"+mn2.name+" "+cts(mn2.cents):"",0);
-    if(isF){
-      tline("狙い ",tgt.toFixed(1)+" Hz",nt?"　"+nt.name+" "+cts(nt.cents):"",cur>0);
-      var ir=impliedR(d);
-      if(ir) tline("実測 R ",ir.toFixed(3),"　（早見表 1.73）",1);
-    } else {
-      tline("目標 ",tgt+" Hz",(nt?"　"+nt.name+" "+cts(nt.cents):"")
-        +"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）",cur>0);
-    }
+    if(cur>0) elTS.appendChild(document.createTextNode(cur.toFixed(1)+" → "));
+    var tb=document.createElement("b");
+    tb.textContent=(isF?tgt.toFixed(1):tgt)+" Hz";
+    elTS.appendChild(tb);
+    elTS.appendChild(document.createTextNode((isF?" 予測":" 目標")+(nt?"　"+nt.name:"")));
 
+    // マイクが動いていれば入力欄は出さない
+    elIn.hidden=mic.on;
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
     elIn.placeholder=isF?"実音の Hz":"測った Hz";
 
@@ -1415,11 +1432,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     if(dmsg) elDg.textContent=dmsg;
     elCal.hidden=!(isF&&d.rcal>0);
 
-    elCtx.textContent=keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1):"")
-      +" ・ タム"+(st.voic==="low"?"低め":"高め")
-      +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
-    elCtx.setAttribute("aria-expanded",keyOpen?"true":"false");
-
     if(zoom){ zoom=false; anim(elSVG,"zoom",400); }
     if(pop){ pop=false; anim(elSVG,"pop",560); }
   }
@@ -1428,7 +1440,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   if(st.view==="tune") micStart();
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-013356";
+  var BUILD="20261021-015252";
   function checkUpdate(){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
