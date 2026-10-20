@@ -179,7 +179,7 @@ th.on{color:var(--acc);font-weight:700}
 .dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
 .pane.tune{justify-items:center;gap:9px;padding:11px}
-svg.hd{width:100%;max-width:252px;height:auto;display:block;touch-action:manipulation;margin:-4px 0}
+svg.hd{width:100%;max-width:252px;height:auto;display:block;touch-action:manipulation;margin:-2px 0;overflow:visible}
 svg.hd .lug{cursor:pointer}
 .editor{display:flex;align-items:center;gap:6px;width:100%;max-width:300px;padding:6px;border-radius:999px;background:var(--acc-soft)}
 .editor .el{font-size:11.5px;font-weight:700;color:var(--acc);padding-left:9px;white-space:nowrap}
@@ -197,11 +197,31 @@ svg.hd .lug{cursor:pointer}
 .chip:active{transform:scale(.95)}
 .tgt{text-align:center;font-size:12px;color:var(--dim);line-height:1.55}
 .tgt b{font-family:var(--mono);font-weight:600;color:var(--fg)}
-.vd{font-size:13.5px;font-weight:700;padding:10px 16px;border-radius:13px;text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center;width:100%;max-width:300px;line-height:1.4}
-.vd.good{background:var(--good-soft);color:var(--good)}
-.vd.close{background:var(--close-soft);color:var(--close)}
-.vd.off{background:var(--off-soft);color:var(--off)}
-.vd.idle{background:var(--sunk);color:var(--faint);font-weight:500}
+.ctx{width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border:0;border-radius:999px;background:var(--acc-soft);color:var(--acc);font-size:12.5px;font-weight:700;transition:transform .12s}
+.ctx:active{transform:scale(.97)}
+.ctx::after{content:"▾";font-size:11px;opacity:.7;transition:transform .2s}
+.ctx[aria-expanded="true"]::after{transform:rotate(180deg)}
+
+/* アニメーション */
+@media (prefers-reduced-motion:no-preference){
+  svg.hd.pop{animation:hitpop .34s cubic-bezier(.25,.9,.3,1)}
+  @keyframes hitpop{0%{transform:scale(1)}28%{transform:scale(1.035)}100%{transform:scale(1)}}
+  .pop .dot-on,.pop .big-n{animation:popin .28s cubic-bezier(.2,1.3,.4,1);transform-box:fill-box;transform-origin:center}
+  @keyframes popin{0%{opacity:.25;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
+  .pop .pulse{animation:ring .55s cubic-bezier(.2,.7,.3,1);transform-box:fill-box;transform-origin:center}
+  @keyframes ring{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(2)}}
+  .pop .chk{animation:chkpop .36s cubic-bezier(.2,1.5,.45,1);transform-box:fill-box;transform-origin:center}
+  @keyframes chkpop{0%{transform:scale(0)}100%{transform:scale(1)}}
+  svg.hd.zoom{animation:zoomin .4s cubic-bezier(.2,1,.3,1)}
+  @keyframes zoomin{0%{opacity:.25;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+  .enter-right{animation:enterright .34s cubic-bezier(.22,.9,.3,1)}
+  @keyframes enterright{0%{opacity:0;transform:translateX(30px)}100%{opacity:1;transform:none}}
+  .swap{animation:swapin .26s ease}
+  @keyframes swapin{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+  #keyPane:not([hidden]).drop{animation:drop .22s ease}
+  @keyframes drop{0%{opacity:0;transform:translateY(-7px)}100%{opacity:1;transform:translateY(0)}}
+  .dg{transition:background .2s,color .2s}
+}
 .lvl{height:5px;border-radius:999px;background:var(--raise);overflow:hidden;width:100%;max-width:300px}
 .lvl i{display:block;height:100%;width:0;background:var(--good);border-radius:999px;transition:width .06s linear}
 .dg{width:100%;max-width:300px;text-align:center;font-size:11.5px;font-weight:700;color:var(--acc);background:var(--acc-soft);border-radius:11px;padding:8px 12px;line-height:1.45}
@@ -281,6 +301,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
 
   <div id="vTune" hidden>
     <div class="pane tune">
+      <button class="ctx" id="tCtx" type="button" aria-expanded="false"></button>
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
       <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
       <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
@@ -297,7 +318,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       </div>
       <div class="tgt" id="tS">目標</div>
       <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
-      <div class="vd idle" id="tV">ラグを選んでください</div>
       <div class="dg" id="tDg" hidden></div>
       <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
       <div class="tl">
@@ -773,12 +793,23 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
-      elV=E("tV"),elTS=E("tS"),elPresets=E("presets"),
+      elTS=E("tS"),elCtx=E("tCtx"),elPresets=E("presets"),
       elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
       elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),elChips=E("chips"),
       elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
-  var lug=0, edit=null, inT=0;
+  var lug=0, edit=null, inT=0, keyOpen=false, pop=false, zoom=false;
+
+  function anim(el,cls,ms){
+    if(!el) return;
+    el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls);
+    setTimeout(function(){el.classList.remove(cls);},ms);
+  }
+  // キーやタムの高さはチューナーからも開ける。どの数字がどこから来たか見えるように
+  elCtx.addEventListener("click",function(){
+    keyOpen=!keyOpen; render();
+    if(keyOpen) anim(elKeyPane,"drop",260);
+  });
 
   // 口径・ラグ数はその場で直す。タブを移動しない
   elDia.addEventListener("click",function(){edit="dia";render();});
@@ -811,8 +842,6 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     b.addEventListener("click",function(){st.ord=p[0];save();render();});
     elOrds.appendChild(b);
   });
-  elDia.addEventListener("click",function(){st.view="kit";save();render();});
-  elLugs.addEventListener("click",function(){st.view="kit";save();render();});
 
   [["auto","◐","自動"],["light","☀","ライト"],["dark","☾","ダーク"]].forEach(function(p){
     var b=document.createElement("button");
@@ -850,10 +879,11 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
     t.addEventListener("click",function(){
-      st.view=t.dataset.v; droneOff(); edit=null;
+      st.view=t.dataset.v; droneOff(); edit=null; keyOpen=false;
       if(st.view!=="tune") micStop();
       save(); render();
-      if(st.view==="tune") micStart();
+      anim(st.view==="recipe"?elVR:st.view==="tune"?elVT:elVK,"swap",280);
+      if(st.view==="tune"){ micStart(); anim(elSVG,"zoom",400); }
     });
   });
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
@@ -961,7 +991,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     st.meas[d.id+"|"+st.thead]=a;
     // 既定は据え置き。誤差が消えるまで同じラグで測り直す
     if(st.adv==="auto") lug=nextLug(lug,n);
-    save(); render();
+    pop=true; save(); render();
   }
   function avgOf(a){
     var v=a.filter(function(x){return x>0;});
@@ -994,7 +1024,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune"; elVK.hidden=st.view!=="kit";
-    elKeyPane.hidden=st.view!=="recipe";
+    elKeyPane.hidden=st.view==="recipe"?false:(st.view==="tune"?!keyOpen:true);
 
     Array.prototype.forEach.call(elModes.children,function(b){
       b.setAttribute("aria-pressed",b.dataset.mode===st.mode?"true":"false");
@@ -1134,7 +1164,11 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
       var go=document.createElement("button");
       go.type="button"; go.className="go"; go.textContent="合わせる";
-      go.addEventListener("click",function(){st.tid=d.id;st.thead="top";st.view="tune";lug=0;save();render();});
+      go.addEventListener("click",function(){
+        st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null; keyOpen=false;
+        zoom=true; save(); render(); micStart();
+        anim(elVT,"enter-right",340);
+      });
       cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(go);
       card.appendChild(cf);
 
@@ -1285,15 +1319,23 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       var dg=-90+360*i/n, a=dg*Math.PI/180,
           x=100+79*Math.cos(a), y=100+79*Math.sin(a), k=cl(arr[i]), on=i===lug;
       ps.push('<g class="lug" data-l="'+i+'" role="button" tabindex="0" aria-label="ラグ'+(i+1)+'">');
-      if(on) ps.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="12.5" fill="none" stroke="'+ACC+'" stroke-width="2.5"/>');
+      ps.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="13" fill="'+RIM+'" opacity="0.16"/>');
+      if(on){
+        ps.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="12.5" fill="none" stroke="'+ACC+'" stroke-width="2.5"/>');
+        // 打撃を拾った瞬間に広がるリング
+        ps.push('<circle class="pulse" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="12.5" fill="none" stroke="'
+          +(k==="none"?ACC:CO[k])+'" stroke-width="2.5" opacity="0"/>');
+      }
       ps.push('<g transform="translate('+x.toFixed(1)+','+y.toFixed(1)+') rotate('+(dg+90).toFixed(1)+')">'
         +'<rect x="-8" y="-6.5" width="16" height="13" rx="4" fill="'+CO[k]+'" stroke="'+(k==="none"?LHI:CO[k])+'" stroke-width="1"/></g>');
       ps.push('<text x="'+x.toFixed(1)+'" y="'+(y+3.9).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="'+(k==="none"?DIM:CARD)+'">'+(i+1)+'</text>');
       if(k==="good"){
         var bx=100+91*Math.cos(a), by=100+91*Math.sin(a);
+        ps.push('<g'+(on?' class="chk"':'')+'>');
         ps.push('<circle cx="'+bx.toFixed(1)+'" cy="'+by.toFixed(1)+'" r="5" fill="'+CO.good+'"/>');
         ps.push('<path d="M'+(bx-2.2).toFixed(1)+' '+by.toFixed(1)+'l1.5 1.7 2.9-3.4" fill="none" stroke="'+CARD
           +'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>');
+        ps.push('</g>');
       }
       ps.push('</g>');
     }
@@ -1303,7 +1345,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     if(cur>0){
       var dv=cur-tgt, av=Math.abs(dv);
       var dtx=av<0.05?"±0":(dv>0?"+":"−")+(av<10?av.toFixed(1).replace(/\.0$/,""):String(Math.round(av)));
-      ps.push('<text x="100" y="100" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="37" font-weight="700" fill="'+CO[cl(cur)]+'">'+dtx+'</text>');
+      ps.push('<text class="big-n" x="100" y="100" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="37" font-weight="700" fill="'+CO[cl(cur)]+'">'+dtx+'</text>');
       ps.push('<text x="100" y="113" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" font-weight="600" fill="'+HINK+'" opacity="0.5">Hz</text>');
     } else {
       ps.push('<text x="100" y="98" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="32" font-weight="700" fill="'+HINK+'" opacity="0.3">'+tgt+'</text>');
@@ -1314,7 +1356,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var ND=19, di=cur>0?Math.round(9+Math.max(-1,Math.min(1,(cur-tgt)/(tgt*0.08)))*9):-1;
     for(j=0;j<ND;j++){
       var dx=100+(j-9)*6.2, hit=j===di;
-      ps.push('<circle cx="'+dx.toFixed(1)+'" cy="126" r="'+(hit?3.8:1.8)+'" fill="'
+      ps.push('<circle'+(hit?' class="dot-on"':'')+' cx="'+dx.toFixed(1)+'" cy="126" r="'+(hit?3.8:1.8)+'" fill="'
         +(hit?CO[cl(cur)]:HINK)+'" opacity="'+(hit?1:(j===9?0.5:0.2))+'"/>');
     }
     elSVG.innerHTML=ps.join("");
@@ -1355,43 +1397,38 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     }
 
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
-    elIn.placeholder=isF?"実音の Hz":"ラグ "+(lug+1)+" の Hz";
+    elIn.placeholder=isF?"実音の Hz":"測った Hz";
 
-    if(cur>0){
-      var df=cur-tgt;
-      elV.className="vd "+cl(cur);
-      if(isF){
-        var ce=Math.round(1200*Math.log2(cur/tgt));
-        elV.textContent="予測との差　"+(ce>0?"+":ce<0?"−":"±")+Math.abs(ce)+" セント";
-      } else {
-        elV.textContent="ラグ "+(lug+1)+"　"+(Math.abs(df)<0.5?"ぴったり"
-          :(df>0?"+"+df.toFixed(1)+" Hz　緩める":df.toFixed(1)+" Hz　締める"));
-      }
-    } else {
-      elV.className="vd idle";
-      elV.textContent=isF
-        ? (mic.on?"ヘッドの中央を叩いてください":"実音を測って入力してください")
-        : (mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください");
-    }
-
-    // 測った値から言えることを返す
+    // 測った値から言えることだけを返す。数字は中央と上の行で足りている
     var dmsg=null;
     if(isF){
       if(d.rcal>0) dmsg="実測 R "+d.rcal.toFixed(3)+" でこのドラムの目標ラグ値を補正しました"
         +"（早見表の 1.73 から "+(d.rcal>R?"上":"下")+"に "
         +Math.abs(Math.round(1200*Math.log2(d.rcal/R)))+" セント相当）。狙いの音が出る値に動いています。";
-      else if(cur>0) dmsg="打面と裏面のラグを全部測ると、このドラムの R を割り出してレシピに反映できます。";
+      else if(cur>0) dmsg="予測との差 "+(function(){
+        var ce=Math.round(1200*Math.log2(cur/tgt));
+        return (ce>0?"+":ce<0?"−":"±")+Math.abs(ce)+" セント";
+      })()+"。打面と裏面のラグを全部測ると、R を割り出してレシピに反映できます。";
+      else dmsg="ヘッドの中央を叩いてください";
     } else dmsg=diag(d,st.thead);
     elDg.hidden=!dmsg;
     if(dmsg) elDg.textContent=dmsg;
     elCal.hidden=!(isF&&d.rcal>0);
+
+    elCtx.textContent=keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1):"")
+      +" ・ タム"+(st.voic==="low"?"低め":"高め")
+      +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
+    elCtx.setAttribute("aria-expanded",keyOpen?"true":"false");
+
+    if(zoom){ zoom=false; anim(elSVG,"zoom",400); }
+    if(pop){ pop=false; anim(elSVG,"pop",560); }
   }
 
   render();
   if(st.view==="tune") micStart();
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-012242";
+  var BUILD="20261021-013356";
   function checkUpdate(){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
