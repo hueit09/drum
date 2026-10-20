@@ -178,35 +178,33 @@ th.on{color:var(--acc);font-weight:700}
 .dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
 .dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
-.dial{display:grid;justify-items:center;gap:13px;padding:10px 0 2px}
-svg.hd{width:100%;max-width:290px;height:auto;display:block;touch-action:manipulation}
+.pane.tune{justify-items:center;gap:9px;padding:11px}
+svg.hd{width:100%;max-width:252px;height:auto;display:block;touch-action:manipulation;margin:-4px 0}
 svg.hd .lug{cursor:pointer}
-.chips{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;width:100%;max-width:300px}
-.chip{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:6px 13px;border-radius:999px;background:var(--sunk);color:var(--dim);border:1px solid var(--line);transition:transform .1s}
+.editor{display:flex;align-items:center;gap:6px;width:100%;max-width:300px;padding:6px;border-radius:999px;background:var(--acc-soft)}
+.editor .el{font-size:11.5px;font-weight:700;color:var(--acc);padding-left:9px;white-space:nowrap}
+.editor button{width:36px;height:36px;flex:none;font-size:18px;font-weight:700;border:0;border-radius:50%;background:var(--card);color:var(--acc);line-height:1}
+.editor button:active{transform:scale(.9)}
+.editor .ev{flex:1;text-align:center;font-family:var(--mono);font-size:15px;font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums}
+.editor .ok{width:auto;flex:none;padding:0 15px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--acc);color:var(--acc-fg)}
+.hzin{width:100%;max-width:300px;font-family:var(--mono);font-size:21px;font-weight:600;text-align:center;padding:11px;background:var(--sunk);color:var(--fg);border:2px solid var(--line);border-radius:13px;font-variant-numeric:tabular-nums}
+.hzin:focus{border-color:var(--acc);outline:none}
+.opt{margin-top:-4px}
+.opt .row{gap:7px}
+.opt .bd{padding:0 13px 13px;display:grid;gap:12px}
+.chips{display:flex;align-items:center;gap:7px;justify-content:center}
+.chip{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--sunk);color:var(--dim);border:1px solid var(--line);transition:transform .1s}
 .chip:active{transform:scale(.95)}
-.tgt{flex-basis:100%;text-align:center;font-size:12px;color:var(--dim);line-height:1.5}
+.tgt{text-align:center;font-size:12px;color:var(--dim);line-height:1.55}
 .tgt b{font-family:var(--mono);font-weight:600;color:var(--fg)}
-.nav{display:flex;gap:7px;width:100%;max-width:290px}
-.nav button{flex:1;min-height:42px;font-size:12.5px;font-weight:700;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:12px;transition:transform .1s}
-.nav button:active{transform:scale(.96)}
-.nav #tNextL{background:var(--acc-soft);color:var(--acc)}
-.ent{display:flex;gap:7px;width:100%;max-width:290px}
-.ent input{flex:1;min-width:0;font-family:var(--mono);font-size:21px;font-weight:600;text-align:center;padding:12px;background:var(--sunk);color:var(--fg);border:2px solid var(--line);border-radius:13px;font-variant-numeric:tabular-nums}
-.ent input:focus{border-color:var(--acc);outline:none}
-.ent button{flex:none;padding:0 21px;background:var(--acc);color:var(--acc-fg);border:0;border-radius:13px;font-size:14px;font-weight:700;box-shadow:var(--sh-lift);transition:transform .1s}
-.ent button:active{transform:scale(.96)}
-.vd{font-size:13.5px;font-weight:700;padding:11px 16px;border-radius:13px;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;width:100%;max-width:290px;line-height:1.4}
+.vd{font-size:13.5px;font-weight:700;padding:10px 16px;border-radius:13px;text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center;width:100%;max-width:300px;line-height:1.4}
 .vd.good{background:var(--good-soft);color:var(--good)}
 .vd.close{background:var(--close-soft);color:var(--close)}
 .vd.off{background:var(--off-soft);color:var(--off)}
 .vd.idle{background:var(--sunk);color:var(--faint);font-weight:500}
-.lvl{height:6px;border-radius:999px;background:var(--raise);overflow:hidden;width:100%;max-width:290px}
+.lvl{height:5px;border-radius:999px;background:var(--raise);overflow:hidden;width:100%;max-width:300px}
 .lvl i{display:block;height:100%;width:0;background:var(--good);border-radius:999px;transition:width .06s linear}
-.st3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%}
-.st3 div{background:var(--sunk);border-radius:13px;padding:10px 6px;display:grid;gap:2px;text-align:center}
-.st3 .k2{font-size:10.5px;font-weight:700;color:var(--faint)}
-.st3 .v2{font-family:var(--mono);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
-.tl{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.tl{display:flex;gap:6px;flex-wrap:wrap;width:100%;justify-content:center}
 .tl button{font-size:12.5px;font-weight:700;min-height:42px;padding:9px 16px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:999px;transition:transform .1s}
 .tl button:active:not(:disabled){transform:scale(.95)}
 .tl button[aria-pressed="true"]{background:var(--good-soft);color:var(--good);border-color:var(--good)}
@@ -281,47 +279,42 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   </div>
 
   <div id="vTune" hidden>
-    <div class="pane">
-      <div class="row"><div class="cap">ドラム</div><div class="dr" id="drums" role="group" aria-label="ドラム"></div></div>
-      <div class="row"><div class="cap">ヘッド</div><div class="segs" id="heads" role="group" aria-label="ヘッド"></div></div>
-    </div>
-    <div class="pane">
-      <div class="dial">
-        <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ラグ配置図"></svg>
-        <div class="chips">
-          <button class="chip" id="tDia" type="button">—</button>
-          <button class="chip" id="tLugs" type="button">—</button>
-          <span class="tgt" id="tS">目標</span>
-        </div>
-        <div class="ent">
-          <input id="tIn" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
-          <button id="tOk" type="button">記録</button>
-        </div>
-        <div class="vd idle" id="tV">ラグを選んで、測った Hz を入れてください</div>
-        <div class="nav">
-          <button id="tPrev" type="button">← 前のラグ</button>
-          <button id="tNextL" type="button">次のラグ →</button>
-        </div>
-        <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
-        <div class="st3">
-          <div><div class="k2">平均</div><div class="v2" id="sA">—</div></div>
-          <div><div class="k2">ばらつき</div><div class="v2" id="sS">—</div></div>
-          <div><div class="k2">測定済み</div><div class="v2" id="sD">—</div></div>
-        </div>
+    <div class="pane tune">
+      <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
+      <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
+      <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
+      <div class="chips" id="chips">
+        <button class="chip" id="tDia" type="button">—</button>
+        <button class="chip" id="tLugs" type="button">—</button>
       </div>
+      <div class="editor" id="tEdit" hidden>
+        <span class="el" id="tEdL">口径</span>
+        <button id="tEdDn" type="button" aria-label="減らす">−</button>
+        <span class="ev" id="tEdV">—</span>
+        <button id="tEdUp" type="button" aria-label="増やす">＋</button>
+        <button id="tEdOk" type="button" class="ok">完了</button>
+      </div>
+      <div class="tgt" id="tS">目標</div>
+      <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz">
+      <div class="vd idle" id="tV">ラグを選んでください</div>
+      <div class="lvl" id="tL" hidden><i id="tLB"></i></div>
       <div class="tl">
-        <button id="tMic" type="button" aria-pressed="false">マイクで測る</button>
         <button id="tPlay" type="button">目標音</button>
         <button id="tDrone" type="button" aria-pressed="false">持続</button>
         <button id="tClr" type="button">クリア</button>
-        <button id="tNext" type="button" class="nx">次のヘッドへ →</button>
+        <button id="tNext" type="button" class="nx">次へ →</button>
       </div>
-      <div class="row" style="margin-top:14px"><div class="cap">記録したあと</div>
-        <div class="segs" id="advs" role="group" aria-label="記録したあとの動作"></div></div>
-      <div class="row" style="margin-top:11px"><div class="cap">ラグを回る順</div>
-        <div class="segs" id="ords" role="group" aria-label="ラグを回る順"></div></div>
       <div class="mn" id="mn" hidden></div>
     </div>
+    <details class="opt">
+      <summary>オプション</summary>
+      <div class="bd">
+        <div class="row"><div class="cap">記録したあと</div>
+          <div class="segs" id="advs" role="group" aria-label="記録したあとの動作"></div></div>
+        <div class="row"><div class="cap">ラグを回る順</div>
+          <div class="segs" id="ords" role="group" aria-label="ラグを回る順"></div></div>
+      </div>
+    </details>
   </div>
 
   <div id="vKit" hidden>
@@ -380,6 +373,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     </details>
 
     <details>
+      <summary>実音を測る（データ収集）</summary>
+      <div class="bd">
+        <p>表裏を追い込んだら、ヘッドの切替を<strong>実音</strong>にしてヘッドの中央を叩いてください。実際に出ている音が記録され、予測値との差がセントで出ます。レシピ画面の「実音」表示も実測値に切り替わります。</p>
+        <p>ここで出している予測値は早見表から逆算した推定にすぎません。実音は表裏ヘッドの連成振動と胴の共鳴で決まるので、本来は計算で確定できない値です。<strong>実測を貯めることが、この推定が妥当かどうかを確かめる唯一の方法</strong>です。</p>
+        <p>表裏のラグ平均と実音の実測が揃うと、そのドラムの<strong>実測 R</strong> も出ます。</p>
+        <p><code>R = √(打面平均 × 裏面平均) ÷ 実音</code></p>
+        <p>早見表から出た基準値は 1.73 です。手持ちのキットで繰り返し 1.73 から外れるなら、そのシェルや深さではこの定数がずれているということです。胴が深いドラム、厚いシェル、特殊なヘッドで差が出るはずなので、気づいたら教えてください。レシピ側に反映します。</p>
+      </div>
+    </details>
+
+    <details>
       <summary>実音の確かさ</summary>
       <div class="bd">
         <p>表裏のラグ値から実音を厳密に計算することはできません。実音は表裏ヘッドの連成振動と胴の共鳴で決まるので、差音でも倍音比でも出ません。ここで出しているのは早見表から逆算した推定値です。</p>
@@ -401,20 +405,18 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       <summary>チューナーの使い方</summary>
       <div class="bd">
         <ul>
-          <li>ドラムとヘッドを選ぶと、円の中央に目標ラグ値が出ます。</li>
-          <li>ヘッドの縁のラグをタップするか「次のラグ」で選び、測った Hz を入れて記録します。既定では<strong>記録しても勝手に次へは進みません</strong>。そのラグの誤差が消えるまで同じラグで測り直し、納得したら自分で次へ進んでください。記録のたびに自動で進めたい場合は、下の「記録したあと」を<strong>次のラグへ進む</strong>に切り替えます。</li>
+          <li><strong>ラグを直接タップ</strong>して選びます。弾けばマイクが拾い、手入力なら打ち込んで少し待つだけ。記録ボタンはありません。</li>
+          <li>既定では<strong>記録しても勝手に次へ進みません</strong>。そのラグの誤差が消えるまで同じラグを弾き続け、納得したら次のラグをタップしてください。自動で送りたい場合はオプションの「記録したあと」を切り替えます。</li>
           <li>ヘッドの中央の大きい数字は、<strong>目標とのズレ</strong>です。<code>+3</code> なら 3Hz 高いので緩める、<code>−3</code> なら締める、<code>±0</code> で合致。まだ測っていないラグでは目標値そのものが薄く出ます。その下のドット列も同じズレを表していて、真ん中のドットが光れば合っています（端まで振れた状態で±8%）。</li>
-          <li>実測値と音名はヘッドのすぐ下に出ます。目標・音名・中央のピッチもそこに並びます。</li>
-          <li>許容範囲に入ったラグには<strong>緑のチェック</strong>が付きます。全部にチェックが付けばそのヘッドは完了です。</li>
-          <li>回る順は既定で<strong>対角線</strong>です（8本なら 1→5→2→6→3→7→4→8）。ヘッドの中の破線がその順路。一方向に回して締めるとヘッドが片寄るので、通常は対角線を使ってください。「ラグを回る順」で時計回りにも変えられます。番号はラグの物理的な位置なので、現場のボルトとそのまま対応します。</li>
-          <li>ヘッドの下の「14"」「10 ラグ」はタップするとキットタブに飛び、口径とラグ数を直せます。</li>
-          <li>ラグの色は目標との差です。緑は ±1.5% 以内、黄は ±3.5% 以内、赤はそれより外。</li>
-          <li>ばらつきが小さいほど、ヘッドが均等に張れています。平均が目標に乗っていても、ばらつきが大きければ鳴りは濁ります。</li>
+          <li>実測値・音名・目標・中央のピッチは、すべてヘッドのすぐ下に数字で並びます。</li>
+          <li>許容範囲に入ったラグには<strong>緑のチェック</strong>が付きます。全部にチェックが付けばそのヘッドは完了です。ラグの色は緑が ±1.5% 以内、黄が ±3.5% 以内、赤はそれより外。</li>
+          <li>回る順は既定で<strong>対角線</strong>です（8本なら 1→5→2→6→3→7→4→8）。ヘッドの中の破線がその順路。一方向に回して締めるとヘッドが片寄るので、通常は対角線を使ってください。番号はラグの物理的な位置なので、現場のボルトとそのまま対応します。</li>
+          <li>「14"」「10 ラグ」をタップすると<strong>その場で</strong>口径とラグ数を変えられます。タブは移動しません。</li>
           <li>耳で合わせるなら「持続」。目標音が鳴り続けるので、弾いた音と重ねてうなりが消えるところを探せます。うなりの速さがそのままずれの大きさです。</li>
-          <li>「次のヘッドへ」で同じドラムの裏面、その次のドラムへと順に進みます。</li>
+          <li>「次へ」で 打面 → 裏面 → 実音 → 次のドラム と順に進みます。</li>
           <li>測定値はこの端末にだけ残ります。</li>
         </ul>
-        <p><strong>マイクで測る</strong>をオンにすると、弾くたびに選んでいるラグの値が更新されます。ラグは自動で進まないので、合うまで同じラグを弾き続けられます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。打撃を拾うしきい値は暗騒音から自動で決まります。</p>
+        <p><strong>マイクはチューナーを開いた時点で動き始めます</strong>。最初の一度だけブラウザが使用許可を聞くので「許可」してください。以降はボタン操作なしで、弾くたびに選んでいるラグの値が更新されます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。打撃を拾うしきい値は暗騒音から自動で決まります。</p>
         <p>読み取りは FFT でスペクトルの最強ピークを拾う方式です。探す範囲は<strong>目標の1オクターブ下から5度上まで</strong>。緩んだ状態から締め上げる途中は目標を大きく下回るので、下側を広く取ってあります。</p>
         <p>低い音ほど部屋の影響を受けます。響きの大きい部屋では、16" フロアやバスドラムのような低い太鼓で、弾いた音ではなく部屋の共鳴を拾うことがあります。おおむね 140Hz 以上は安定しますが、それより下は読みが揺れたら手入力に切り替えてください。</p>
       </div>
@@ -643,7 +645,8 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   }
 
   /* ---------- mic（ウェブサイトとして開いたときのみ） ---------- */
-  var mic={on:false,stream:null,src:null,an:null,buf:null,raf:0,armed:true,last:0,floor:0.002};
+  var mic={on:false,stream:null,src:null,an:null,buf:null,raf:0,armed:true,last:0,floor:0.002,
+           failed:false,starting:false};
   function dsample(buf,sr,tgt){
     var f=Math.max(1,Math.floor(sr/tgt)),n=Math.floor(buf.length/f);
     var o=new Float32Array(n),i,j,s;
@@ -696,32 +699,34 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       +'ブラウザの権限設定にかかわらずマイクが届かないためです。<strong>ウェブサイトとして開いた場合は、このボタンから使えます。</strong>';
   }
   function micStop(){
-    mic.on=false;
+    mic.on=false; mic.starting=false;
     if(mic.raf) cancelAnimationFrame(mic.raf);
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
     try{if(mic.stream) mic.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
     mic.stream=null;mic.src=null;mic.an=null;
-    elMic.setAttribute("aria-pressed","false"); elMic.textContent="マイクで測る";
     elDrone.disabled=false; elLvl.hidden=true;
-    render();
   }
+  // チューナーを開いた時点で一度だけ許可を求める。ボタンは置かない
   function micStart(){
+    if(mic.on||mic.starting||mic.failed) return;
     var a=ctx();
-    if(!a||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){micMsg();return;}
+    if(!a||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){mic.failed=true;micMsg();return;}
+    mic.starting=true;
     navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})
       .then(function(s){
+        mic.starting=false;
+        if(st.view!=="tune"){ s.getTracks().forEach(function(t){t.stop();}); return; }
         mic.stream=s; mic.src=a.createMediaStreamSource(s);
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
         mic.on=true; mic.armed=true; mic.last=0; mic.floor=0.002;
         droneOff(); elDrone.setAttribute("aria-pressed","false");
         elDrone.textContent="持続"; elDrone.disabled=true;
-        elMic.setAttribute("aria-pressed","true"); elMic.textContent="マイクを止める";
         elLvl.hidden=false; elMn.hidden=true;
         render(); micLoop();
       })
-      .catch(micMsg);
+      .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); });
   }
   function micLoop(){
     if(!mic.on) return;
@@ -743,12 +748,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   function micGrab(){
     if(!mic.on||!mic.an) return;
     var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d), tg=st.thead==="top"?c.top:c.bot;
+    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var tg=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
     mic.an.getFloatTimeDomainData(mic.buf);
     var ds=dsample(mic.buf,ac.sampleRate,4000);
     // 緩い状態から締め上げる途中は目標を大きく下回るので、下側を1オクターブ取る
     // （以前は上下5半音だけで、低い側が範囲外になり拾えなかった）
-    var r=detect(ds.d,ds.sr,Math.max(30,tg*0.5),Math.min(600,tg*1.5));
+    var r=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6));
     if(r&&r.hz>0&&isFinite(r.hz)){ elIn.value=(Math.round(r.hz*10)/10).toFixed(1); commit(); }
   }
 
@@ -760,10 +766,30 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elV=E("tV"),elTS=E("tS"),elPresets=E("presets"),
-      elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),elMic=E("tMic"),
-      elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),
-      elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords");
-  var lug=0;
+      elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
+      elMn=E("mn"),elLvl=E("tL"),elLvlB=E("tLB"),elChips=E("chips"),
+      elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
+      elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV");
+  var lug=0, edit=null, inT=0;
+
+  // 口径・ラグ数はその場で直す。タブを移動しない
+  elDia.addEventListener("click",function(){edit="dia";render();});
+  elLugs.addEventListener("click",function(){edit="lugs";render();});
+  E("tEdOk").addEventListener("click",function(){edit=null;save();render();});
+  function bumpEd(s){
+    var d=byId(st.tid); if(!d||!edit) return;
+    if(edit==="dia"){
+      var auto=d.lugs===lugsFor(d.kind,d.dia);
+      d.dia=Math.max(4,Math.min(30,d.dia+s));
+      if(auto) d.lugs=lugsFor(d.kind,d.dia);
+    } else {
+      d.lugs=Math.max(4,Math.min(12,d.lugs+s));
+      if(lug>d.lugs-1) lug=0;
+    }
+    save(); render();
+  }
+  E("tEdUp").addEventListener("click",function(){bumpEd(1);});
+  E("tEdDn").addEventListener("click",function(){bumpEd(-1);});
 
   [["manual","そのラグに留まる"],["auto","次のラグへ進む"]].forEach(function(p){
     var b=document.createElement("button");
@@ -815,13 +841,17 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   elUp.addEventListener("click",function(){if(st.nudge<2){st.nudge++;save();render();}});
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
-    t.addEventListener("click",function(){st.view=t.dataset.v;droneOff();save();render();});
+    t.addEventListener("click",function(){
+      st.view=t.dataset.v; droneOff(); edit=null;
+      if(st.view!=="tune") micStop();
+      save(); render();
+      if(st.view==="tune") micStart();
+    });
   });
-  ["top","bot"].forEach(function(h){
+  [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
-    b.type="button"; b.className="sg"; b.dataset.head=h;
-    b.textContent=h==="top"?"打面":"裏面";
-    b.addEventListener("click",function(){st.thead=h;lug=0;save();render();});
+    b.type="button"; b.className="sg"; b.dataset.head=p[0]; b.textContent=p[1];
+    b.addEventListener("click",function(){st.thead=p[0];lug=0;edit=null;save();render();});
     elHeads.appendChild(b);
   });
   Object.keys(PRE).forEach(function(id){
@@ -848,14 +878,8 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     if(st.tid===g.id) st.tid=st.drums[st.drums.length-1].id;
     renameToms(st.drums); save(); render();
   });
-  E("tClr").addEventListener("click",function(){delete st.meas[st.tid+"|"+st.thead];lug=0;save();render();});
-  E("tPrev").addEventListener("click",function(){
-    var d=byId(st.tid); if(!d) return;
-    lug=prevLug(lug,d.lugs); render(); if(!mic.on) elIn.focus();
-  });
-  E("tNextL").addEventListener("click",function(){
-    var d=byId(st.tid); if(!d) return;
-    lug=nextLug(lug,d.lugs); render(); if(!mic.on) elIn.focus();
+  E("tClr").addEventListener("click",function(){
+    delete st.meas[st.tid+"|"+st.thead]; lug=0; elIn.value=""; save(); render();
   });
   E("tPlay").addEventListener("click",function(){
     var d=byId(st.tid); if(!d) return;
@@ -864,12 +888,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   });
   E("tNext").addEventListener("click",function(){
     if(st.thead==="top") st.thead="bot";
+    else if(st.thead==="bot") st.thead="fund";
     else{
       st.thead="top";
       var i=st.drums.indexOf(byId(st.tid));
       st.tid=st.drums[(i+1)%st.drums.length].id;
     }
-    lug=0;
+    lug=0; edit=null;
     if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
     save(); render();
   });
@@ -880,9 +905,12 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     droneOn(st.thead==="top"?c.top:c.bot);
     elDrone.setAttribute("aria-pressed","true"); elDrone.textContent="止める";
   });
-  elMic.addEventListener("click",function(){ if(mic.on) micStop(); else micStart(); });
-  E("tOk").addEventListener("click",commit);
-  elIn.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();commit();}});
+  // 記録ボタンは置かない。打ち終わって少し待つと自動で記録される
+  elIn.addEventListener("input",function(){clearTimeout(inT);inT=setTimeout(commit,600);});
+  elIn.addEventListener("change",function(){clearTimeout(inT);commit();});
+  elIn.addEventListener("keydown",function(e){
+    if(e.key==="Enter"){e.preventDefault();clearTimeout(inT);commit();elIn.blur();}
+  });
 
   // 締める順は対角線（8本なら 1→5→2→6…）。偶数は半周ずつ交互、奇数は半周ぶん飛ばして一巡
   function order(n){
@@ -906,15 +934,28 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
   }
   function commit(){
     var d=byId(st.tid); if(!d) return;
-    var v=parseFloat(elIn.value),n=d.lugs,a=measOf(d.id,st.thead).slice();
+    var v=parseFloat(elIn.value), val=(isFinite(v)&&v>0)?Math.round(v*10)/10:null;
+    if(st.thead==="fund"){
+      if(val) st.meas[d.id+"|fund"]=val; else delete st.meas[d.id+"|fund"];
+      save(); render(); return;
+    }
+    var n=d.lugs,a=measOf(d.id,st.thead).slice();
     while(a.length<n) a.push(null);
     a.length=n;
-    a[lug]=(isFinite(v)&&v>0)?Math.round(v*10)/10:null;
+    a[lug]=val;
     st.meas[d.id+"|"+st.thead]=a;
     // 既定は据え置き。誤差が消えるまで同じラグで測り直す
     if(st.adv==="auto") lug=nextLug(lug,n);
-    elIn.value=""; save(); render();
-    if(!mic.on) elIn.focus();
+    save(); render();
+  }
+  function avgOf(a){
+    var v=a.filter(function(x){return x>0;});
+    return v.length?v.reduce(function(s,x){return s+x;},0)/v.length:0;
+  }
+  // 表裏のラグ平均と実音の実測から、そのドラムの実際の R を逆算する
+  function impliedR(d){
+    var t=avgOf(measOf(d.id,"top")), b=avgOf(measOf(d.id,"bot")), f=st.meas[d.id+"|fund"];
+    return (t>0&&b>0&&f>0)?Math.sqrt(t*b)/f:null;
   }
 
   /* ---------- render ---------- */
@@ -926,7 +967,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune"; elVK.hidden=st.view!=="kit";
-    elKeyPane.hidden=st.view==="kit";
+    elKeyPane.hidden=st.view!=="recipe";
 
     Array.prototype.forEach.call(elModes.children,function(b){
       b.setAttribute("aria-pressed",b.dataset.mode===st.mode?"true":"false");
@@ -997,8 +1038,15 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       var pw=document.createElement("div"); pw.className="pitch";
       var pv=document.createElement("div"); pv.className="pv";
       var fn=noteOf(p.fund,flat);
+      var mf=st.meas[d.id+"|fund"];
       var pb=document.createElement("b"); pb.textContent="実音 "+(fn?fn.name:"—");
-      var ps=document.createElement("span"); ps.textContent=p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
+      var ps=document.createElement("span");
+      if(mf>0){
+        var mfn=noteOf(mf,flat), ce2=Math.round(1200*Math.log2(mf/p.fund));
+        pb.textContent="実測 "+(mfn?mfn.name:"—");
+        pb.style.color="var(--good)";
+        ps.textContent=mf.toFixed(1)+" Hz　予測比 "+(ce2>0?"+":ce2<0?"−":"±")+Math.abs(ce2)+"¢";
+      } else ps.textContent=p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
       pv.appendChild(pb); pv.appendChild(ps);
       var stp=document.createElement("div"); stp.className="step";
       [["−",-1],["＋",1]].forEach(function(o){
@@ -1148,7 +1196,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       b.type="button"; b.textContent=x.name; b.dataset.kind=x.kind;
       b.setAttribute("aria-pressed",x.id===d.id?"true":"false");
       b.addEventListener("click",function(){
-        st.tid=x.id; lug=0;
+        st.tid=x.id; lug=0; edit=null;
         if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
         save(); render();
       });
@@ -1164,9 +1212,11 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       b.setAttribute("aria-pressed",b.dataset.ord===st.ord?"true":"false");
     });
 
+    var isF=st.thead==="fund";
     var flat=!!FLATK[rootOf(st.live,st.mode)];
     var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
-    var tgt=st.thead==="top"?cc.top:cc.bot, n=d.lugs, arr=measOf(d.id,st.thead);
+    var tgt=isF?Math.round(cc.fund*10)/10:(st.thead==="top"?cc.top:cc.bot);
+    var n=d.lugs, arr=isF?[]:measOf(d.id,st.thead);
     var nt=noteOf(tgt,flat), ctr=tgt/R, cn=noteOf(ctr,flat);
 
     function cl(v){
@@ -1177,13 +1227,18 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     var CO={good:cssv("--good"),close:cssv("--close"),off:cssv("--off"),none:cssv("--raise")};
     var CARD=cssv("--card"), LHI=cssv("--line-hi"), DIM=cssv("--dim"), ACC=cssv("--acc"),
         HEAD=cssv("--head"), HINK=cssv("--head-ink"), RIM=cssv("--rim");
-    var cur=arr[lug], vs=arr.filter(function(v){return v>0;}), ps=[], i, j;
+    var cur=isF?(st.meas[d.id+"|fund"]||0):arr[lug], ps=[], i, j;
 
     // ヘッドとフープ
     ps.push('<circle cx="100" cy="100" r="70" fill="'+HEAD+'"/>');
     ps.push('<circle cx="100" cy="100" r="70" fill="none" stroke="'+RIM+'" stroke-width="5"/>');
     ps.push('<circle cx="100" cy="100" r="64.5" fill="none" stroke="'+HINK+'" stroke-width="0.7" opacity="0.14"/>');
 
+    if(isF){
+      // 実音モードは中央を叩く。ラグは出さない
+      ps.push('<circle cx="100" cy="100" r="27" fill="none" stroke="'+HINK+'" stroke-width="1" stroke-dasharray="3 4" opacity="0.25"/>');
+      ps.push('<text x="100" y="60" text-anchor="middle" font-family="M PLUS Rounded 1c, sans-serif" font-size="10" font-weight="700" fill="'+HINK+'" opacity="0.45">中央を叩く</text>');
+    } else {
     // 回る順の破線。ヘッド内側に描くのでラグ金具と重ならない
     var ord=order(n),pth="",aa;
     for(i=0;i<ord.length;i++){
@@ -1209,6 +1264,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
       }
       ps.push('</g>');
     }
+    }
 
     // ヘッド中央は目標とのズレ。未測定なら目標値を薄く置く
     if(cur>0){
@@ -1230,50 +1286,77 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.7}
     }
     elSVG.innerHTML=ps.join("");
     Array.prototype.forEach.call(elSVG.querySelectorAll(".lug"),function(g){
-      function pick(){lug=parseInt(g.dataset.l,10);render();if(!mic.on)elIn.focus();}
+      function pick(){lug=parseInt(g.dataset.l,10);edit=null;render();}
       g.addEventListener("click",pick);
       g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}});
     });
 
+    // 口径とラグ数はこの画面で直す
+    elChips.hidden=!!edit||isF;
+    elEd.hidden=!edit;
+    if(edit){
+      elEdL.textContent=edit==="dia"?"口径":"ラグ数";
+      elEdV.textContent=edit==="dia"?(d.dia+'"'):(n+" ラグ");
+    }
     elDia.textContent=d.dia+'"';
     elLugs.textContent=n+" ラグ";
+
     elTS.innerHTML="";
-    function tline(lead,strong,tail,on){
+    function tline(lead,strong,tail,dim){
       var w=document.createElement("div");
-      if(!on) w.style.opacity=".55";
+      if(dim) w.style.opacity=".55";
       w.appendChild(document.createTextNode(lead));
       var b2=document.createElement("b"); b2.textContent=strong; w.appendChild(b2);
       if(tail) w.appendChild(document.createTextNode(tail));
       elTS.appendChild(w);
     }
-    if(cur>0){
-      var mn2=noteOf(cur,flat);
-      tline("測定 ",cur.toFixed(1)+" Hz",mn2?"　"+mn2.name+" "+cts(mn2.cents):"",1);
+    var mn2=cur>0?noteOf(cur,flat):null;
+    if(cur>0) tline("実測 ",cur.toFixed(1)+" Hz",mn2?"　"+mn2.name+" "+cts(mn2.cents):"",0);
+    if(isF){
+      tline("予測 ",tgt.toFixed(1)+" Hz",nt?"　"+nt.name+" "+cts(nt.cents):"",cur>0);
+      var ir=impliedR(d);
+      if(ir) tline("実測 R ",ir.toFixed(3),"　（基準 1.73）",1);
+    } else {
+      tline("目標 ",tgt+" Hz",(nt?"　"+nt.name+" "+cts(nt.cents):"")
+        +"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）",cur>0);
     }
-    tline("目標 ",tgt+" Hz",(nt?"　"+nt.name+" "+cts(nt.cents):"")
-      +"　（中央 "+ctr.toFixed(1)+" Hz "+(cn?cn.name:"")+"）",!(cur>0));
-    elIn.placeholder="ラグ "+(lug+1)+" の Hz";
+
+    if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
+    elIn.placeholder=isF?"実音の Hz":"ラグ "+(lug+1)+" の Hz";
+
     if(cur>0){
       var df=cur-tgt;
       elV.className="vd "+cl(cur);
-      elV.textContent="ラグ "+(lug+1)+"　"+(Math.abs(df)<0.5?"ぴったり"
-        :(df>0?"+"+df.toFixed(1)+" Hz　緩める":df.toFixed(1)+" Hz　締める"));
+      if(isF){
+        var ce=Math.round(1200*Math.log2(cur/tgt));
+        elV.textContent="予測との差　"+(ce>0?"+":ce<0?"−":"±")+Math.abs(ce)+" セント";
+      } else {
+        elV.textContent="ラグ "+(lug+1)+"　"+(Math.abs(df)<0.5?"ぴったり"
+          :(df>0?"+"+df.toFixed(1)+" Hz　緩める":df.toFixed(1)+" Hz　締める"));
+      }
     } else {
       elV.className="vd idle";
-      elV.textContent=mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください";
+      elV.textContent=isF
+        ? (mic.on?"ヘッドの中央を叩いてください":"実音を測って入力してください")
+        : (mic.on?"ラグ "+(lug+1)+" を弾いてください":"ラグ "+(lug+1)+" を測って入力してください");
     }
-    var sA=E("sA"),sS=E("sS"),sD=E("sD");
-    if(vs.length){
-      var a2=vs.reduce(function(s,v){return s+v;},0)/vs.length;
-      var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs),sp=mx-mn;
-      sA.textContent=a2.toFixed(1); sA.style.color=CO[cl(a2)];
-      sS.textContent=sp.toFixed(1);
-      sS.style.color=sp/tgt<=0.015?CO.good:sp/tgt<=0.035?CO.close:CO.off;
-    } else {sA.textContent="—";sA.style.color="";sS.textContent="—";sS.style.color="";}
-    sD.textContent=vs.length+" / "+n;
   }
 
   render();
+  if(st.view==="tune") micStart();
+
+  // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
+  var BUILD="20261021-005916";
+  function checkUpdate(){
+    if(!window.fetch||BUILD.charAt(0)==="_") return;
+    fetch("version.json?t="+Date.now(),{cache:"no-store"})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(j){ if(j&&j.build&&j.build!==BUILD) location.reload(); })
+      .catch(function(){});
+  }
+  checkUpdate();
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden) checkUpdate(); });
+
   if(window.matchMedia){
     try{
       window.matchMedia("(prefers-color-scheme:dark)")
