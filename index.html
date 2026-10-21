@@ -1650,12 +1650,12 @@ footer b{font-family:var(--mono);font-weight:700}
   if(st.view==="tune") micStart();
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-022910";
+  var BUILD="20261021-101937";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
   // 空のあいだは何もしない。オフラインで溜めて、次にオンラインになった時にまとめて送る。
-  var SYNC_URL="";
+  var SYNC_URL="https://script.google.com/macros/s/AKfycbwxs9T27Pco1dGeqPP-vf1ytyq9WpVJrtjBIcGQIs1IX5T1tT5w7IPT6ieI6iz7Pqaszw/exec";
   function syncOn(){ return SYNC_URL.indexOf("http")===0; }
   function qGet(){ try{return JSON.parse(localStorage.getItem("tautq")||"[]");}catch(e){return [];} }
   function qPut(a){ try{localStorage.setItem("tautq",JSON.stringify(a.slice(-60)));}catch(e){} }
