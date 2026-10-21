@@ -71,20 +71,20 @@
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
-.wrap{max-width:700px;margin:0 auto;padding-left:max(17px,env(safe-area-inset-left,0px));padding-right:max(17px,env(safe-area-inset-right,0px));padding-block:0 104px}
+.wrap{max-width:700px;margin:0 auto;padding-left:max(17px,env(safe-area-inset-left,0px));padding-right:max(17px,env(safe-area-inset-right,0px));padding-block:env(safe-area-inset-top,0px) 104px}
 button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2.5px solid var(--acc);outline-offset:3px;border-radius:4px}
 .cap{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
 /* ─── header ─── */
-header{display:flex;align-items:center;gap:12px;padding-block:22px 16px}
+header{display:flex;align-items:center;gap:12px;padding-block:14px 12px}
 .brand{flex:1;min-width:0;display:flex;align-items:center;gap:9px}
 .mark{width:26px;height:26px;flex:none;color:var(--fg)}
 .brand h1{align-self:center}
 .brand h1{margin:0;font-size:23px;font-weight:800;letter-spacing:.17em;line-height:1}
 .ver{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--acc);background:var(--acc-soft);padding:3px 7px;border-radius:5px;line-height:1}
-.sub{margin:5px 0 0;font-size:11.5px;color:var(--faint);letter-spacing:.02em}
+.sub{margin:2px 0 10px;font-size:11px;color:var(--faint);letter-spacing:.02em}
 .thm{flex:none;display:flex;gap:2px;background:var(--sunk);padding:3px;border-radius:999px;border:1px solid var(--line)}
 .thm button{width:33px;height:29px;border:0;background:transparent;border-radius:999px;font-size:13px;line-height:1;display:grid;place-items:center;color:var(--faint);transition:color .2s,background .2s}
 .thm button[aria-pressed="true"]{background:var(--card);color:var(--acc);box-shadow:var(--sh)}
@@ -213,7 +213,7 @@ th.on{color:var(--acc)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
 .tune .segs{width:100%;max-width:306px}
 
-.dial{position:relative;width:100%;max-width:272px;display:grid;place-items:center}
+.dial{position:relative;width:100%;max-width:min(100%,318px);display:grid;place-items:center}
 svg.hd{width:100%;height:auto;display:block;touch-action:manipulation;overflow:visible}
 svg.hd .lug{cursor:pointer}
 svg.hd .lugbody,svg.hd .chkdot{transition:fill .3s var(--ease),stroke .3s var(--ease)}
@@ -222,14 +222,14 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 
 /* 中央の読み取り。SVGではなくHTMLなので滑らかに動く */
 .ro{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;gap:1px;pointer-events:none}
-.ro{padding-top:17px}
-.ro .lab{font-size:9.5px;font-weight:700;letter-spacing:.17em;color:var(--head-ink);opacity:.4}
-.ro .dev{font-size:42px;font-weight:800;line-height:1.06;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:var(--head-ink);transition:color .3s var(--ease)}
-.ro .dev em{font-style:normal;font-size:13px;font-weight:700;letter-spacing:0;margin-left:3px;opacity:.5}
+.ro{padding-top:20px}
+.ro .lab{font-size:10px;font-weight:700;letter-spacing:.17em;color:var(--head-ink);opacity:.4}
+.ro .dev{font-size:clamp(40px,13.5vw,56px);font-weight:800;line-height:1.06;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:var(--head-ink);transition:color .3s var(--ease)}
+.ro .dev em{font-style:normal;font-size:15px;font-weight:700;letter-spacing:0;margin-left:3px;opacity:.5}
 .ro .dev.muted{opacity:.3}
-.ro .nn2{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
-.ro .act{font-size:11.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
-svg.dw{width:100%;max-width:238px;height:auto;display:block;margin:-2px 0 -10px}
+.ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
+.ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
+svg.dw{width:100%;max-width:252px;height:auto;display:block;margin:-6px 0 -12px}
 svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
@@ -359,7 +359,7 @@ footer b{font-family:var(--mono);font-weight:700}
     <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
       <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
-      <svg class="dw" id="dwg" viewBox="0 0 200 84" role="img" aria-label="ドラム図"></svg>
+      <svg class="dw" id="dwg" viewBox="0 0 230 100" role="img" aria-label="ドラム図"></svg>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -1537,46 +1537,110 @@ footer b{font-family:var(--mono);font-weight:700}
     }
   }
 
-  // キットの寸法どおりに描くドラムの図。選んでいる面が光る
-  function drawDrum(d,head){
-    var W=Math.max(64,Math.min(156,d.dia*6.9));
-    var H=Math.max(18,Math.min(48,d.dep*2.5));
-    var cx=100, ry=W*0.145, topY=42-H/2, botY=42+H/2;
-    var SH=cssv("--rim"), HI=cssv("--rim-hi"), ACC=cssv("--acc");
-    var HA=cssv("--head-a"), HB=cssv("--head-b"), INK=cssv("--head-ink");
-    var shell=d.kind==="kick"?"#2A3140":(d.kind==="snare"?"#3A424F":"#333B48");
-    var p=[],i;
-    p.push('<defs>'
-      +'<linearGradient id="shg" x1="0" x2="1"><stop offset="0" stop-color="'+shell+'" stop-opacity="0.55"/>'
-      +'<stop offset=".32" stop-color="'+shell+'"/><stop offset=".66" stop-color="'+shell+'" stop-opacity="0.8"/>'
-      +'<stop offset="1" stop-color="'+shell+'" stop-opacity="0.5"/></linearGradient>'
-      +'<linearGradient id="chg" x1="0" x2="1"><stop offset="0" stop-color="'+SH+'"/>'
-      +'<stop offset=".35" stop-color="'+HI+'"/><stop offset="1" stop-color="'+SH+'"/></linearGradient></defs>');
+  // キットの実寸どおりに描くドラム。いま触っている面が光り、反対面は沈む
+  function drawDrum(d, head) {
+    var W = Math.max(72, Math.min(172, d.dia * 7.6));
+    var H = Math.max(20, Math.min(44, d.dep * 2.4));
+    var cx = 115, ry = W * 0.132, topY = 46 - H / 2, botY = 46 + H / 2;
+    var isF = head === "fund", lit = { top: head === "top" || isF, bot: head === "bot" || isF };
+    var ACC = cssv("--acc"), DIMC = cssv("--faint"), N = Math.min(d.lugs, 12);
+    var p = [], i, a, fx;
+
+    p.push('<defs>' +
+      // 胴（木目の円筒）
+      '<linearGradient id="shl" x1="0" x2="1">' +
+        '<stop offset="0" stop-color="#190F0C"/><stop offset=".09" stop-color="#432718"/>' +
+        '<stop offset=".24" stop-color="#7A4A30"/><stop offset=".38" stop-color="#9A6240"/>' +
+        '<stop offset=".5" stop-color="#7E4F2F"/><stop offset=".68" stop-color="#5B3620"/>' +
+        '<stop offset=".86" stop-color="#2C1A11"/><stop offset="1" stop-color="#150D09"/></linearGradient>' +
+      // クローム
+      '<linearGradient id="crm" x1="0" x2="1">' +
+        '<stop offset="0" stop-color="#5E6671"/><stop offset=".08" stop-color="#C6CFD9"/>' +
+        '<stop offset=".2" stop-color="#FAFCFE"/><stop offset=".33" stop-color="#A4AEBA"/>' +
+        '<stop offset=".48" stop-color="#E9EEF3"/><stop offset=".63" stop-color="#8A94A0"/>' +
+        '<stop offset=".8" stop-color="#D6DCE4"/><stop offset="1" stop-color="#596271"/></linearGradient>' +
+      // ヘッド
+      '<radialGradient id="hdg" cx="38%" cy="26%" r="86%">' +
+        '<stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#EDF1F6"/>' +
+        '<stop offset="1" stop-color="#C4CCD6"/></radialGradient>' +
+      '<radialGradient id="shd" cx="50%" cy="50%" r="50%">' +
+        '<stop offset="0" stop-color="#000" stop-opacity=".45"/>' +
+        '<stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>' +
+      '</defs>');
+
+    // 接地影
+    p.push('<ellipse cx="' + cx + '" cy="' + (botY + ry * 0.72).toFixed(1) + '" rx="' + (W * 0.56).toFixed(1) +
+      '" ry="' + (ry * 0.62).toFixed(1) + '" fill="url(#shd)"/>');
+
     // 脚・スパー
-    if(d.kind==="kick"){
-      p.push('<path d="M'+(cx-W/2+6)+' '+(botY-3)+'l-13 15M'+(cx+W/2-6)+' '+(botY-3)+'l13 15" stroke="'+SH+'" stroke-width="3" stroke-linecap="round" fill="none"/>');
-    } else if(d.dia>=14&&d.kind==="tom"){
-      p.push('<path d="M'+(cx-W/2+4)+' '+(topY+6)+'l-9 28M'+(cx+W/2-4)+' '+(topY+6)+'l9 28M'+cx+' '+botY+'l0 16" stroke="'+SH+'" stroke-width="2.6" stroke-linecap="round" fill="none"/>');
+    if (d.kind === "kick") {
+      p.push('<g stroke="url(#crm)" stroke-width="3.2" stroke-linecap="round" fill="none">' +
+        '<path d="M' + (cx - W / 2 + 7).toFixed(1) + ' ' + (botY - 2).toFixed(1) + 'l-14 15"/>' +
+        '<path d="M' + (cx + W / 2 - 7).toFixed(1) + ' ' + (botY - 2).toFixed(1) + 'l14 15"/></g>');
+    } else if (d.kind === "tom" && d.dia >= 14) {
+      p.push('<g stroke="url(#crm)" stroke-width="2.8" stroke-linecap="round" fill="none">' +
+        '<path d="M' + (cx - W / 2 + 3).toFixed(1) + ' ' + (topY + 7).toFixed(1) + 'l-11 34"/>' +
+        '<path d="M' + (cx + W / 2 - 3).toFixed(1) + ' ' + (topY + 7).toFixed(1) + 'l11 34"/>' +
+        '<path d="M' + cx + ' ' + (botY + 2).toFixed(1) + 'l0 20"/></g>');
     }
+
     // 胴
-    p.push('<path d="M'+(cx-W/2)+' '+topY+'V'+botY+'A'+(W/2)+' '+ry+' 0 0 0 '+(cx+W/2)+' '+botY+'V'+topY+'Z" fill="url(#shg)"/>');
-    // ラグ
-    for(i=0;i<Math.min(d.lugs,10);i++){
-      var fx=cx-W/2+10+(W-20)*i/(Math.min(d.lugs,10)-1||1);
-      p.push('<rect x="'+(fx-2.6).toFixed(1)+'" y="'+(topY+H*0.3).toFixed(1)+'" width="5.2" height="'+(H*0.4).toFixed(1)+'" rx="2" fill="url(#chg)"/>');
+    p.push('<path d="M' + (cx - W / 2).toFixed(1) + ' ' + topY.toFixed(1) + 'V' + botY.toFixed(1) +
+      'A' + (W / 2).toFixed(1) + ' ' + ry.toFixed(1) + ' 0 0 0 ' + (cx + W / 2).toFixed(1) + ' ' + botY.toFixed(1) +
+      'V' + topY.toFixed(1) + 'Z" fill="url(#shl)"/>');
+    // 木目
+    for (i = 1; i < 7; i++) {
+      fx = cx - W / 2 + W * i / 7;
+      p.push('<path d="M' + fx.toFixed(1) + ' ' + (topY + 1).toFixed(1) + 'q' + (i % 2 ? 2 : -2) + ' ' +
+        (H / 2).toFixed(1) + ' 0 ' + (H - 2).toFixed(1) + '" stroke="#120B08" stroke-width="0.8" fill="none" opacity="0.22"/>');
     }
-    // 下フープ
-    p.push('<ellipse class="lit" cx="'+cx+'" cy="'+botY+'" rx="'+(W/2)+'" ry="'+ry+'" fill="none" stroke="'
-      +(head==="bot"?ACC:SH)+'" stroke-width="'+(head==="bot"?3.4:2.6)+'" opacity="'+(head==="bot"?1:0.75)+'"/>');
+
+    // テンションロッドとラグ
+    for (i = 0; i < N; i++) {
+      fx = cx - W / 2 + 8 + (W - 16) * i / (N - 1 || 1);
+      p.push('<path d="M' + fx.toFixed(1) + ' ' + (topY + ry * 0.5).toFixed(1) + 'V' + (topY + H * 0.3).toFixed(1) +
+        '" stroke="url(#crm)" stroke-width="1.6" stroke-linecap="round"/>');
+      p.push('<rect x="' + (fx - 3).toFixed(1) + '" y="' + (topY + H * 0.3).toFixed(1) + '" width="6" height="' +
+        (H * 0.42).toFixed(1) + '" rx="2.4" fill="url(#crm)"/>');
+      p.push('<rect x="' + (fx - 3).toFixed(1) + '" y="' + (topY + H * 0.3).toFixed(1) + '" width="2" height="' +
+        (H * 0.42).toFixed(1) + '" rx="1" fill="#FFF" opacity="0.5"/>');
+    }
+
+    // 裏のフープ
+    p.push('<ellipse cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) + '" ry="' + ry.toFixed(1) +
+      '" fill="none" stroke="url(#crm)" stroke-width="3.4" opacity="' + (lit.bot ? 1 : 0.45) + '"/>');
+    if (lit.bot && !isF)
+      p.push('<ellipse cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2 + 2.6).toFixed(1) + '" ry="' +
+        (ry + 2.6).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6"/>');
+
     // 打面
-    p.push('<ellipse cx="'+cx+'" cy="'+topY+'" rx="'+(W/2-2)+'" ry="'+(ry-1).toFixed(1)+'" fill="'+HA+'"/>');
-    p.push('<ellipse cx="'+cx+'" cy="'+topY+'" rx="'+(W/2-2)+'" ry="'+(ry-1).toFixed(1)+'" fill="none" stroke="'+INK+'" stroke-width="0.6" opacity="0.1"/>');
-    p.push('<ellipse class="lit" cx="'+cx+'" cy="'+topY+'" rx="'+(W/2)+'" ry="'+ry+'" fill="none" stroke="'
-      +(head==="top"?ACC:HI)+'" stroke-width="'+(head==="top"?3.4:2.8)+'"/>');
-    // スナッピー
-    if(d.kind==="snare")
-      p.push('<rect x="'+(cx+W/2-4)+'" y="'+(topY+H*0.22).toFixed(1)+'" width="7" height="'+(H*0.5).toFixed(1)+'" rx="2" fill="url(#chg)"/>');
-    elDwg.innerHTML=p.join("");
+    p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 - 2).toFixed(1) + '" ry="' +
+      (ry - 1.4).toFixed(1) + '" fill="url(#hdg)" opacity="' + (lit.top ? 1 : 0.5) + '"/>');
+    p.push('<ellipse cx="' + (cx - W * 0.13).toFixed(1) + '" cy="' + (topY - ry * 0.2).toFixed(1) + '" rx="' +
+      (W * 0.2).toFixed(1) + '" ry="' + (ry * 0.34).toFixed(1) + '" fill="#FFF" opacity="' + (lit.top ? 0.5 : 0.18) + '"/>');
+    p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) + '" ry="' + ry.toFixed(1) +
+      '" fill="none" stroke="url(#crm)" stroke-width="3.4" opacity="' + (lit.top ? 1 : 0.45) + '"/>');
+    if (lit.top && !isF)
+      p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 + 2.6).toFixed(1) + '" ry="' +
+        (ry + 2.6).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6"/>');
+
+    // スネアのストレイナー
+    if (d.kind === "snare")
+      p.push('<rect x="' + (cx + W / 2 - 5).toFixed(1) + '" y="' + (topY + H * 0.2).toFixed(1) +
+        '" width="8" height="' + (H * 0.55).toFixed(1) + '" rx="2.5" fill="url(#crm)"/>');
+
+    // いま何を測っているか
+    var lbl = isF ? "実音" : (head === "top" ? "打面" : "裏面");
+    var ly = isF ? 46 : (head === "top" ? topY : botY);
+    p.push('<g transform="translate(' + (cx + W / 2 + 13).toFixed(1) + ',' + ly.toFixed(1) + ')">' +
+      '<rect x="-15" y="-8" width="30" height="16" rx="8" fill="' + ACC + '"/>' +
+      '<text x="0" y="4.2" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" ' +
+      'font-size="9.5" font-weight="700" fill="' + cssv("--acc-fg") + '">' + lbl + '</text></g>');
+    p.push('<text x="' + (cx - W / 2 - 13).toFixed(1) + '" y="' + (46 + 3.5).toFixed(1) +
+      '" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="9" ' +
+      'font-weight="700" fill="' + DIMC + '">' + d.dia + '"</text>');
+
+    elDwg.innerHTML = p.join("");
   }
 
   function rTuner(){
@@ -1664,7 +1728,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-103453";
+  var BUILD="20261021-104354";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
