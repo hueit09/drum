@@ -211,12 +211,12 @@ th.on{color:var(--acc)}
 .dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
 .dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
-.hsl{position:relative;display:flex;gap:0;padding:3px;border-radius:999px;background:var(--sunk);
-  border:1px solid var(--line);margin-top:2px}
-.hsl i.hin{position:absolute;top:3px;bottom:3px;border-radius:999px;background:var(--acc);
-  box-shadow:var(--sh);transition:left .3s var(--ease),width .3s var(--ease);z-index:0}
-.hsl button{position:relative;z-index:1;border:0;background:none;color:var(--dim);font-size:11.5px;
-  font-weight:700;letter-spacing:.06em;padding:7px 18px;border-radius:999px;transition:color .22s var(--ease)}
+.hsl{position:relative;flex:0 0 auto;display:flex;flex-direction:column;gap:0;padding:3px;
+  border-radius:999px;background:var(--sunk);border:1px solid var(--line)}
+.hsl i.hin{position:absolute;left:3px;right:3px;border-radius:999px;background:var(--acc);
+  box-shadow:var(--sh);transition:top .3s var(--ease),height .3s var(--ease);z-index:0}
+.hsl button{position:relative;z-index:1;border:0;background:none;color:var(--dim);font-size:10.5px;
+  font-weight:700;letter-spacing:.04em;padding:8px 7px;border-radius:999px;transition:color .22s var(--ease)}
 .hsl button[aria-pressed="true"]{color:var(--acc-fg)}
 
 .dial{position:relative;width:100%;max-width:min(100%,292px);display:grid;place-items:center}
@@ -228,6 +228,8 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 
 /* 中央の読み取り。SVGではなくHTMLなので滑らかに動く */
 .ro{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;gap:1px;pointer-events:none}
+.ro .dev{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ro .dev:active{transform:scale(.95)}
 .ro{padding-top:20px}
 .ro .lab{font-size:10px;font-weight:700;letter-spacing:.17em;color:var(--head-ink);opacity:.4}
 .ro .dev{font-size:clamp(40px,13.5vw,56px);font-weight:800;line-height:1.06;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:var(--head-ink);transition:color .3s var(--ease)}
@@ -235,11 +237,13 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro .dev.muted{opacity:.3}
 .ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
 .ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
-.car{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:-14px 0 -6px;
+.stage{display:flex;align-items:center;gap:4px;width:100%;margin:-14px 0 -6px}
+.dnm{flex:0 0 56px;font-size:11.5px;font-weight:700;line-height:1.35;color:var(--fg);text-align:right;letter-spacing:.01em}
+.car{flex:1;min-width:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .car::-webkit-scrollbar{display:none}
 .slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center}
-.slide svg{width:100%;max-width:208px;height:auto;display:block;overflow:visible}
+.slide svg{width:100%;max-width:242px;height:auto;display:block;overflow:visible}
 svg .hit{cursor:pointer}
 .cdots{display:flex;gap:5px;justify-content:center;margin:-6px 0 2px}
 .cdots i{width:5px;height:5px;border-radius:3px;background:var(--faint);opacity:.3;
@@ -374,9 +378,12 @@ footer b{font-family:var(--mono);font-weight:700}
     <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
 
-      <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
+      <div class="stage">
+        <div class="dnm" id="dNm"></div>
+        <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
+        <div class="hsl" id="heads" role="group" aria-label="ヘッド"><i class="hin" id="hInd"></i></div>
+      </div>
       <div class="cdots" id="cdots" aria-hidden="true"></div>
-      <div class="hsl" id="heads" role="group" aria-label="ヘッド"><i class="hin" id="hInd"></i></div>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -388,7 +395,6 @@ footer b{font-family:var(--mono);font-weight:700}
       </div>
       <div class="chips" id="chips">
         <button class="chip" id="tDia" type="button">—</button>
-        <button class="chip" id="tLugs" type="button">—</button>
         <span class="tgt" id="tS"></span>
       </div>
       <div class="editor" id="tEdit" hidden>
@@ -527,6 +533,8 @@ footer b{font-family:var(--mono);font-weight:700}
         <ul>
           <li><strong>ラグを直接タップ</strong>して選びます。弾けばマイクが拾い、手入力なら打ち込んで少し待つだけ。記録ボタンはありません。</li>
           <li>既定では<strong>記録しても勝手に次へ進みません</strong>。そのラグの誤差が消えるまで同じラグを弾き続け、納得したら次のラグをタップしてください。自動で送りたい場合はオプションの「記録したあと」を切り替えます。</li>
+          <li>画像の<strong>上のヘッドをタップすると打面、下のフープで裏面、胴で実音</strong>に切り替わります。右の縦スイッチからでも同じです。画像を左右にスワイプするとドラムが変わります。</li>
+          <li><strong>中央の数字をタップすると目標音が鳴ります。</strong>耳で合わせたいとき、どうしても合わないときに。鳴っているあいだはマイクの検出が止まるので、リファレンス音を測ってしまうことはありません。</li>
           <li>ヘッドの中央の大きい数字は、<strong>目標とのズレ</strong>です。<code>+3</code> なら 3Hz 高いので緩める、<code>−3</code> なら締める、<code>±0</code> で合致。まだ測っていないラグでは目標値そのものが薄く出ます。その下のドット列も同じズレを表していて、真ん中のドットが光れば合っています（端まで振れた状態で±8%）。</li>
           <li>実測値・音名・目標・中央のピッチは、すべてヘッドのすぐ下に数字で並びます。</li>
           <li>許容範囲に入ったラグには<strong>緑のチェック</strong>が付きます。全部にチェックが付けばそのヘッドは完了です。ラグの色は緑が ±1.5% 以内、黄が ±3.5% 以内、赤はそれより外。</li>
@@ -898,10 +906,10 @@ footer b{font-family:var(--mono);font-weight:700}
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elRoDev=E("roDev"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
-      elCar=E("car"),elCdots=E("cdots"),elHInd=E("hInd"),elTabInd=E("tabInd"),
+      elCar=E("car"),elCdots=E("cdots"),elHInd=E("hInd"),elDNm=E("dNm"),elTabInd=E("tabInd"),
       elKit=E("kitList"),elTomN=E("tomN"),
       elMn=E("mn"),elChips=E("chips"),
-      elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
+      elDia=E("tDia"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
   var lug=0, edit=null, inT=0, pop=false, zoom=false;
 
@@ -919,7 +927,6 @@ footer b{font-family:var(--mono);font-weight:700}
 
   // 口径・ラグ数はその場で直す。タブを移動しない
   elDia.addEventListener("click",function(){edit="dia";render();});
-  elLugs.addEventListener("click",function(){edit="lugs";render();});
   E("tEdOk").addEventListener("click",function(){edit=null;save();render();});
   function bumpEd(s){
     var d=byId(st.tid); if(!d||!edit) return;
@@ -1034,6 +1041,15 @@ footer b{font-family:var(--mono);font-weight:700}
     delete d.rcal; save(); render();
   });
   // 記録ボタンは置かない。打ち終わって少し待つと自動で記録される
+  // 中央の数字をタップすると目標音が鳴る。鳴らしているあいだはマイクの検出を止める
+  elRoDev.addEventListener("click",function(){
+    var d=byId(st.tid); if(!d) return;
+    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var hz=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
+    mic.armed=false; mic.last=(window.performance&&performance.now)?performance.now():Date.now();
+    ping(hz,null);
+    setTimeout(function(){ mic.armed=true; mic.floor=0.002; },2100);
+  });
   elIn.addEventListener("input",function(){clearTimeout(inT);inT=setTimeout(commit,600);});
   elIn.addEventListener("change",function(){clearTimeout(inT);commit();});
   elIn.addEventListener("keydown",function(e){
@@ -1653,8 +1669,6 @@ footer b{font-family:var(--mono);font-weight:700}
       '<rect x="-16" y="-8.5" width="32" height="17" rx="8.5" fill="' + ACC + '"/>' +
       '<text x="0" y="4.4" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" ' +
       'font-size="10" font-weight="700" fill="' + AFG + '">' + lbl + '</text></g>');
-    p.push('<text x="8" y="15" font-family="-apple-system, system-ui, sans-serif" font-size="10" ' +
-      'font-weight="700" fill="' + DIMC + '">' + d.dia + '×' + d.dep + '"</text>');
 
     return '<svg viewBox="0 0 238 158" role="img" aria-label="' + d.name + '">' +
       p.join("").replace(/id="(\w+)"/g, 'id="$1' + uid + '"').replace(/url\(#(\w+)\)/g, 'url(#$1' + uid + ')') +
@@ -1716,7 +1730,7 @@ footer b{font-family:var(--mono);font-weight:700}
       b.setAttribute("aria-pressed",on?"true":"false");
       if(on) hi=b;
     });
-    if(hi&&elHInd){ elHInd.style.left=hi.offsetLeft+"px"; elHInd.style.width=hi.offsetWidth+"px"; }
+    if(hi&&elHInd){ elHInd.style.top=hi.offsetTop+"px"; elHInd.style.height=hi.offsetHeight+"px"; }
 
     var isF=st.thead==="fund";
     var flat=!!FLATK[rootOf(st.live,st.mode)];
@@ -1757,8 +1771,7 @@ footer b{font-family:var(--mono);font-weight:700}
       elEdV.textContent=edit==="dia"?(d.dia+'"'):(n+" ラグ");
     }
     elDia.textContent=d.dia+'"';
-    elLugs.hidden=isF;
-    elLugs.textContent=n+" ラグ";
+    elDNm.textContent=d.name;
     elTS.innerHTML="";
     if(cur>0) elTS.appendChild(document.createTextNode(cur.toFixed(1)+" → "));
     var tb=document.createElement("b");
@@ -1793,7 +1806,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-113816";
+  var BUILD="20261021-114553";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
