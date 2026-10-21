@@ -247,8 +247,10 @@ th.on{color:var(--acc)}
 .dial{position:relative;width:100%;max-width:min(100%,292px);display:grid;place-items:center}
 svg.hd{width:100%;height:auto;display:block;touch-action:manipulation;overflow:visible}
 svg.hd .lug{cursor:pointer}
-svg.hd .lugbody,svg.hd .chkdot{transition:fill .3s var(--ease),stroke .3s var(--ease)}
-svg.hd .selring{transition:cx .4s var(--ease),cy .4s var(--ease),opacity .25s}
+svg.hd .lugbody{transform-box:fill-box;transform-origin:center;
+  transition:fill .3s var(--ease),stroke .3s var(--ease),transform .3s var(--spring)}
+svg.hd .lugnum{transition:fill .3s var(--ease),font-size .26s var(--ease)}
+svg.hd .chkdot{transition:fill .3s var(--ease),stroke .3s var(--ease)}
 svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 
 /* 中央の読み取り。SVGではなくHTMLなので滑らかに動く */
@@ -1623,9 +1625,6 @@ footer b{font-family:var(--mono);font-weight:700}
     } else {
       p.push('<circle class="arc" id="arc" cx="100" cy="100" r="97" fill="none" stroke="'+cssv("--acc")
         +'" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 100 100)"/>');
-      q=lugXY(0,n);
-      p.push('<circle class="selring" id="selr" cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)
-        +'" r="12.5" fill="none" stroke="'+cssv("--acc")+'" stroke-width="2.5"/>');
       for(i=0;i<n;i++){
         q=lugXY(i,n);
         p.push('<g class="lug" data-l="'+i+'" role="button" tabindex="0" aria-label="ラグ'+(i+1)+'">');
@@ -1634,7 +1633,7 @@ footer b{font-family:var(--mono);font-weight:700}
           +'" r="12.5" fill="none" stroke="'+cssv("--acc")+'" stroke-width="2.5" opacity="0"/>');
         p.push('<g transform="translate('+q.x.toFixed(1)+','+q.y.toFixed(1)+') rotate('+(q.dg+90).toFixed(1)+')">'
           +'<rect class="lugbody" id="lb'+i+'" x="-8" y="-6.5" width="16" height="13" rx="4" stroke-width="1"/></g>');
-        p.push('<text id="ln'+i+'" x="'+q.x.toFixed(1)+'" y="'+(q.y+3.9).toFixed(1)
+        p.push('<text class="lugnum" id="ln'+i+'" x="'+q.x.toFixed(1)+'" y="'+(q.y+3.9).toFixed(1)
           +'" text-anchor="middle" font-size="11.5" font-weight="700">'+(i+1)+'</text>');
         p.push('<g id="ck'+i+'" opacity="0">'
           +'<circle class="chkdot" cx="'+q.bx.toFixed(1)+'" cy="'+q.by.toFixed(1)+'" r="5" fill="'+cssv("--good")+'"/>'
@@ -1667,18 +1666,24 @@ footer b{font-family:var(--mono);font-weight:700}
 
   function paintHead(n,isF,arr,cl,CO){
     if(isF) return;
-    var i,done=0,C=2*Math.PI*97,arc=E("arc"),sel=E("selr"),q=lugXY(lug,n);
+    var i,done=0,C=2*Math.PI*97,arc=E("arc");
     for(i=0;i<n;i++) if(cl(arr[i])==="good") done++;
     if(arc){
       arc.setAttribute("stroke-dasharray",C.toFixed(1));
       arc.setAttribute("stroke-dashoffset",(C*(1-done/n)).toFixed(1));
       arc.setAttribute("stroke",done===n?CO.good:cssv("--acc"));
     }
-    if(sel){ sel.setAttribute("cx",q.x.toFixed(1)); sel.setAttribute("cy",q.y.toFixed(1)); }
     for(i=0;i<n;i++){
-      var k=cl(arr[i]),body=E("lb"+i),num=E("ln"+i),ck=E("ck"+i);
-      if(body){ body.setAttribute("fill",CO[k]); body.setAttribute("stroke",k==="none"?cssv("--line-hi"):CO[k]); }
-      if(num) num.setAttribute("fill",k==="none"?cssv("--dim"):cssv("--card"));
+      var k=cl(arr[i]),body=E("lb"+i),num=E("ln"+i),ck=E("ck"+i),on=(i===lug);
+      // まだ測っていない「いま回すラグ」はアクセント色で埋めて、他と見分ける
+      var fill=(on&&k==="none")?cssv("--acc"):CO[k];
+      var ink=(on&&k==="none")?cssv("--acc-fg"):(k==="none"?cssv("--dim"):cssv("--card"));
+      if(body){
+        body.setAttribute("fill",fill);
+        body.setAttribute("stroke",(k==="none"&&!on)?cssv("--line-hi"):fill);
+        body.style.transform=on?"scale(1.46)":"scale(1)";
+      }
+      if(num){ num.setAttribute("fill",ink); num.setAttribute("font-size",on?"13.5":"11.5"); }
       if(ck){ ck.setAttribute("opacity",k==="good"?"1":"0"); ck.classList.remove("chk"); }
     }
     if(pop){ var c2=E("ck"+lug); if(c2&&cl(arr[lug])==="good") c2.classList.add("chk"); }
@@ -1989,7 +1994,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-230802";
+  var BUILD="20261021-231018";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
