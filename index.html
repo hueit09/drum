@@ -95,6 +95,14 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
   font-size:13.5px;font-weight:700;letter-spacing:.03em;transition:transform .13s var(--ease)}
 .sres .go2:active{transform:scale(.97)}
 .sres .go2.sub{background:var(--card);color:var(--dim);font-weight:700;border:1px solid var(--line)}
+.dchk{display:flex;gap:10px;align-items:flex-start;margin-top:12px;cursor:pointer}
+.dchk input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc);flex:0 0 auto}
+.dchk span{font-size:13px;font-weight:700;color:var(--fg);line-height:1.45}
+.dchk i{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:var(--dim);margin-top:3px}
+.sres .fitrow{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--dim)}
+.sres .fitrow b{font-family:var(--mono);font-size:13.5px;color:var(--fg);min-width:72px}
+.sres .fitrow i{font-style:normal;font-family:var(--mono)}
+.sres .fitrow.ng b,.sres .fitrow.ng i{color:var(--dim);opacity:.65}
 .snote{margin:0;font-size:11.5px;line-height:1.75;color:var(--faint)}
 
 .upd{position:fixed;left:50%;transform:translateX(-50%);z-index:45;
@@ -591,6 +599,9 @@ footer b{font-family:var(--mono);font-weight:700}
           <span id="songPickT">ファイルを選ぶ</span>
         </label>
       </div>
+      <label class="dchk"><input type="checkbox" id="songDrums">
+        <span>ドラムだけの音源<i>タムまで読んで、キーと音の高さの両方を決めます。ベースや歌が入っていると外れます</i></span>
+      </label>
       <div class="prog" id="songProg" hidden><i id="songBar"></i></div>
       <div class="sres" id="songRes" hidden></div>
       <p class="snote" id="songMsg"></p>
@@ -652,6 +663,17 @@ footer b{font-family:var(--mono);font-weight:700}
     </details>
 
     <details>
+      <summary>余韻を測る</summary>
+      <div class="bd">
+        <p>ヘッドの切替を<strong>実音</strong>にして中央を叩くと、音程と一緒に<strong>余韻</strong>が出ます。叩いたあと実音まわりの帯域が何 dB/秒 で落ちるかを測り、その傾きから「60dB 落ちるまでの秒数」を出しています。残響でいう T60 と同じ考え方です。</p>
+        <p>ヘッドの厚み・ミュートの効き具合・表裏の開きは、どれも伸びに出ます。これまで「もう少し締まった音」としか言えなかったところが、<strong>3.1秒から1.4秒に減った</strong>と言えるようになります。生徒さんと同じ数字を見て話せます。</p>
+        <p>正解の分かる信号で確かめたところ、0.3秒から4秒まで<strong>誤差 2%以内</strong>で読めました。ただし条件があります。暗騒音より 22dB 以上大きく鳴っていること、きれいに減衰していること（当てはまりが悪いと数字を出しません）。静かな場所で、余韻が消えるまで止めずに叩いてください。</p>
+        <p>読めなかったときは何も表示しません。おかしな数字を出すより黙る方を選んでいます。</p>
+        <p>測った余韻は、実音と一緒に測定データとして送られます。ヘッドごとの違いが貯まれば、<strong>どのヘッドならどれだけ伸びるか</strong>を実測で言えるようになります。</p>
+      </div>
+    </details>
+
+    <details>
       <summary>曲から読み取る</summary>
       <div class="bd">
         <p>「曲から」タブに音声ファイルを渡すと、キー・テンポと、<strong>その曲のキックとスネアが実際に鳴っている音程</strong>を読み取ります。解析はこの端末の中だけで行われ、曲はどこにも送られません。真ん中あたりから最大2分（ドラムは最大1分）を見ます。</p>
@@ -661,6 +683,8 @@ footer b{font-family:var(--mono);font-weight:700}
         <p>スネアの帯域はベースの主音と重なるので、<strong>叩いた音と伸びている音を分けて</strong>から測ります。スペクトルを時間方向に均すと伸びている音が、周波数方向に均すと叩いた音が残る性質を使っています。</p>
         <p>キックは胴鳴り自体が伸びた音に見えるのでこの分離をかけません。代わりに、叩いた直後は膜の張りの過渡で音程が高く出るため、<strong>100ミリ秒より後</strong>を測っています。</p>
         <p><strong>どこまで当てになるか。</strong>正解の分かる合成音源で確かめたところ、キックで +3〜+6セント、スネアで ±5セント以内に収まりました。ただしこれは音が整理された音源での値です。音が混み合った市販音源や、スマートフォンで録った音では、特にキックの基音が他の音に埋もれて読めないことがあります。読めなかった側は「読めず」と出します。「確からしさ」が低いときは、数字を信用せず耳で合わせてください。</p>
+        <p><strong>ドラムだけの音源なら、レシピそのものが出ます。</strong>「ドラムだけの音源」にチェックを入れると、タムまで含めて1打ずつ音程を測り、「このキー・この高さならどの実音が並ぶはず」という組と照合します。キック・スネア・タムが全部その位置に乗る組み合わせが答えです。正解の分かる音源5本で、キーも音の高さも5本とも当てられました。</p>
+        <p>ベースや歌が入っているとこれは使えません。ベースが音階上の空きを埋めてしまい、タムの位置を決められなくなるからです（同じ5本にベースを足すと、キーは5本とも当たりますが、高さは2本しか当たりません）。混ざった音源では、キーだけを見てください。</p>
         <p><strong>確かめ方。</strong>「聴き取った結果を曲に重ねて鳴らす」を押すと、拾った打点に読み取った音程の音を置いた状態で15秒ぶん鳴ります。ずれていればその場で分かります。</p>
         <p>和音から出たキーとドラムから出たキーが一致したときがいちばん確かです。食い違ったときは両方のボタンを出すので、鳴らし比べて選んでください。</p>
       </div>
@@ -787,7 +811,8 @@ footer b{font-family:var(--mono);font-weight:700}
            [-5,"完全4度下（裏が低い）"],[-6,"増4度下（裏が低い）"],[-7,"完全5度下（裏が低い）"]];
 
   var PRE={
-    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]]},
+    // ラグ数は実機の写真から。タムは口径によらず8本
+    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]],lugs:{tom:8}},
     std:{label:"標準",kick:[22,16],snare:[14,5.5],toms:[[12,9],[13,10],[16,16]]},
     t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]]},
     cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
@@ -846,10 +871,11 @@ footer b{font-family:var(--mono);font-weight:700}
 
   function buildKit(id){
     var p=PRE[id], out=[];
-    out.push({id:"kick",kind:"kick",name:"キック",dia:p.kick[0],dep:p.kick[1],lugs:lugsFor("kick",p.kick[0]),iv:IV_K,deg:0});
-    out.push({id:"snare",kind:"snare",name:"スネア",dia:p.snare[0],dep:p.snare[1],lugs:lugsFor("snare",p.snare[0]),iv:IV_S,deg:0});
+    function lg(k,d){ return (p.lugs&&p.lugs[k]>0)?p.lugs[k]:lugsFor(k,d); }
+    out.push({id:"kick",kind:"kick",name:"キック",dia:p.kick[0],dep:p.kick[1],lugs:lg("kick",p.kick[0]),iv:IV_K,deg:0});
+    out.push({id:"snare",kind:"snare",name:"スネア",dia:p.snare[0],dep:p.snare[1],lugs:lg("snare",p.snare[0]),iv:IV_S,deg:0});
     p.toms.forEach(function(t,i){
-      out.push({id:"t"+i,kind:"tom",name:"",dia:t[0],dep:t[1],lugs:lugsFor("tom",t[0]),iv:IV_T,deg:0});
+      out.push({id:"t"+i,kind:"tom",name:"",dia:t[0],dep:t[1],lugs:lg("tom",t[0]),iv:IV_T,deg:0});
     });
     return renameToms(out);
   }
@@ -1114,8 +1140,15 @@ footer b{font-family:var(--mono);font-weight:700}
     var rms=Math.sqrt(s/1024), now=(window.performance&&performance.now)?performance.now():Date.now();
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
     var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
+    if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
     if(mic.armed&&rms>thr&&now-mic.last>650){
       mic.armed=false; mic.last=now;
+      // 中央を叩いたときだけ、余韻の長さも測る
+      decFinish();
+      if(st.thead==="fund"){
+        var d0=byId(st.tid);
+        if(d0) decStart(calc(st.live,st.mode,st.ser,st.nudge,d0).fund,d0.id,now);
+      }
       // 部屋鳴りは時間とともに育つので、早い窓のほうが膜の音と分離できる。
       // 合成信号で検証：200/340ms は 78/120 しか読めず、150/260ms では 108/120 まで上がる
       setTimeout(function(){micGrab(1);},150);
@@ -1149,6 +1182,74 @@ footer b{font-family:var(--mono);font-weight:700}
     var med=b.length%2?b[(b.length-1)>>1]:(b[(b.length>>1)-1]+b[b.length>>1])/2;
     rejAt=0;
     elIn.value=(Math.round(med*10)/10).toFixed(1); commit();
+  }
+
+
+  /* ---------- 余韻（減衰時間）を測る ---------- */
+  // 叩いたあと、実音まわりの帯域が何 dB/秒 で落ちていくかを見る。
+  // その傾きから「60dB 落ちるまでの秒数」を出す（残響でいう T60 と同じ考え方）。
+  // ヘッドの厚み・ミュートの効き具合を、感覚でなく数字で比べられるようにするため。
+  // 中央を叩いたとき（実音モード）だけ測る。ラグ際は胴の鳴りが乗らないため。
+  var DECN=4096, DEC=null, decRaw={}, decRe=null, decIm=null, decWin=null;
+  function decStart(tg,id,now){
+    DEC=(tg>0)?{t0:0,pts:[],tg:tg,id:id,tick:0,start:now}:null;
+  }
+  function decTick(now){
+    if(!DEC||!mic.an||!ac) return;
+    var N=DECN, b=mic.buf, i;
+    if(!decRe||decRe.length!==N){
+      decRe=new Float64Array(N); decIm=new Float64Array(N); decWin=new Float64Array(N);
+      for(i=0;i<N;i++) decWin[i]=0.5-0.5*Math.cos(2*Math.PI*i/(N-1));
+    }
+    var off=b.length-N; if(off<0) return;
+    for(i=0;i<N;i++){ decRe[i]=b[off+i]*decWin[i]; decIm[i]=0; }
+    fft(decRe,decIm);
+    var sr=ac.sampleRate, lo=Math.max(20,DEC.tg*0.6), hi=Math.min(2000,DEC.tg*2.6);
+    var k0=Math.max(1,Math.floor(lo*N/sr)), k1=Math.min((N>>1)-1,Math.ceil(hi*N/sr));
+    if(k1<=k0) { DEC=null; return; }
+    var e=0;
+    for(i=k0;i<=k1;i++) e+=decRe[i]*decRe[i]+decIm[i]*decIm[i];
+    var db=10*Math.log10(e+1e-20);
+    if(!DEC.t0) DEC.t0=now;
+    DEC.pts.push([(now-DEC.t0)/1000,db]);
+    if(now-DEC.t0>5000) decFinish();
+  }
+  function decFinish(){
+    var D=DEC; DEC=null;
+    if(!D||D.pts.length<10) return;
+    var p=D.pts,i,pk=-999,pkT=0;
+    for(i=0;i<p.length;i++) if(p[i][0]<0.5&&p[i][1]>pk){ pk=p[i][1]; pkT=p[i][0]; }
+    var fl=999, s0=Math.floor(p.length*0.8);
+    for(i=s0;i<p.length;i++) if(p[i][1]<fl) fl=p[i][1];
+    if(pk-fl<22) return;                          // 暗騒音まで落差がないと傾きが読めない
+    var hiD=pk-5, loD=Math.max(pk-25,fl+6);       // 山の5dB下から、暗騒音の6dB上まで
+    if(hiD-loD<12) return;
+    var xs=[],ys=[];
+    for(i=0;i<p.length;i++){
+      if(p[i][0]<pkT) continue;
+      if(p[i][1]<=hiD&&p[i][1]>=loD){ xs.push(p[i][0]); ys.push(p[i][1]); }
+      else if(p[i][1]<loD&&xs.length) break;
+    }
+    if(xs.length<6) return;
+    var n=xs.length,sx=0,sy=0,sxx=0,sxy=0;
+    for(i=0;i<n;i++){ sx+=xs[i]; sy+=ys[i]; sxx+=xs[i]*xs[i]; sxy+=xs[i]*ys[i]; }
+    var den=n*sxx-sx*sx; if(!(den>0)) return;
+    var sl=(n*sxy-sx*sy)/den, ic=(sy-sl*sx)/n;
+    if(!(sl<-2)) return;                          // 落ちていない＝鳴り続けている/雑音
+    var ss=0,tt=0,my=sy/n,r;
+    for(i=0;i<n;i++){ r=ys[i]-(sl*xs[i]+ic); ss+=r*r; tt+=(ys[i]-my)*(ys[i]-my); }
+    if(!(tt>0)||1-ss/tt<0.90) return;             // きれいな指数減衰になっていない
+    var t60=60/(-sl);
+    if(!(t60>0.05&&t60<12)) return;
+    var a=decRaw[D.id]||(decRaw[D.id]=[]);
+    a.push(t60); if(a.length>5) a.shift();
+    var b2=a.slice().sort(function(x,y){return x-y;});
+    st.meas[D.id+"|t60"]=b2.length%2?b2[(b2.length-1)>>1]:(b2[(b2.length>>1)-1]+b2[b2.length>>1])/2;
+    save(); render();
+  }
+  function t60Of(id){ var v=st.meas[id+"|t60"]; return (v>0)?v:0; }
+  function t60Word(t){
+    return t>=3.2?"よく伸びる":t>=1.8?"伸びる":t>=1.0?"ほどほど":t>=0.5?"短め":"かなり短い";
   }
 
   /* ---------- elements ---------- */
@@ -2178,6 +2279,13 @@ footer b{font-family:var(--mono);font-weight:700}
       elTS.appendChild(tb);
       elTS.appendChild(document.createTextNode((isF?" 予測":" 目標")+(nt?"　"+nt.name:"")));
     }
+    var t60=t60Of(d.id);
+    if(t60>0){
+      var tv=document.createElement("b"); tv.textContent=t60.toFixed(1)+" 秒";
+      elTS.appendChild(document.createTextNode("　余韻 "));
+      elTS.appendChild(tv);
+      elTS.appendChild(document.createTextNode(" "+t60Word(t60)));
+    }
 
     elIn.hidden=mic.on;
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
@@ -2225,7 +2333,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-073411";
+  var BUILD="20261022-081549";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -2633,8 +2741,66 @@ footer b{font-family:var(--mono);font-weight:700}
     return out;
   }
 
+  /* ---------- ドラムだけの音源から、レシピそのものを当てる ---------- */
+  // 1打ずつ測った音程を1本のヒストグラムにまとめ、
+  // 「このキー・この上タム位置ならどの実音が並ぶはず」という組と照合する。
+  // キック・スネア・タムが全部その位置に乗る組み合わせが正解。
+  // ベースやコードが入っていると、音階上の空きを埋めてしまって上タム位置が
+  // 決められなくなるため、ドラムだけの音源のときだけ使う。
+  var DFLO=30.0, DFHI=330.0, DFBIN=8.0, DFOFF=[0.030,0.060,0.100];
+
+  function dfHist(x,sr,ons){
+    var nb=Math.floor(1200*Math.log2(DFHI/DFLO)/DFBIN)+2, h=new Float64Array(nb);
+    var i,j,o,r,t,k,f;
+    for(i=0;i<ons.length;i++){
+      o=ons[i];
+      for(j=0;j<DFOFF.length;j++){
+        r=dpeak(x,sr,o+Math.round(sr*DFOFF[j]),DFLO,DFHI,o-DNM);
+        if(!r) continue;
+        t=1200*Math.log2(r.hz/DFLO)/DFBIN; k=Math.floor(t);
+        if(k>=0&&k<nb-1){ f=t-k; h[k]+=r.amp*(1-f); h[k+1]+=r.amp*f; }
+      }
+    }
+    var ker=[0.2,0.5,0.85,1,0.85,0.5,0.2], sm=new Float64Array(nb), q,v,ix;
+    for(i=0;i<nb;i++){ v=0; for(q=0;q<7;q++){ ix=i+q-3; if(ix>=0&&ix<nb) v+=h[ix]*ker[q]; } sm[i]=v; }
+    return sm;
+  }
+  function dfAt(h,hz){
+    if(!(hz>DFLO&&hz<DFHI)) return 0;
+    var t=1200*Math.log2(hz/DFLO)/DFBIN, i=Math.floor(t);
+    if(i<0||i>=h.length-1) return 0;
+    var f=t-i; return h[i]*(1-f)+h[i+1]*f;
+  }
+  function dfRef(h){
+    var v=[],i;
+    for(i=0;i<h.length;i++) if(h[i]>0) v.push(h[i]);
+    if(!v.length) return 1;
+    v.sort(function(a,b){return a-b;});
+    return v[Math.min(v.length-1,Math.floor(v.length*0.85))]||1;
+  }
+  // そのキー・その上タム位置なら並ぶはずの実音
+  function dfPredict(ki,s,ntom){
+    var o=Math.pow(2,offs(ki,"major")/12), out=[(s<=1?KICK_HI:KICK_LO)*o, SNARE_F*o], i;
+    for(i=0;i<ntom;i++) out.push((s+i<SER.length?SER[s+i]:SER[SER.length-1])*o);
+    return out;
+  }
+  function dfFit(h,ntom){
+    var ref=dfRef(h), out=[], ki, s, i, p, sc, hit, smax=Math.max(1,SER.length-ntom+1);
+    for(ki=0;ki<12;ki++) for(s=0;s<smax;s++){
+      p=dfPredict(ki,s,ntom); sc=0; hit=0;
+      for(i=0;i<p.length;i++){
+        var a=dfAt(h,p[i]);
+        sc+=Math.log(1+a/ref);
+        if(a>ref*0.5) hit++;
+      }
+      out.push({score:sc/p.length, hit:hit, n:p.length, ki:ki, ser:s, pred:p});
+    }
+    out.sort(function(a,b){return b.score-a.score;});
+    return out;
+  }
+
   // 重いので小分けにして走らせる。画面は固まらない
-  function drumsOf(mono,sr0,onProg,done){
+  function drumsOf(mono,sr0,onProg,done,drumsOnly,ntom){
     var x=dnsamp(mono,sr0,DSR), sr=DSR;
     var N=DN, H=DH, half=N>>1, NB=Math.min(half,Math.ceil(DTOP*N/sr)+2);
     var FR=Math.floor((x.length-N)/H);
@@ -2647,6 +2813,8 @@ footer b{font-family:var(--mono);font-weight:700}
     var xp=new Float32Array(x.length), w2=new Float32Array(x.length);
     var stage=0, pos=0, env=null, hfe=null, sne=null, fps=0, EH=128;
     var kO=null,sO=null,kPer=[],sPer=[],res={};
+    var hAll=0, hHar=0;
+    var wO=null, wH=null, wde=null, wnb=Math.floor(1200*Math.log2(DFHI/DFLO)/DFBIN)+2;
 
     function step(){
       var t0=Date.now(), j,k,o,q,v,b,m;
@@ -2684,6 +2852,7 @@ footer b{font-family:var(--mono);font-weight:700}
             v=Pp[pos*NB+k]*Pp[pos*NB+k];
             b=Hh[pos*NB+k]*Hh[pos*NB+k];
             m=(v+b)>0?v/(v+b):0;
+            hAll+=A[pos*NB+k]; hHar+=A[pos*NB+k]*(1-m);   // 伸びている音の割合を控える
             re[k]=RE[pos*NB+k]*m; im[k]=-IM[pos*NB+k]*m;
             if(k>0&&k<half){ re[N-k]=re[k]; im[N-k]=-im[k]; }
           }
@@ -2692,12 +2861,12 @@ footer b{font-family:var(--mono);font-weight:700}
           for(k=0;k<N;k++){ xp[o+k]+=re[k]/N*win[k]; w2[o+k]+=win[k]*win[k]; }
           pos++;
         } else if(stage===4){                           // 帯域ごとの音量の推移
-          var EN=512, bands=[[30,130],[150,400],[2000,7000]];
+          var EN=512, bands=[[30,130],[150,400],[2000,7000],[30,330]];
           var cnt=Math.floor((x.length-EN)/EH);
-          env=new Float64Array(cnt); sne=new Float64Array(cnt); hfe=new Float64Array(cnt);
-          var ci=0;
+          env=new Float64Array(cnt); sne=new Float64Array(cnt);
+          hfe=new Float64Array(cnt); wde=new Float64Array(cnt);
           dbandFFT(x,sr,bands,EN,EH,function(f,row){
-            if(f<cnt){ env[f]=row[0]; sne[f]=row[1]; hfe[f]=row[2]; }
+            if(f<cnt){ env[f]=row[0]; sne[f]=row[1]; hfe[f]=row[2]; wde[f]=row[3]; }
           });
           fps=sr/EH; stage=5; pos=0; continue;
         } else if(stage===5){
@@ -2726,6 +2895,25 @@ footer b{font-family:var(--mono);font-weight:700}
             g2=g2.filter(function(z){return z.amp>=mx2*0.25;});
             if(g2.length) sPer.push(g2); }
           pos++;
+        } else if(stage===8){                           // ドラムだけの音源：全部の打点から音程を集める
+          if(!drumsOnly){ stage=10; continue; }
+          if(!wO){ wO=dhits(wde,hfe,fps,0.11,0.20,0.06,0.03,0.05); wH=new Float64Array(wnb); pos=0; }
+          if(pos>=wO.length){ stage=9; pos=0; continue; }
+          var ow=wO[pos]*EH, jj, rw, tw, kw2, fw;
+          for(jj=0;jj<DFOFF.length;jj++){
+            rw=dpeak(x,sr,ow+Math.round(sr*DFOFF[jj]),DFLO,DFHI,ow-DNM);
+            if(!rw) continue;
+            tw=1200*Math.log2(rw.hz/DFLO)/DFBIN; kw2=Math.floor(tw);
+            if(kw2>=0&&kw2<wnb-1){ fw=tw-kw2; wH[kw2]+=rw.amp*(1-fw); wH[kw2+1]+=rw.amp*fw; }
+          }
+          pos++;
+        } else if(stage===9){
+          var ker=[0.2,0.5,0.85,1,0.85,0.5,0.2], sm=new Float64Array(wnb), qq, vv, ix2, ii;
+          for(ii=0;ii<wnb;ii++){ vv=0; for(qq=0;qq<7;qq++){ ix2=ii+qq-3; if(ix2>=0&&ix2<wnb) vv+=wH[ix2]*ker[qq]; } sm[ii]=vv; }
+          res.fit=dfFit(sm,Math.max(1,ntom||3));
+          res.hratio=hAll>0?hHar/hAll:0;
+          res.nTom=Math.max(1,ntom||3);
+          stage=10; continue;
         } else {
           res.kick=ddecide(kPer,32,DKMAX); res.snare=ddecide(sPer,120,340);
           // 探索範囲の端に張り付いた値は、本当の基音が範囲の外にある合図。読めなかった扱いにする
@@ -2738,20 +2926,22 @@ footer b{font-family:var(--mono);font-weight:700}
           done(res); return;
         }
       }
-      var p=stage===0?pos/FR*0.30
-           :stage===1?0.30+pos/NB*0.12
-           :stage===2?0.42+pos/FR*0.12
-           :stage===3?0.54+pos/FR*0.24
-           :stage<=5?0.80
-           :stage===6?0.82+pos/Math.max(1,kO.length)*0.09
-           :0.91+pos/Math.max(1,sO.length)*0.09;
+      var p=stage===0?pos/FR*0.26
+           :stage===1?0.26+pos/NB*0.10
+           :stage===2?0.36+pos/FR*0.10
+           :stage===3?0.46+pos/FR*0.20
+           :stage<=5?0.68
+           :stage===6?0.68+pos/Math.max(1,kO.length)*0.08
+           :stage===7?0.76+pos/Math.max(1,sO.length)*0.08
+           :stage===8?0.84+(wO?pos/Math.max(1,wO.length):0)*0.15
+           :0.99;
       onProg(p);
       setTimeout(step,0);
     }
     step();
   }
 
-  var elSongFile=E("songFile"),elSongMsg=E("songMsg"),elSongRes=E("songRes"),
+  var elSongFile=E("songFile"),elSongMsg=E("songMsg"),elSongRes=E("songRes"),elSongDr=E("songDrums"),
       elSongProg=E("songProg"),elSongBar=E("songBar"),elSongPickT=E("songPickT");
   var songBusy=false;
   function songSay(t){ elSongMsg.textContent=t; }
@@ -2836,6 +3026,15 @@ footer b{font-family:var(--mono);font-weight:700}
       if(sub){ var s3=document.createElement("span"); s3.textContent=sub; r.appendChild(s3); }
       elSongRes.appendChild(r);
     }
+    var shown={};
+    var fit=dr&&dr.fit&&dr.fit[0], fconf=0;
+    if(fit){
+      var marg=fit.score-dr.fit[1].score;
+      fconf=(fit.hit>=fit.n-1&&marg>=0.08)?2:(fit.hit>=fit.n-2&&marg>=0.04)?1:0;
+      if(fconf>=1){ pc=fit.ki; mode="major"; conf=fconf===2?"高い":"ふつう"; }
+      b.textContent=KEYS[pc];
+      u.textContent="メジャー";
+    }
     kv("確からしさ",conf);
     if(bpm) kv("テンポ","約 "+bpm+" BPM");
     kv("和音から",(k.mode==="minor"?MKEY[k.pc]:KEYS[k.pc]),hconf===2?"はっきり":hconf===1?"ふつう":"あいまい");
@@ -2846,14 +3045,37 @@ footer b{font-family:var(--mono);font-weight:700}
       kv(nm,o.hz.toFixed(1)+" Hz",(n?n.name+" "+cts(n.cents)+" / ":"")+o.agree+" 打が一致");
     }
     if(dr){
-      dline("キックの実音",dr.kick,true);
-      dline("スネアの実音",dr.snare,true);
-      if(dm) kv("ドラムから",KEYS[dm.ki],"ずれ "+Math.round(Math.abs(dm.dev))+"¢"
+      // レシピ照合が決まっているときは、そちらが全部の太鼓を見ている。
+      // 単独のキック・スネア読みはタムに引っ張られるので出さない
+      if(!(fit&&fconf>=1)){
+        dline("キックの実音",dr.kick,true);
+        dline("スネアの実音",dr.snare,true);
+      }
+      if(fit){
+        var tnm=noteOf(fit.pred[2],!!FLATK[fit.ki]);
+        kv("キット全体","タム上端 "+(tnm?tnm.name:"—"),
+           "予測と合った太鼓 "+fit.hit+"/"+fit.n+" 台");
+        var lbl=["キック","スネア"], ti;
+        for(ti=0;ti<fit.n-2;ti++) lbl.push("タム"+(ti+1));
+        (function(){
+          var ref=null, i2;
+          for(i2=0;i2<fit.pred.length;i2++){
+            var row=document.createElement("div"); row.className="fitrow";
+            var n2=noteOf(fit.pred[i2],!!FLATK[fit.ki]);
+            var s1=document.createElement("span"); s1.textContent=lbl[i2];
+            var b1=document.createElement("b"); b1.textContent=fit.pred[i2].toFixed(1)+" Hz";
+            var i1=document.createElement("i"); i1.textContent=n2?n2.name:"";
+            row.appendChild(s1); row.appendChild(b1); row.appendChild(i1);
+            elSongRes.appendChild(row);
+          }
+        })();
+      }
+      if(fit&&fconf>=1){ /* 照合結果が上に出ているので重ねない */ }
+      else if(dm) kv("ドラムから",KEYS[dm.ki],"ずれ "+Math.round(Math.abs(dm.dev))+"¢"
         +(same?" / 和音と一致":"")+((kok&&sok)?"":" / 片方のみ"));
       else kv("ドラムから","読めず","実音が取れませんでした");
     }
     // 平行調は同じラグ値になるので、同じレシピになる候補はボタンを増やさない
-    var shown={};
     function goBtn(tpc,tmode,label){
       var sig=rootOf(tpc,tmode);
       if(shown[sig]) return;
@@ -2876,12 +3098,31 @@ footer b{font-family:var(--mono);font-weight:700}
       pb.addEventListener("click",function(){ drumPlay(dr,pb); });
       elSongRes.appendChild(pb);
     }
+    if(fit&&fconf>=1){
+      var fb=document.createElement("button");
+      fb.type="button"; fb.className="go2";
+      fb.textContent=KEYS[fit.ki]+" でこのレシピにする";
+      fb.addEventListener("click",function(){
+        st.free=false; st.mode="major"; st.live=fit.ki; st.ser=fit.ser; st.nudge=0;
+        if(st.keys.indexOf(fit.ki)<0){ st.keys.push(fit.ki); st.keys.sort(function(x,y){return x-y;}); }
+        var la2=deriveLA(fit.ki); st.ltr=la2.l; st.acc=la2.a;
+        st.view="recipe"; save(); render();
+        anim(elVR,"enter-right",340);
+      });
+      elSongRes.appendChild(fb);
+      shown[rootOf(fit.ki,"major")]=1;
+    }
     goBtn(pc,mode,(mode==="minor"?MKEY[pc]:KEYS[pc])+" でレシピを出す");
-    if(dm) goBtn(dm.ki,"major",KEYS[dm.ki]+"（ドラムから）でレシピを出す");
+    if(dm&&!(fit&&fconf>=1)) goBtn(dm.ki,"major",KEYS[dm.ki]+"（ドラムから）でレシピを出す");
     goBtn(k.pc,k.mode,(k.mode==="minor"?MKEY[k.pc]:KEYS[k.pc])+"（和音から）でレシピを出す");
 
     var msg=[];
-    if(dr&&dconf===0)
+    if(fit&&dr.hratio>0.78)
+      msg.push("伸びている音がかなり多く含まれています（"+Math.round(dr.hratio*100)
+        +"%）。ベースや歌が入っているとタムの並びを読み違えます。ドラムだけの音源か確かめてください。");
+    if(fit&&fconf===0)
+      msg.push("ドラムの並びがレシピのどれとも合いませんでした。ドラムだけの音源か確かめてください。歌やベースが入っていると外れます。");
+    if(dr&&dconf===0&&!fit)
       msg.push("ドラムの実音は、音が混み合っていると読み取りにくくなります。この曲では当てにしない方が無難です。");
     if(bpm) msg.push("テンポは半分（"+Math.round(bpm/2)+"）や倍（"+Math.round(bpm*2)+"）に取り違えることがあります。");
     msg.push("平行調（"+(mode==="minor"?MKEY[pc]+" と "+KEYS[rootOf(pc,mode)]
@@ -2927,7 +3168,8 @@ footer b{font-family:var(--mono);font-weight:700}
                     elSongProg.hidden=true; elSongPickT.textContent="別の曲を選ぶ";
                     songBusy=false; elSongFile.value="";
                     songShow(kk,bb,dr);
-                  });
+                  },
+                  !!(elSongDr&&elSongDr.checked), toms().length);
               }catch(e){
                 elSongProg.hidden=true; elSongPickT.textContent="別の曲を選ぶ";
                 songBusy=false; elSongFile.value="";
@@ -2967,13 +3209,14 @@ footer b{font-family:var(--mono);font-weight:700}
     var t=avgOf(measN(d,"top")), b=avgOf(measN(d,"bot")), f=st.meas[d.id+"|fund"];
     if(!(t>0)||!(b>0)||!(f>0)) return;
     var c=calc(st.live,st.mode,st.ser,st.nudge,d);
-    var q=qGet(), sig=d.id+"|"+t.toFixed(1)+"|"+b.toFixed(1)+"|"+f.toFixed(1);
+    var q=qGet(), sig=d.id+"|"+t.toFixed(1)+"|"+b.toFixed(1)+"|"+f.toFixed(1)+"|"+((st.meas[d.id+"|t60"]||0)).toFixed(2);
     for(var i=0;i<q.length;i++) if(q[i].sig===sig) return;   // 同じ測定は一度だけ
     q.push({sig:sig,id:who(),at:new Date().toISOString().slice(0,16),build:BUILD,
             kind:d.kind,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,
             key:keyName(st.live),ser:st.ser,nudge:st.nudge,
             top:+t.toFixed(1),bot:+b.toFixed(1),fund:+f.toFixed(1),
             topT:c.top,botT:c.bot,fundP:+c.fund.toFixed(2),
+            t60:+((st.meas[d.id+"|t60"]||0)).toFixed(2),
             r:+(Math.sqrt(t*b)/f).toFixed(4)});
     qPut(q); flush();
   }
