@@ -1513,6 +1513,13 @@ footer b{font-family:var(--mono);font-weight:700}
       : keyName(st.live)+" ／ 基準レシピを "+(dd===0?"そのまま":(dd>0?"+":"−")+Math.abs(dd)+"半音")
         +" 移調"+(stock?"":"、音の高さを調整")+"した値です。";
     if(!st.free) elBand.appendChild(tx);
+    // 短調は平行長調と同じ値になる。違いを探さなくて済むように、その場で書いておく
+    if(!st.free&&st.mode==="minor"){
+      var rel=document.createElement("span");
+      rel.textContent=MKEY[st.live]+" は "+KEYS[rootOf(st.live,"minor")]
+        +" と同じ値です。使う音が同じなので、鳴りを変える必要がありません。";
+      elBand.appendChild(rel);
+    }
     var t0=toms()[0];
     if(t0){
       var tf=calc(st.live,st.mode,st.ser,st.nudge,t0).fund, tn=noteOf(tf,flat);
@@ -2218,7 +2225,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-011937";
+  var BUILD="20261022-073411";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
