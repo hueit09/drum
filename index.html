@@ -2356,7 +2356,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-082028";
+  var BUILD="20261022-083436";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3246,15 +3246,22 @@ footer b{font-family:var(--mono);font-weight:700}
   function flush(){
     if(!syncOn()||flushing||!window.fetch) return;
     if(navigator.onLine===false) return;
-    var q=qGet(); if(!q.length) return;
+    var q=qGet(), i, pend=[];
+    for(i=0;i<q.length;i++) if(!q[i].sent) pend.push(q[i]);
+    if(!pend.length) return;
     flushing=true;
     fetch(SYNC_URL,{method:"POST",mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({rows:q})})
+      body:JSON.stringify({rows:pend})})
       .then(function(){
+        // 送りっぱなしの方式なので本当に届いたかは分からない。
+        // 端末側の控えは消さずに印だけ付ける。書き出せば必ず全部取り出せる
+        var k=qGet(), j;
+        for(j=0;j<k.length;j++) if(!k[j].sent) k[j].sent=1;
+        qPut(k);
         var done=0; try{done=parseInt(localStorage.getItem("tautqs")||"0",10)||0;}catch(e){}
-        try{localStorage.setItem("tautqs",String(done+q.length));}catch(e){}
-        qPut([]); syncLine();
+        try{localStorage.setItem("tautqs",String(done+pend.length));}catch(e){}
+        syncLine();
       })
       .catch(function(){})
       .then(function(){ flushing=false; });
@@ -3263,8 +3270,10 @@ footer b{font-family:var(--mono);font-weight:700}
   // 説明タブに、測定値がどれだけ送り出されたかを出す
   function syncLine(){
     var el=E("syncSt"); if(!el) return;
-    var wait=qGet().length;
+    var qq=qGet(), wait=0, wi;
+    for(wi=0;wi<qq.length;wi++) if(!qq[wi].sent) wait++;
     if(!syncOn()){
+      wait=qq.length;
       el.textContent="控えてある測定 "+wait+" 件。送信先は設定されていないので、どこにも送られません。"
         +"キットタブの「表計算用に書き出す」で取り出せます。";
       return;
