@@ -80,6 +80,9 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
 /* ─── 動き ─── */
+.slidebox{overflow:hidden;transition:height .26s var(--ease),opacity .2s var(--ease)}
+details>summary{-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
 body{transition:background-color .35s var(--ease),color .35s var(--ease)}
 .pane,.card,.tabs{transition:background-color .35s var(--ease),border-color .35s var(--ease)}
 svg.hd .tick{transition:stroke .22s var(--ease),opacity .22s var(--ease)}
@@ -421,8 +424,8 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="picked" id="picked" hidden></div>
     </div>
     <div class="row" id="rowVoic">
-      <div class="cap">タムの高さ<span class="note">キックに対してタム群が乗る位置</span></div>
-      <div class="segs" id="voics" role="group" aria-label="タムの高さ"></div>
+      <div class="cap">いちばん上のタム<span class="note">主音から見て何度の音に置くか。下のタムは3度ずつ下がります</span></div>
+      <div class="segs" id="voics" role="group" aria-label="いちばん上のタムの度数"></div>
     </div>
     <div class="row" id="rowNudge">
       <div class="cap">キット全体を上下</div>
@@ -679,7 +682,12 @@ footer b{font-family:var(--mono);font-weight:700}
 
   // 実測レシピ2本から √(表×裏)/1.73 で逆算した基音（G♭ でのHz）
   var SER=[174.2935,138.3474,116.4761,92.6013,77.6338,61.8223,51.9884];
-  var VC={low:{s:2,kick:39.8372,snare:157.6494},high:{s:1,kick:40.1797,snare:157.6494}};
+  // SER は長音階を3度ずつ下る列。先頭から順に、主音から見た度数は 7,5,3,1,6,4,2。
+  // いちばん上のタムをこの列のどこに置くかで、キット全体の高さが決まる。
+  var SERDEG=[7,5,3,1,6,4,2];
+  // キックは早見表の2つのレシピで 15¢ ぶん食い違う（69 と 62 が正確な2半音差ではない）ため、
+  // 高め寄り（s<=1）と低め寄り（s>=2）で値を分けて、どちらのレシピも 1Hz 違わず再現する。
+  var KICK_HI=40.1797, KICK_LO=39.8372, SNARE_F=157.6494;
   var IV_T=-3, IV_K=0, IV_S=5.4929;
   var TAB=[[10,196,277],[12,165,233],[14,123,174],[16,104,147]];
   var IVO=[[7,"完全5度（裏が高い）"],[6,"増4度（裏が高い）"],[5,"完全4度（裏が高い）"],
@@ -756,7 +764,7 @@ footer b{font-family:var(--mono);font-weight:700}
     return renameToms(out);
   }
 
-  var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,voic:"low",nudge:0,view:"tune",theme:"auto",
+  var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
           drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
   try{
@@ -771,7 +779,9 @@ footer b{font-family:var(--mono);font-weight:700}
       st.ltr=(typeof sv.ltr==="number"&&sv.ltr>=0&&sv.ltr<7&&pcOf(sv.ltr,
               (sv.acc===-1||sv.acc===0||sv.acc===1)?sv.acc:0)===st.live)?sv.ltr:la.l;
       st.acc=(sv.acc===-1||sv.acc===0||sv.acc===1)&&pcOf(st.ltr,sv.acc)===st.live?sv.acc:la.a;
-      if(sv.voic==="low"||sv.voic==="high") st.voic=sv.voic;
+      if(typeof sv.ser==="number"&&sv.ser>=0&&sv.ser<SER.length) st.ser=sv.ser;
+      else if(sv.voic==="high") st.ser=1;          // 旧「高め／低め」からの移行
+      else if(sv.voic==="low") st.ser=2;
       if(sv.theme==="auto"||sv.theme==="light"||sv.theme==="dark") st.theme=sv.theme;
       if(sv.adv==="manual"||sv.adv==="auto") st.adv=sv.adv;
       st.keyOpen=!!sv.keyOpen;
@@ -799,23 +809,23 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   applyTheme();
 
-  function baseFund(voic,d){
-    if(d.kind==="kick") return VC[voic].kick;
-    if(d.kind==="snare") return VC[voic].snare;
-    var i=VC[voic].s+Math.max(0,toms().indexOf(d));
+  function baseFund(ser,d){
+    if(d.kind==="kick") return ser<=1?KICK_HI:KICK_LO;
+    if(d.kind==="snare") return SNARE_F;
+    var i=ser+Math.max(0,toms().indexOf(d));
     return i<SER.length?SER[i]:SER[SER.length-1]*Math.pow(2,-(i-SER.length+1)*3/12);
   }
   // 実音の実測から逆算した、そのドラム固有の R。無ければ早見表の 1.73
   function rOf(d){ return (d.rcal>=1.40&&d.rcal<=2.10)?d.rcal:R; }
-  function calc(ki,mode,voic,nudge,d){
-    var b=baseFund(voic,d);
+  function calc(ki,mode,ser,nudge,d){
+    var b=baseFund(ser,d);
     var f=b*Math.pow(2,(offs(ki,mode)+nudge+scaleShift(b,GB,d.deg||0))/12);
     var g=f*rOf(d), h=Math.pow(2,d.iv/24);
     return {top:Math.round(g/h),bot:Math.round(g*h),fund:f};
   }
-  function partsOf(ki,mode,voic,nudge){
+  function partsOf(ki,mode,ser,nudge){
     return st.drums.map(function(d){
-      var c=calc(ki,mode,voic,nudge,d), r=d.kind==="tom"?rangeFor(d.dia):null, w=null;
+      var c=calc(ki,mode,ser,nudge,d), r=d.kind==="tom"?rangeFor(d.dia):null, w=null;
       if(r){ if(c.top<r[0]*0.97) w={lo:1,lim:r[0]}; else if(c.top>r[1]*1.03) w={lo:0,lim:r[1]}; }
       return {d:d,top:c.top,bot:c.bot,fund:c.fund,warn:w};
     });
@@ -831,8 +841,12 @@ footer b{font-family:var(--mono);font-weight:700}
       });
       return n;
     }
-    return miss("low")<=miss("high")?"low":"high";
+    var best=2, bn=99, i;
+    for(i=0;i<serMax();i++){ var m=miss(i); if(m<bn-0.001||(m===bn&&Math.abs(i-2)<Math.abs(best-2))){bn=m;best=i;} }
+    return best;
   }
+  // いちばん下のタムまで列に収まる範囲。タムが多いほど選べる段は減る
+  function serMax(){ return Math.max(1,SER.length-Math.max(1,toms().length)+1); }
   function keyName(i){return st.mode==="minor"?MKEY[i]:KEYS[i];}
 
   /* ---------- audio ---------- */
@@ -1009,7 +1023,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function micGrab(stage){
     if(!mic.on||!mic.an) return;
     var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var c=calc(st.live,st.mode,st.ser,st.nudge,d);
     var tg=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
     mic.an.getFloatTimeDomainData(mic.buf);
     var ds=dsample(mic.buf,ac.sampleRate,4000);
@@ -1047,6 +1061,40 @@ footer b{font-family:var(--mono);font-weight:700}
   // 合致 15 セント、近い 35 セント。検出の実測誤差（中央値で約3¢、悪条件でも20¢台）に見合う幅
   var GOOD_C=15, CLOSE_C=35, EVEN_C=25, OUT_C=40;
 
+  // <details> は既定だと一瞬で開くので、中身の高さを動かして開閉する
+  function slideDetails(dt){
+    var sum=dt.querySelector("summary"); if(!sum) return;
+    var box=sum.nextElementSibling; if(!box) return;
+    box.classList.add("slidebox");
+    var busy=false;
+    sum.addEventListener("click",function(e){
+      e.preventDefault();
+      if(busy) return;
+      if(calm()){ dt.open=!dt.open; dt.dispatchEvent(new Event("taut:toggled")); return; }
+      busy=true;
+      var D=260;
+      if(dt.open){
+        box.style.height=box.scrollHeight+"px"; box.style.opacity="1";
+        void box.offsetHeight;
+        box.style.height="0px"; box.style.opacity="0";
+        setTimeout(function(){
+          dt.open=false; box.style.height=""; box.style.opacity=""; busy=false;
+          dt.dispatchEvent(new Event("taut:toggled"));
+        },D);
+      } else {
+        dt.open=true;
+        box.style.height="0px"; box.style.opacity="0";
+        void box.offsetHeight;
+        box.style.height=box.scrollHeight+"px"; box.style.opacity="1";
+        setTimeout(function(){
+          box.style.height=""; box.style.opacity=""; busy=false;
+          dt.dispatchEvent(new Event("taut:toggled"));
+        },D);
+      }
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("details"),slideDetails);
+
   function anim(el,cls,ms){
     if(!el) return;
     el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls);
@@ -1054,7 +1102,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   // キー設定は開閉式。どちらのタブからでも同じものを開く
   elKeyPane.open=!!st.keyOpen;
-  elKeyPane.addEventListener("toggle",function(){
+  elKeyPane.addEventListener("taut:toggled",function(){
     st.keyOpen=elKeyPane.open; save();
     if(elKeyPane.open) anim(elKeyPane,"drop",260);
   });
@@ -1102,14 +1150,14 @@ footer b{font-family:var(--mono);font-weight:700}
     b.type="button"; b.className="sg"; b.dataset.mode=p[0]; b.textContent=p[1];
     b.addEventListener("click",function(){
       if(p[0]==="free"){ st.free=true; }
-      else { st.free=false; st.mode=p[0]; st.voic=recommend(st.live); }
+      else { st.free=false; st.mode=p[0]; st.ser=recommend(st.live); }
       save(); render();
     });
     elModes.appendChild(b);
   });
   function pickKey(pc){
     if(st.keys.indexOf(pc)<0){ st.keys.push(pc); st.keys.sort(function(a,c){return a-c;}); }
-    st.live=pc; st.voic=recommend(pc); st.nudge=0; save(); render();
+    st.live=pc; st.ser=recommend(pc); st.nudge=0; save(); render();
   }
   [[-1,"♭"],[0,"♮"],[1,"♯"]].forEach(function(p){
     var b=document.createElement("button");
@@ -1124,14 +1172,21 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){ st.ltr=i; pickKey(pcOf(i,st.acc)); });
     elKeys.appendChild(b);
   });
-  [["low","低め"],["high","高め"]].forEach(function(p){
-    var b=document.createElement("button");
-    b.type="button"; b.className="sg"; b.dataset.voic=p[0];
-    b.innerHTML='<span></span><small hidden>おすすめ</small>';
-    b.firstChild.textContent=p[1];
-    b.addEventListener("click",function(){st.voic=p[0];save();render();});
-    elVoics.appendChild(b);
-  });
+  function buildVoics(){
+    elVoics.innerHTML="";
+    for(var i=0;i<serMax();i++){
+      (function(ix){
+        var b=document.createElement("button");
+        b.type="button"; b.className="sg"; b.dataset.ser=String(ix);
+        b.innerHTML='<span></span><small hidden>おすすめ</small>';
+        b.firstChild.textContent=SERDEG[ix]+"度";
+        b.setAttribute("aria-label","いちばん上のタムを主音の"+SERDEG[ix]+"度に置く");
+        b.addEventListener("click",function(){st.ser=ix;save();render();});
+        elVoics.appendChild(b);
+      })(i);
+    }
+  }
+  buildVoics();
   elUp.addEventListener("click",function(){if(st.nudge<2){st.nudge++;save();render();}});
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
@@ -1158,7 +1213,7 @@ footer b{font-family:var(--mono);font-weight:700}
     b.type="button"; b.className="sg"; b.dataset.pre=id; b.textContent=PRE[id].label;
     b.addEventListener("click",function(){
       st.drums=buildKit(id); st.preset=id; st.meas={};
-      st.tid=st.drums[2].id; lug=0; st.voic=recommend(st.live); save(); render();
+      st.tid=st.drums[2].id; lug=0; st.ser=recommend(st.live); save(); render();
     });
     elPresets.appendChild(b);
   });
@@ -1194,7 +1249,7 @@ footer b{font-family:var(--mono);font-weight:700}
       hz=st.thead==="fund"?(st.meas[d.id+"|fund"]||0):avgOf(measN(d,st.thead));
       if(!(hz>0)) return;          // まだ何も測れていないので鳴らす音がない
     } else {
-      var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+      var c=calc(st.live,st.mode,st.ser,st.nudge,d);
       hz=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
     }
     toneOn(hz);
@@ -1295,7 +1350,7 @@ footer b{font-family:var(--mono);font-weight:700}
     elKeySum.textContent=st.free
       ? "キー指定なし ・ 鳴っている音を読む"
       : keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
-        +" ・ タム"+(st.voic==="low"?"低め":"高め")
+        +" ・ 上タム"+SERDEG[st.ser]+"度"
         +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
     E("rowKeys").hidden=st.free;
     E("rowVoic").hidden=st.free;
@@ -1319,22 +1374,25 @@ footer b{font-family:var(--mono);font-weight:700}
       var w=document.createElement("span");
       w.className="pk"; w.dataset.live=k===st.live?"1":"0";
       var t=document.createElement("b"); t.textContent=keyName(k);
-      t.addEventListener("click",function(){st.live=k;st.voic=recommend(k);st.nudge=0;save();render();});
+      t.addEventListener("click",function(){st.live=k;st.ser=recommend(k);st.nudge=0;save();render();});
       var x=document.createElement("button");
       x.type="button"; x.textContent="×"; x.setAttribute("aria-label",keyName(k)+" を外す");
       x.addEventListener("click",function(){
         if(st.keys.length<=1) return;
         st.keys=st.keys.filter(function(v){return v!==k;});
-        if(st.live===k){st.live=st.keys[0];st.voic=recommend(st.live);st.nudge=0;}
+        if(st.live===k){st.live=st.keys[0];st.ser=recommend(st.live);st.nudge=0;}
         save();render();
       });
       w.appendChild(t); w.appendChild(x); elPicked.appendChild(w);
     });
 
+    if(elVoics.children.length!==serMax()) buildVoics();
+    if(st.ser>=serMax()) st.ser=serMax()-1;
     var rec=recommend(st.live);
     Array.prototype.forEach.call(elVoics.children,function(b){
-      b.setAttribute("aria-pressed",b.dataset.voic===st.voic?"true":"false");
-      b.querySelector("small").hidden=b.dataset.voic!==rec;
+      var ix=parseInt(b.dataset.ser,10);
+      b.setAttribute("aria-pressed",ix===st.ser?"true":"false");
+      b.querySelector("small").hidden=ix!==rec;
     });
     elNV.textContent=(st.nudge>0?"+":st.nudge<0?"−":"±")+Math.abs(st.nudge)+" 半音";
     elUp.disabled=st.nudge>=2; elDn.disabled=st.nudge<=-2;
@@ -1355,7 +1413,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function rRecipe(){
     var flat=!!FLATK[rootOf(st.live,st.mode)];
     var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg&&!(d.rcal>0);});
-    var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.voic==="low")||(offs(st.live,st.mode)===-2&&st.voic==="high"));
+    var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.ser==="low")||(offs(st.live,st.mode)===-2&&st.ser==="high"));
     elBand.innerHTML="";
     elBand.hidden=st.free;
     var tg=document.createElement("span");
@@ -1377,7 +1435,7 @@ footer b{font-family:var(--mono);font-weight:700}
     }
 
     elCards.innerHTML="";
-    partsOf(st.live,st.mode,st.voic,st.nudge).forEach(function(p,i){
+    partsOf(st.live,st.mode,st.ser,st.nudge).forEach(function(p,i){
       var d=p.d, card=document.createElement("div");
       card.className="card"+(i===2?" gap":"");
       card.style.animationDelay=(i*32)+"ms";
@@ -1519,7 +1577,7 @@ footer b{font-family:var(--mono);font-weight:700}
       h+='</tr><tr><th style="font-weight:400">タムの高さ</th>';
       st.keys.forEach(function(k){
         h+='<th class="'+(k===st.live?"on":"")+'" style="font-weight:400">'
-          +((k===st.live?st.voic:recommend(k))==="low"?"低":"高")+"</th>";
+          +((k===st.live?st.ser:recommend(k))==="low"?"低":"高")+"</th>";
       });
       h+="</tr></thead><tbody>";
       st.drums.forEach(function(d){
@@ -1527,7 +1585,7 @@ footer b{font-family:var(--mono);font-weight:700}
         st.keys.forEach(function(k){
           var on=k===st.live;
           h+='<td class="'+(on?"on":"")+'">'
-            +calc(k,st.mode,on?st.voic:recommend(k),on?st.nudge:0,d).top+"</td>";
+            +calc(k,st.mode,on?st.ser:recommend(k),on?st.nudge:0,d).top+"</td>";
         });
         h+="</tr>";
       });
@@ -1581,12 +1639,12 @@ footer b{font-family:var(--mono);font-weight:700}
     var L=[],d2=new Date();
     function p2(x){return (x<10?"0":"")+x;}
     L.push("TAUT v1.0　"+d2.getFullYear()+"-"+p2(d2.getMonth()+1)+"-"+p2(d2.getDate()));
-    L.push("キー "+keyName(st.live)+"　タム"+(st.voic==="low"?"低め":"高め")
+    L.push("キー "+keyName(st.live)+"　タム"+(st.ser==="low"?"低め":"高め")
       +(st.nudge?"　"+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":""));
     L.push("");
     var any=false;
     st.drums.forEach(function(d){
-      var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+      var c=calc(st.live,st.mode,st.ser,st.nudge,d);
       var t=measN(d,"top"),b=measN(d,"bot"),f=st.meas[d.id+"|fund"];
       var ta=avgOf(t),ba=avgOf(b);
       if(!(ta>0)&&!(ba>0)&&!(f>0)) return;
@@ -1967,7 +2025,7 @@ footer b{font-family:var(--mono);font-weight:700}
     if(!(lug>=0&&lug<d.lugs)) lug=0;      // ラグ数を減らした直後の取り残し防止
     var isF=st.thead==="fund", free=!!st.free;
     var flat=!!FLATK[rootOf(st.live,st.mode)];
-    var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var cc=calc(st.live,st.mode,st.ser,st.nudge,d);
     var n=d.lugs, arr=isF?[]:measN(d,st.thead);
     var cur=isF?(st.meas[d.id+"|fund"]||0):arr[lug];
     // キー指定なしのときは狙いの値がないので、測れたラグの平均に合わせていく
@@ -2067,7 +2125,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-233829";
+  var BUILD="20261021-235118";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
@@ -2088,12 +2146,12 @@ footer b{font-family:var(--mono);font-weight:700}
     if(!syncOn()) return;
     var t=avgOf(measN(d,"top")), b=avgOf(measN(d,"bot")), f=st.meas[d.id+"|fund"];
     if(!(t>0)||!(b>0)||!(f>0)) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+    var c=calc(st.live,st.mode,st.ser,st.nudge,d);
     var q=qGet(), sig=d.id+"|"+t.toFixed(1)+"|"+b.toFixed(1)+"|"+f.toFixed(1);
     for(var i=0;i<q.length;i++) if(q[i].sig===sig) return;   // 同じ測定は一度だけ
     q.push({sig:sig,id:who(),at:new Date().toISOString().slice(0,16),build:BUILD,
             kind:d.kind,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,
-            key:keyName(st.live),voic:st.voic,nudge:st.nudge,
+            key:keyName(st.live),ser:st.ser,nudge:st.nudge,
             top:+t.toFixed(1),bot:+b.toFixed(1),fund:+f.toFixed(1),
             topT:c.top,botT:c.bot,fundP:+c.fund.toFixed(2),
             r:+(Math.sqrt(t*b)/f).toFixed(4)});
