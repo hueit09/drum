@@ -568,9 +568,10 @@ footer b{font-family:var(--mono);font-weight:700}
     <div class="cards" id="kitList"></div>
     <div class="pane" style="margin-top:11px">
       <div class="row">
-        <div class="cap">測定データ<span class="note">先生に送る用。押すとクリップボードに入ります</span></div>
+        <div class="cap">測定データ<span class="note">押すとクリップボードに入ります。「表計算用」はスプレッドシートにそのまま貼れます</span></div>
         <div class="tl" style="justify-content:flex-start">
           <button id="kExp" type="button">書き出す</button>
+          <button id="kTsv" type="button">表計算用に書き出す</button>
           <button id="kWipe" type="button">測定値を全消去</button>
         </div>
       </div>
@@ -1877,6 +1878,28 @@ footer b{font-family:var(--mono);font-weight:700}
         function(){out.select();done("下を長押しでコピー");});
     } else { out.select(); done("下を長押しでコピー"); }
   });
+  // 表計算にそのまま貼れる形。送信先が無くても測定を取り出せるようにしておく
+  var TSVH=["日時","端末","版","種別","口径","深さ","ラグ数","表裏差","キー","高さ","移調",
+            "打面平均","裏面平均","実音","打面目標","裏面目標","実音予測","余韻秒","実測R"];
+  function tsvText(){
+    var q=qGet(), L=[TSVH.join("\t")], i, r;
+    for(i=0;i<q.length;i++){
+      r=q[i];
+      L.push([r.at,r.id,r.build,r.kind,r.dia,r.dep,r.lugs,r.iv,r.key,r.ser,r.nudge,
+              r.top,r.bot,r.fund,r.topT,r.botT,r.fundP,(r.t60||""),r.r].join("\t"));
+    }
+    if(q.length===0) L.push("（まだ測定データがありません）");
+    return L.join("\n");
+  }
+  E("kTsv").addEventListener("click",function(){
+    var b=this,txt=tsvText(),out=E("kOut");
+    out.hidden=false; out.value=txt;
+    function done(m){b.textContent=m;setTimeout(function(){b.textContent="表計算用に書き出す";},1800);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){done("コピーしました");},
+        function(){out.select();done("下を長押しでコピー");});
+    } else { out.select(); done("下を長押しでコピー"); }
+  });
   E("kWipe").addEventListener("click",function(){
     var b=this;
     if(b.dataset.armed!=="1"){
@@ -2333,7 +2356,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-081549";
+  var BUILD="20261022-082028";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3192,10 +3215,10 @@ footer b{font-family:var(--mono);font-weight:700}
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
   // 空のあいだは何もしない。オフラインで溜めて、次にオンラインになった時にまとめて送る。
-  var SYNC_URL="https://script.google.com/macros/s/AKfycbwxs9T27Pco1dGeqPP-vf1ytyq9WpVJrtjBIcGQIs1IX5T1tT5w7IPT6ieI6iz7Pqaszw/exec";
+  var SYNC_URL="";
   function syncOn(){ return SYNC_URL.indexOf("http")===0; }
   function qGet(){ try{return JSON.parse(localStorage.getItem("tautq")||"[]");}catch(e){return [];} }
-  function qPut(a){ try{localStorage.setItem("tautq",JSON.stringify(a.slice(-60)));}catch(e){} }
+  function qPut(a){ try{localStorage.setItem("tautq",JSON.stringify(a.slice(-400)));}catch(e){} }
   function who(){
     var k="tautid",v=null;
     try{ v=localStorage.getItem(k);
@@ -3205,7 +3228,6 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   // 1台ぶんの測定が揃ったら、その要約を控える
   function queue(d){
-    if(!syncOn()) return;
     var t=avgOf(measN(d,"top")), b=avgOf(measN(d,"bot")), f=st.meas[d.id+"|fund"];
     if(!(t>0)||!(b>0)||!(f>0)) return;
     var c=calc(st.live,st.mode,st.ser,st.nudge,d);
@@ -3241,10 +3263,15 @@ footer b{font-family:var(--mono);font-weight:700}
   // 説明タブに、測定値がどれだけ送り出されたかを出す
   function syncLine(){
     var el=E("syncSt"); if(!el) return;
-    if(!syncOn()){ el.textContent="この版では測定値の送信は無効です。"; return; }
-    var sent=0; try{sent=parseInt(localStorage.getItem("tautqs")||"0",10)||0;}catch(e){}
     var wait=qGet().length;
-    el.textContent="送り出した測定 "+sent+" 件"+(wait?"　送信待ち "+wait+" 件（オンラインになると送られます）":"　送信待ちなし");
+    if(!syncOn()){
+      el.textContent="控えてある測定 "+wait+" 件。送信先は設定されていないので、どこにも送られません。"
+        +"キットタブの「表計算用に書き出す」で取り出せます。";
+      return;
+    }
+    var sent=0; try{sent=parseInt(localStorage.getItem("tautqs")||"0",10)||0;}catch(e){}
+    el.textContent="送り出した測定 "+sent+" 件"+(wait?"　送信待ち "+wait+" 件（オンラインになると送られます）":"　送信待ちなし")
+      +"　※送りっぱなしの方式なので、この件数は届いた証拠にはなりません。";
   }
 
   function checkUpdate(){
