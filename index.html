@@ -1145,7 +1145,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function diag(d,head){
     var all=measOf(d.id,head), n=d.lugs, got=all.filter(function(x){return x>0;}), i;
     if(!got.length) return null;
-    if(got.length<n) return "あと "+(n-got.length)+" 本";
+    if(got.length<n) return null;   // 残りはラグの円を見れば分かる
     var av=avgOf(all), sp=Math.max.apply(null,got)-Math.min.apply(null,got), mx=0, mi=-1;
     for(i=0;i<n;i++) if(all[i]>0&&Math.abs(all[i]-av)>mx){mx=Math.abs(all[i]-av);mi=i;}
     if(sp/av<=0.015) return "揃いました　平均 "+av.toFixed(1)+" Hz　中央の目安 "+(av/R).toFixed(1)+" Hz";
@@ -1799,7 +1799,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-120150";
+  var BUILD="20261021-122201";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
