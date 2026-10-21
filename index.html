@@ -96,6 +96,17 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .sres .go2:active{transform:scale(.97)}
 .snote{margin:0;font-size:11.5px;line-height:1.75;color:var(--faint)}
 
+.upd{position:fixed;left:50%;transform:translateX(-50%);z-index:45;
+  bottom:calc(62px + env(safe-area-inset-bottom,0px));
+  border:0;border-radius:999px;padding:11px 20px;background:var(--acc);color:var(--acc-fg);
+  font-size:12.5px;font-weight:700;letter-spacing:.03em;box-shadow:var(--sh-lift);white-space:nowrap}
+.upd:active{transform:translateX(-50%) scale(.95)}
+@media (prefers-reduced-motion:no-preference){
+  .upd{animation:updin .35s var(--ease)}
+  @keyframes updin{0%{opacity:0;transform:translateX(-50%) translateY(10px)}
+    100%{opacity:1;transform:translateX(-50%)}}
+}
+
 /* ─── 音作りの輪 ─── */
 .sheet{position:fixed;inset:0;z-index:55;background:rgba(10,14,22,.5);
   display:flex;align-items:flex-end;justify-content:center;padding:0;
@@ -284,6 +295,8 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 
 .cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .cf label{font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;letter-spacing:.03em}
+.cf .acts{margin-left:auto;display:flex;gap:8px}
+.cf select{flex:1 1 150px;min-width:0}
 .cf select{font-family:var(--sans);font-size:12.5px;font-weight:500;padding:9px 11px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:100%}
 .cf .go{font-size:12px;font-weight:700;letter-spacing:.03em;padding:9px 18px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .13s var(--ease),background .2s}
 .cf .go:active{transform:scale(.93)}
@@ -555,6 +568,8 @@ footer b{font-family:var(--mono);font-weight:700}
       <textarea id="kOut" class="exp" hidden readonly aria-label="書き出した測定データ"></textarea>
     </div>
   </div>
+
+  <button class="upd" id="updBar" type="button" hidden>新しい版があります　タップで更新</button>
 
   <div class="sheet" id="wheelSheet" hidden>
     <div class="sheetin">
@@ -1598,9 +1613,9 @@ footer b{font-family:var(--mono);font-weight:700}
         sel.appendChild(op);
       });
       sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
+      var acts=document.createElement("div"); acts.className="acts";
       var mk=document.createElement("button");
       mk.type="button"; mk.className="go"; mk.textContent="音を作る";
-      mk.style.marginLeft="auto";
       mk.addEventListener("click",function(){ wheelOpen(d); });
       var go=document.createElement("button");
       go.type="button"; go.className="go"; go.textContent="合わせる";
@@ -1610,7 +1625,8 @@ footer b{font-family:var(--mono);font-weight:700}
         anim(elVT,"enter-right",340);
       });
       lb.hidden=st.free; sel.hidden=st.free; mk.hidden=st.free;
-      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(mk); cf.appendChild(go);
+      acts.appendChild(mk); acts.appendChild(go);
+      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(acts);
       card.appendChild(cf);
 
       if(p.warn){
@@ -2176,7 +2192,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-002310";
+  var BUILD="20261022-003400";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -2539,10 +2555,20 @@ footer b{font-family:var(--mono);font-weight:700}
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
       .then(function(r){return r.ok?r.json():null;})
-      .then(function(j){ if(j&&j.build&&j.build!==BUILD&&!mic.on) location.reload(); })
+      .then(function(j){
+        if(!j||!j.build||j.build===BUILD) return;
+        // マイクを掴んだまま読み込み直すと iOS が音を鳴らすので、
+        // 作動中は黙って見送らず、押してもらってから入れ替える
+        if(mic.on){ var u=E("updBar"); if(u) u.hidden=false; }
+        else location.reload();
+      })
       .catch(function(){});
   }
   checkUpdate();
+  E("updBar").addEventListener("click",function(){
+    try{ micStop(); }catch(e){}
+    location.reload();
+  });
   // 戻るたびにマイクを掴み直すとiOSがオーディオセッションを切り替えて音が出るので、
   // ストリームは保持したままにする。更新も鳴動の原因になるため、マイク作動中は読み込み直さない。
   document.addEventListener("visibilitychange",function(){
