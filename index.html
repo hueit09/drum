@@ -79,6 +79,33 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .cap{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
+/* ─── 動き ─── */
+body{transition:background-color .35s var(--ease),color .35s var(--ease)}
+.pane,.card,.tabs{transition:background-color .35s var(--ease),border-color .35s var(--ease)}
+svg.hd .tick{transition:stroke .22s var(--ease),opacity .22s var(--ease)}
+svg.hd .rimring{transition:stroke .45s var(--ease)}
+.tab{transition:color .22s var(--ease),transform .12s var(--ease)}
+.tab:active{transform:scale(.94)}
+.dsl button:active,.hsl button:active{transform:scale(.93)}
+.dsl button,.hsl button{will-change:transform}
+/* 合致したときに外へ広がる輪 */
+.burst{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;border-radius:50%;
+  border:2.5px solid var(--good);opacity:0;pointer-events:none;
+  transform:translate(-50%,-50%) scale(.74)}
+@media (prefers-reduced-motion:no-preference){
+  .burst.go{animation:burst .72s cubic-bezier(.2,.8,.25,1)}
+  @keyframes burst{0%{opacity:.9;transform:translate(-50%,-50%) scale(.74)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+  .hd.alldone{animation:alldone .85s var(--ease)}
+  @keyframes alldone{0%,100%{transform:scale(1)}28%{transform:scale(1.04)}}
+  /* 起動画面のマークは線を引いて描く */
+  .sp .bigmark path{stroke-dasharray:64;stroke-dashoffset:64;animation:draw .95s var(--ease) forwards}
+  .sp .bigmark path:nth-child(2){animation-delay:.42s}
+  .sp .bigmark path:nth-child(3){animation-delay:.48s}
+  .sp .bigmark path:nth-child(4){animation-delay:.54s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+}
+
 /* ─── 起動画面 ─── */
 .splash{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;
   padding:24px;transition:opacity .4s var(--ease)}
@@ -283,11 +310,6 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center}
 .slide svg{width:100%;max-width:242px;height:auto;display:block;overflow:visible}
 svg .hit{cursor:pointer}
-.cdots{display:flex;gap:5px;justify-content:center;margin:-6px 0 2px}
-.cdots i{width:5px;height:5px;border-radius:3px;background:var(--faint);opacity:.3;
-  transition:opacity .25s var(--ease),background .25s,width .25s var(--ease)}
-.cdots i.on{opacity:1;background:var(--acc);width:15px}
-svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
 .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 13px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .13s var(--ease),border-color .2s,color .2s}
@@ -311,7 +333,6 @@ svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 .tl button:active:not(:disabled){transform:scale(.93)}
 .tl button[aria-pressed="true"]{background:var(--good-soft);color:var(--good);border-color:var(--good)}
 .tl button:disabled{opacity:.35;cursor:default}
-.tl .nx{background:var(--acc-soft);color:var(--acc)}
 .mn{width:100%;max-width:306px;padding:8px 13px;border-radius:11px;background:var(--acc-soft);font-size:11px;text-align:center;color:var(--dim)}
 .mn strong{font-weight:700}
 .opt{margin-top:2px}
@@ -433,9 +454,10 @@ footer b{font-family:var(--mono);font-weight:700}
       </div>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
+        <i class="burst" id="burst" aria-hidden="true"></i>
         <div class="ro" id="ro">
           <div class="lab" id="roLab">目標</div>
-          <div class="dev" id="roDev">—<em>Hz</em></div>
+          <div class="dev" id="roDev"><span id="roDevN">—</span><em id="roDevU">Hz</em></div>
           <div class="nn2" id="roNote"></div>
           <div class="act" id="roAct"></div>
         </div>
@@ -504,6 +526,7 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="bd">
         <p><strong>TAUT v1.0</strong>　ラグ値から追い込むドラムチューニング</p>
         <p>口径はチューナー画面のチップから、キット構成・深さ・ラグ数は「キット」タブから変更できます。設定と測定値はこの端末にだけ保存されます。</p>
+        <p class="rr" id="syncSt" style="margin-left:0"></p>
       </div>
     </details>
 
@@ -840,6 +863,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   // 鳴っているものを全部止めて、マイクの検出を戻す
   function stopTone(){
+    if(elRoDev) elRoDev.classList.remove("ring");
     if(shot){ try{shot.os.forEach(function(o){o.stop();});}catch(e){} shot=null; }
     if(tone){
       try{ var n=ac.currentTime, old=tone;
@@ -1008,13 +1032,13 @@ footer b{font-family:var(--mono);font-weight:700}
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
-      elRoDev=E("roDev"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
+      elBurst=E("burst"),elRoDev=E("roDev"),elRoDevN=E("roDevN"),elRoDevU=E("roDevU"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
       elCar=E("car"),elHInd=E("hInd"),elTabInd=E("tabInd"),
       elKit=E("kitList"),elTomN=E("tomN"),
       elMn=E("mn"),elChips=E("chips"),
       elDia=E("tDia"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
-  var lug=0, edit=null, inT=0, pop=false, zoom=false;
+  var lug=0, edit=null, inT=0, pop=false, zoom=false, doneKey=null;
 
   function anim(el,cls,ms){
     if(!el) return;
@@ -1038,7 +1062,7 @@ footer b{font-family:var(--mono);font-weight:700}
       d.dia=Math.max(4,Math.min(30,d.dia+s));
       if(auto) d.lugs=lugsFor(d.kind,d.dia);
     } else {
-      d.lugs=Math.max(4,Math.min(12,d.lugs+s));
+      d.lugs=Math.max(4,Math.min(12,d.lugs+s)); trimMeas(d);
       if(lug>d.lugs-1) lug=0;
     }
     save(); render();
@@ -1160,7 +1184,7 @@ footer b{font-family:var(--mono);font-weight:700}
     var d=byId(st.tid); if(!d) return;
     var hz;
     if(st.free){
-      hz=st.thead==="fund"?(st.meas[d.id+"|fund"]||0):avgOf(measOf(d.id,st.thead));
+      hz=st.thead==="fund"?(st.meas[d.id+"|fund"]||0):avgOf(measN(d,st.thead));
       if(!(hz>0)) return;          // まだ何も測れていないので鳴らす音がない
     } else {
       var c=calc(st.live,st.mode,st.voic,st.nudge,d);
@@ -1191,6 +1215,16 @@ footer b{font-family:var(--mono);font-weight:700}
     var o=order(n),at=o.indexOf(cur);
     return at<0?o[0]:o[(at-1+n)%n];
   }
+  // ラグ数を減らしたとき、古い値が平均や診断に混ざらないようにする
+  function measN(d,h){ return measOf(d.id,h).slice(0,d.lugs); }
+  function trimMeas(d){
+    ["top","bot"].forEach(function(h){
+      var k=d.id+"|"+h, a=st.meas[k];
+      if(Object.prototype.toString.call(a)==="[object Array]"&&a.length>d.lugs){
+        a.length=d.lugs; st.meas[k]=a;
+      }
+    });
+  }
   function measOf(id,h){
     var a=st.meas[id+"|"+h];
     return Object.prototype.toString.call(a)==="[object Array]"?a:[];
@@ -1220,12 +1254,12 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   // 表裏のラグ平均と実音の実測から、そのドラムの実際の R を逆算する
   function impliedR(d){
-    var t=avgOf(measOf(d.id,"top")), b=avgOf(measOf(d.id,"bot")), f=st.meas[d.id+"|fund"];
+    var t=avgOf(measN(d,"top")), b=avgOf(measN(d,"bot")), f=st.meas[d.id+"|fund"];
     return (t>0&&b>0&&f>0)?Math.sqrt(t*b)/f:null;
   }
   // 測った値から言えることを一行で返す
   function diag(d,head){
-    var all=measOf(d.id,head), n=d.lugs, got=all.filter(function(x){return x>0;}), i;
+    var all=measN(d,head), n=d.lugs, got=all.filter(function(x){return x>0;}), i;
     if(!got.length) return null;
     if(got.length<n) return null;   // 残りはラグの円を見れば分かる
     var av=avgOf(all), sp=Math.max.apply(null,got)-Math.min.apply(null,got), mx=0, mi=-1;
@@ -1247,6 +1281,7 @@ footer b{font-family:var(--mono);font-weight:700}
     moveTab();
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc";
+    if(st.view==="doc") syncLine();
     elKeyPane.hidden=st.view!=="recipe"&&st.view!=="tune";
     elKeySum.textContent=st.free
       ? "キー指定なし ・ 鳴っている音を読む"
@@ -1394,10 +1429,10 @@ footer b{font-family:var(--mono);font-weight:700}
         pl.setAttribute("aria-label",d.name+" "+c[1]+"の音を鳴らす");
         pl.addEventListener("click",function(ev){
           ev.stopPropagation();
-          ping(st.free?avgOf(measOf(d.id,c[3])):c[2],pl);
+          ping(st.free?avgOf(measN(d,c[3])):c[2],pl);
         });
         hl.appendChild(pl);
-        var ms=measOf(d.id,c[3]), av=avgOf(ms);
+        var ms=measN(d,c[3]), av=avgOf(ms);
         var shown=st.free?av:c[2];                      // 指定なしのときは測った平均そのもの
         var bn=document.createElement("div"); bn.className="big";
         if(shown>0) bn.textContent=st.free?shown.toFixed(1):String(shown);
@@ -1526,7 +1561,7 @@ footer b{font-family:var(--mono);font-weight:700}
         d.dia=v;
       }));
       g.appendChild(f("深さ inch",d.dep,2,30,0.5,function(v){d.dep=v;}));
-      g.appendChild(f("ラグ数",d.lugs,4,12,1,function(v){d.lugs=Math.round(v);}));
+      g.appendChild(f("ラグ数",d.lugs,4,12,1,function(v){d.lugs=Math.round(v);trimMeas(d);}));
       c.appendChild(g);
       elKit.appendChild(c);
     });
@@ -1543,7 +1578,7 @@ footer b{font-family:var(--mono);font-weight:700}
     var any=false;
     st.drums.forEach(function(d){
       var c=calc(st.live,st.mode,st.voic,st.nudge,d);
-      var t=measOf(d.id,"top"),b=measOf(d.id,"bot"),f=st.meas[d.id+"|fund"];
+      var t=measN(d,"top"),b=measN(d,"bot"),f=st.meas[d.id+"|fund"];
       var ta=avgOf(t),ba=avgOf(b);
       if(!(ta>0)&&!(ba>0)&&!(f>0)) return;
       any=true;
@@ -1609,7 +1644,7 @@ footer b{font-family:var(--mono);font-weight:700}
       +'<stop offset="0" stop-color="'+cssv("--head-a")+'"/>'
       +'<stop offset="1" stop-color="'+cssv("--head-b")+'"/></radialGradient></defs>');
     p.push('<circle cx="100" cy="100" r="70" fill="url(#hg)"/>');
-    p.push('<circle cx="100" cy="100" r="70" fill="none" stroke="'+cssv("--rim")+'" stroke-width="5"/>');
+    p.push('<circle class="rimring" id="rim" cx="100" cy="100" r="70" fill="none" stroke="'+cssv("--rim")+'" stroke-width="5"/>');
     p.push('<circle cx="100" cy="100" r="72.3" fill="none" stroke="'+cssv("--rim-hi")+'" stroke-width="1" opacity="0.5"/>');
     p.push('<circle cx="100" cy="100" r="64.5" fill="none" stroke="'+cssv("--head-ink")+'" stroke-width="0.7" opacity="0.12"/>');
     // 差分の目盛り。中央から振れた分だけ点灯する
@@ -1663,6 +1698,7 @@ footer b{font-family:var(--mono);font-weight:700}
       var lit=on&&(mid||(dn>0&&fr>0&&fr<=dn+1e-6)||(dn<0&&fr<0&&fr>=dn-1e-6));
       t.setAttribute("stroke",lit?HG[k]:ink);
       t.setAttribute("opacity",lit?(mid&&Math.abs(dn)<0.02?1:0.95):(mid?0.38:0.17));
+      t.style.transitionDelay=lit?(Math.abs(fr)*110).toFixed(0)+"ms":"0ms";
     }
   }
 
@@ -1675,6 +1711,11 @@ footer b{font-family:var(--mono);font-weight:700}
       arc.setAttribute("stroke-dashoffset",(C*(1-done/n)).toFixed(1));
       arc.setAttribute("stroke",done===n?CO.good:cssv("--acc"));
     }
+    var rim=E("rim");
+    if(rim) rim.setAttribute("stroke",done===n?CO.good:cssv("--rim"));
+    var dkey=st.tid+"|"+st.thead;
+    if(done===n&&n>0&&doneKey!==dkey){ doneKey=dkey; anim(elSVG,"alldone",880); }
+    else if(done<n) { if(doneKey===dkey) doneKey=null; }
     for(i=0;i<n;i++){
       var k=cl(arr[i]),body=E("lb"+i),num=E("ln"+i),ck=E("ck"+i),on=(i===lug);
       // まだ測っていない「いま回すラグ」はアクセント色で埋めて、他と見分ける
@@ -1688,26 +1729,56 @@ footer b{font-family:var(--mono);font-weight:700}
       if(num){ num.setAttribute("fill",ink); num.setAttribute("font-size",on?"13.5":"11.5"); }
       if(ck){ ck.setAttribute("opacity",k==="good"?"1":"0"); ck.classList.remove("chk"); }
     }
-    if(pop){ var c2=E("ck"+lug); if(c2&&cl(arr[lug])==="good") c2.classList.add("chk"); }
+    if(pop){
+      var c2=E("ck"+lug);
+      if(c2&&cl(arr[lug])==="good"){ c2.classList.add("chk"); anim(elBurst,"go",760); }
+    }
   }
+
+  // 中央の数字。同じ種類の値どうしなら前の値から転がす
+  var roll={kind:null,val:null,raf:0};
+  function nowMs(){return (window.performance&&performance.now)?performance.now():Date.now();}
+  function calm(){return !!(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches);}
+  function fmtDiff(v){
+    var a=Math.abs(v);
+    return a<0.05?"±0":(v>0?"+":"−")+(a<10?a.toFixed(1):String(Math.round(a)));
+  }
+  function fmtF1(v){return v.toFixed(1);}
+  function fmtI(v){return String(Math.round(v));}
 
   function paintReadout(cur,tgt,isF,cl,flat,free){
     var HG={good:cssv("--h-good"),close:cssv("--h-close"),off:cssv("--h-off"),none:cssv("--h-dim")};
-    function put(txt,sub,color,muted){
-      elRoDev.innerHTML="";
-      elRoDev.appendChild(document.createTextNode(txt));
-      if(sub){ var e=document.createElement("em"); e.textContent=sub; elRoDev.appendChild(e); }
+    // 数値で種類が同じときだけ転がす。文字に変わるときは差し替える
+    function setDev(kind,val,fmt,unit,color,muted){
+      elRoDevU.textContent=unit||"";
+      elRoDevU.hidden=!unit;
       elRoDev.classList.toggle("muted",!!muted);
       elRoDev.classList.toggle("ring",!!tone);
       elRoDev.style.color=color;
+      if(roll.raf){cancelAnimationFrame(roll.raf);roll.raf=0;}
+      var num=(typeof val==="number")&&isFinite(val);
+      var text=num?fmt(val):String(fmt);
+      var from=roll.val;
+      var able=num&&roll.kind===kind&&typeof from==="number"&&isFinite(from)
+               &&Math.abs(val-from)>0.05&&!calm();
+      roll.kind=kind; roll.val=num?val:null;
+      if(!able){ elRoDevN.textContent=text; return; }
+      var t0=nowMs(), D=300;
+      (function step(){
+        var pr=Math.min(1,(nowMs()-t0)/D), e=1-Math.pow(1-pr,3);
+        elRoDevN.textContent=fmt(from+(val-from)*e);
+        if(pr<1) roll.raf=requestAnimationFrame(step);
+        else { roll.raf=0; elRoDevN.textContent=text; }
+      })();
     }
+    function put(txt,sub,color,muted){ setDev("text",null,txt,sub,color,muted); }
     // キー指定なし：狙いの値は持たず、鳴っている音を読んでラグ同士を揃える
     if(free){
       var mn=cur>0?noteOf(cur,flat):null;
       if(cur>0&&tgt>0&&!isF&&Math.abs(cur-tgt)>0.05){
         var dv=cur-tgt, av=Math.abs(dv), kk=cl(cur);
         elRoLab.textContent="平均との差";
-        put((dv>0?"+":"−")+(av<10?av.toFixed(1):String(Math.round(av))),"Hz",HG[kk],false);
+        setDev("diff",dv,fmtDiff,"Hz",HG[kk],false);
         elRoNote.textContent=cur.toFixed(1)+" Hz"+(mn?"　"+mn.name+" "+cts(mn.cents):"");
         elRoAct.style.color=HG[kk];
         elRoAct.textContent=dv>0?"ゆるめる":"しめる";
@@ -1729,13 +1800,7 @@ footer b{font-family:var(--mono);font-weight:700}
     if(cur>0){
       var dv=cur-tgt,av=Math.abs(dv),k=cl(cur),mn=noteOf(cur,flat);
       elRoLab.textContent="差分";
-      elRoDev.innerHTML="";
-      elRoDev.appendChild(document.createTextNode(av<0.05?"±0"
-        :(dv>0?"+":"−")+(av<10?av.toFixed(1):String(Math.round(av)))));
-      var em=document.createElement("em"); em.textContent="Hz"; elRoDev.appendChild(em);
-      elRoDev.classList.remove("muted");
-      elRoDev.classList.toggle("ring",!!tone);
-      elRoDev.style.color=HG[k];
+      setDev("diff",dv,fmtDiff,"Hz",HG[k],false);
       elRoNote.textContent=cur.toFixed(1)+" Hz"+(mn?"　"+mn.name+" "+cts(mn.cents):"");
       elRoAct.style.color=HG[k];
       elRoAct.textContent=isF
@@ -1744,12 +1809,7 @@ footer b{font-family:var(--mono);font-weight:700}
         : (av<0.5?"合致":(dv>0?"ゆるめる":"しめる"));
     } else {
       elRoLab.textContent=isF?"予測":"目標";
-      elRoDev.innerHTML="";
-      elRoDev.appendChild(document.createTextNode(isF?tgt.toFixed(1):String(tgt)));
-      var em2=document.createElement("em"); em2.textContent="Hz"; elRoDev.appendChild(em2);
-      elRoDev.classList.add("muted");
-      elRoDev.classList.toggle("ring",!!tone);
-      elRoDev.style.color=cssv("--head-ink");
+      setDev("tgt",tgt,isF?fmtF1:fmtI,"Hz",cssv("--head-ink"),true);
       elRoNote.textContent="";
       elRoAct.textContent=isF?"中央を叩く":"ラグを弾く";
       elRoAct.style.color=cssv("--h-dim");
@@ -1895,10 +1955,11 @@ footer b{font-family:var(--mono);font-weight:700}
     });
     if(hi&&elHInd){ elHInd.style.top=hi.offsetTop+"px"; elHInd.style.height=hi.offsetHeight+"px"; }
 
+    if(!(lug>=0&&lug<d.lugs)) lug=0;      // ラグ数を減らした直後の取り残し防止
     var isF=st.thead==="fund", free=!!st.free;
     var flat=!!FLATK[rootOf(st.live,st.mode)];
     var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
-    var n=d.lugs, arr=isF?[]:measOf(d.id,st.thead);
+    var n=d.lugs, arr=isF?[]:measN(d,st.thead);
     var cur=isF?(st.meas[d.id+"|fund"]||0):arr[lug];
     // キー指定なしのときは狙いの値がないので、測れたラグの平均に合わせていく
     var tgt;
@@ -1996,7 +2057,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-231333";
+  var BUILD="20261021-232411";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
@@ -2015,7 +2076,7 @@ footer b{font-family:var(--mono);font-weight:700}
   // 1台ぶんの測定が揃ったら、その要約を控える
   function queue(d){
     if(!syncOn()) return;
-    var t=avgOf(measOf(d.id,"top")), b=avgOf(measOf(d.id,"bot")), f=st.meas[d.id+"|fund"];
+    var t=avgOf(measN(d,"top")), b=avgOf(measN(d,"bot")), f=st.meas[d.id+"|fund"];
     if(!(t>0)||!(b>0)||!(f>0)) return;
     var c=calc(st.live,st.mode,st.voic,st.nudge,d);
     var q=qGet(), sig=d.id+"|"+t.toFixed(1)+"|"+b.toFixed(1)+"|"+f.toFixed(1);
@@ -2037,11 +2098,23 @@ footer b{font-family:var(--mono);font-weight:700}
     fetch(SYNC_URL,{method:"POST",mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify({rows:q})})
-      .then(function(){ qPut([]); })
+      .then(function(){
+        var done=0; try{done=parseInt(localStorage.getItem("tautqs")||"0",10)||0;}catch(e){}
+        try{localStorage.setItem("tautqs",String(done+q.length));}catch(e){}
+        qPut([]); syncLine();
+      })
       .catch(function(){})
       .then(function(){ flushing=false; });
   }
   window.addEventListener("online",flush);
+  // 説明タブに、測定値がどれだけ送り出されたかを出す
+  function syncLine(){
+    var el=E("syncSt"); if(!el) return;
+    if(!syncOn()){ el.textContent="この版では測定値の送信は無効です。"; return; }
+    var sent=0; try{sent=parseInt(localStorage.getItem("tautqs")||"0",10)||0;}catch(e){}
+    var wait=qGet().length;
+    el.textContent="送り出した測定 "+sent+" 件"+(wait?"　送信待ち "+wait+" 件（オンラインになると送られます）":"　送信待ちなし");
+  }
 
   function checkUpdate(){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
