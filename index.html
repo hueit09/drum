@@ -424,14 +424,6 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="keys" id="keys" role="group" aria-label="キー"></div>
       <div class="picked" id="picked" hidden></div>
     </div>
-    <div class="row" id="rowNudge">
-      <div class="cap">キット全体を上下</div>
-      <div class="step">
-        <button id="dn" type="button" aria-label="半音下げる">−</button>
-        <span class="v" id="nv">±0 半音</span>
-        <button id="up" type="button" aria-label="半音上げる">＋</button>
-      </div>
-    </div>
     </div>
   </details>
 
@@ -688,9 +680,9 @@ footer b{font-family:var(--mono);font-weight:700}
   var IV_T=-3, IV_K=0, IV_S=5.4929;
   var TAB=[[10,196,277],[12,165,233],[14,123,174],[16,104,147]];
   var IVO=[[7,"完全5度（裏が高い）"],[6,"増4度（裏が高い）"],[5,"完全4度（裏が高い）"],
-           [4,"長3度（裏が高い）"],[3,"短3度（裏が高い）"],[1,"半音（裏が高い）"],
+           [4,"長3度（裏が高い）"],[3,"短3度（裏が高い）"],
            [0,"均等（表と同じ値）"],
-           [-1,"半音下（裏が低い）"],[-3,"短3度下（裏が低い）"],[-4,"長3度下（裏が低い）"],
+           [-3,"短3度下（裏が低い）"],[-4,"長3度下（裏が低い）"],
            [-5,"完全4度下（裏が低い）"],[-6,"増4度下（裏が低い）"],[-7,"完全5度下（裏が低い）"]];
 
   var PRE={
@@ -783,10 +775,14 @@ footer b{font-family:var(--mono);font-weight:700}
       if(sv.adv==="manual"||sv.adv==="auto") st.adv=sv.adv;
       st.keyOpen=!!sv.keyOpen;
       if(sv.ord==="x"||sv.ord==="cw") st.ord=sv.ord;
-      if(typeof sv.nudge==="number"&&Math.abs(sv.nudge)<=2) st.nudge=sv.nudge;
+      st.nudge=0;   // 半音の上下は廃止。キーを選び直して移調する
       if(Object.prototype.toString.call(sv.drums)==="[object Array]"&&sv.drums.length>=3){
         st.drums=sv.drums;
-        st.drums.forEach(function(d){if(typeof d.deg!=="number") d.deg=0;});
+        st.drums.forEach(function(d){
+          if(typeof d.deg!=="number") d.deg=0;
+          // 表裏が半音差だと唸るので、保存されていたものは均等に寄せる
+          if(d.iv===1||d.iv===-1) d.iv=0;
+        });
       }
       if(PRE[sv.preset]) st.preset=sv.preset;
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
@@ -1043,7 +1039,7 @@ footer b{font-family:var(--mono);font-weight:700}
   /* ---------- elements ---------- */
   var E=function(i){return document.getElementById(i);};
   var elKeys=E("keys"),elAccs=E("accs"),elPicked=E("picked"),elModes=E("modes"),
-      elCards=E("cards"),elBand=E("band"),elNV=E("nv"),elUp=E("up"),elDn=E("dn"),
+      elCards=E("cards"),elBand=E("band"),
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
@@ -1174,8 +1170,6 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){ st.ltr=i; pickKey(pcOf(i,st.acc)); });
     elKeys.appendChild(b);
   });
-  elUp.addEventListener("click",function(){if(st.nudge<2){st.nudge++;save();render();}});
-  elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
     t.addEventListener("click",function(){
       st.view=t.dataset.v; stopTone(); edit=null;
@@ -1340,9 +1334,8 @@ footer b{font-family:var(--mono);font-weight:700}
       ? "キー指定なし ・ 鳴っている音を読む"
       : keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
 
-        +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
+;
     E("rowKeys").hidden=st.free;
-    E("rowNudge").hidden=st.free;
 
     Array.prototype.forEach.call(elModes.children,function(b){
       b.setAttribute("aria-pressed",
@@ -1374,8 +1367,6 @@ footer b{font-family:var(--mono);font-weight:700}
       w.appendChild(t); w.appendChild(x); elPicked.appendChild(w);
     });
 
-    elNV.textContent=(st.nudge>0?"+":st.nudge<0?"−":"±")+Math.abs(st.nudge)+" 半音";
-    elUp.disabled=st.nudge>=2; elDn.disabled=st.nudge<=-2;
 
     if(st.view==="recipe") rRecipe(); else if(st.view==="tune") rTuner(); else rKit();
   }
@@ -2107,7 +2098,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-000230";
+  var BUILD="20261022-000757";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
