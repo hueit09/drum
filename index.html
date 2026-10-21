@@ -80,7 +80,8 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
 /* ─── 動き ─── */
-.slidebox{overflow:hidden;transition:height .26s var(--ease),opacity .2s var(--ease)}
+.slidebox{overflow:hidden;
+  transition:height .26s var(--ease),padding-top .26s var(--ease),padding-bottom .26s var(--ease),opacity .22s var(--ease)}
 details>summary{-webkit-tap-highlight-color:transparent}
 details>summary::-webkit-details-marker{display:none}
 body{transition:background-color .35s var(--ease),color .35s var(--ease)}
@@ -422,10 +423,6 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="segs" id="accs" role="group" aria-label="♭ ♮ ♯"></div>
       <div class="keys" id="keys" role="group" aria-label="キー"></div>
       <div class="picked" id="picked" hidden></div>
-    </div>
-    <div class="row" id="rowVoic">
-      <div class="cap">いちばん上のタム<span class="note">主音から見て何度の音に置くか。下のタムは3度ずつ下がります</span></div>
-      <div class="segs" id="voics" role="group" aria-label="いちばん上のタムの度数"></div>
     </div>
     <div class="row" id="rowNudge">
       <div class="cap">キット全体を上下</div>
@@ -1045,7 +1042,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   /* ---------- elements ---------- */
   var E=function(i){return document.getElementById(i);};
-  var elKeys=E("keys"),elAccs=E("accs"),elPicked=E("picked"),elModes=E("modes"),elVoics=E("voics"),
+  var elKeys=E("keys"),elAccs=E("accs"),elPicked=E("picked"),elModes=E("modes"),
       elCards=E("cards"),elBand=E("band"),elNV=E("nv"),elUp=E("up"),elDn=E("dn"),
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
       elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),
@@ -1061,35 +1058,40 @@ footer b{font-family:var(--mono);font-weight:700}
   // 合致 15 セント、近い 35 セント。検出の実測誤差（中央値で約3¢、悪条件でも20¢台）に見合う幅
   var GOOD_C=15, CLOSE_C=35, EVEN_C=25, OUT_C=40;
 
-  // <details> は既定だと一瞬で開くので、中身の高さを動かして開閉する
+  // <details> は既定だと一瞬で開くので、中身の高さを動かして開閉する。
+  // 高さだけ 0 にしても上下の余白は残るので、余白も一緒に畳む（残すと最後に飛ぶ）
   function slideDetails(dt){
     var sum=dt.querySelector("summary"); if(!sum) return;
     var box=sum.nextElementSibling; if(!box) return;
     box.classList.add("slidebox");
-    var busy=false;
+    var cs=window.getComputedStyle(box), padT=cs.paddingTop, padB=cs.paddingBottom;
+    var busy=false, D=260;
+    function openH(){
+      var h=box.style.height, a=box.style.paddingTop, b=box.style.paddingBottom;
+      box.style.height="auto"; box.style.paddingTop=padT; box.style.paddingBottom=padB;
+      var v=box.scrollHeight;
+      box.style.height=h; box.style.paddingTop=a; box.style.paddingBottom=b;
+      return v;
+    }
+    function clear(){ box.style.height=""; box.style.paddingTop=""; box.style.paddingBottom=""; box.style.opacity=""; }
     sum.addEventListener("click",function(e){
       e.preventDefault();
       if(busy) return;
       if(calm()){ dt.open=!dt.open; dt.dispatchEvent(new Event("taut:toggled")); return; }
       busy=true;
-      var D=260;
       if(dt.open){
-        box.style.height=box.scrollHeight+"px"; box.style.opacity="1";
+        box.style.height=openH()+"px"; box.style.paddingTop=padT; box.style.paddingBottom=padB; box.style.opacity="1";
         void box.offsetHeight;
-        box.style.height="0px"; box.style.opacity="0";
-        setTimeout(function(){
-          dt.open=false; box.style.height=""; box.style.opacity=""; busy=false;
-          dt.dispatchEvent(new Event("taut:toggled"));
-        },D);
+        box.style.height="0px"; box.style.paddingTop="0px"; box.style.paddingBottom="0px"; box.style.opacity="0";
+        setTimeout(function(){ dt.open=false; clear(); busy=false; dt.dispatchEvent(new Event("taut:toggled")); },D);
       } else {
+        // 開く前に畳んだ状態にしておく。開いてから畳むと一瞬だけ余白が見える
+        box.style.height="0px"; box.style.paddingTop="0px"; box.style.paddingBottom="0px"; box.style.opacity="0";
         dt.open=true;
-        box.style.height="0px"; box.style.opacity="0";
+        var to=openH();
         void box.offsetHeight;
-        box.style.height=box.scrollHeight+"px"; box.style.opacity="1";
-        setTimeout(function(){
-          box.style.height=""; box.style.opacity=""; busy=false;
-          dt.dispatchEvent(new Event("taut:toggled"));
-        },D);
+        box.style.height=to+"px"; box.style.paddingTop=padT; box.style.paddingBottom=padB; box.style.opacity="1";
+        setTimeout(function(){ clear(); busy=false; dt.dispatchEvent(new Event("taut:toggled")); },D);
       }
     });
   }
@@ -1172,21 +1174,6 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){ st.ltr=i; pickKey(pcOf(i,st.acc)); });
     elKeys.appendChild(b);
   });
-  function buildVoics(){
-    elVoics.innerHTML="";
-    for(var i=0;i<serMax();i++){
-      (function(ix){
-        var b=document.createElement("button");
-        b.type="button"; b.className="sg"; b.dataset.ser=String(ix);
-        b.innerHTML='<span></span><small hidden>おすすめ</small>';
-        b.firstChild.textContent=SERDEG[ix]+"度";
-        b.setAttribute("aria-label","いちばん上のタムを主音の"+SERDEG[ix]+"度に置く");
-        b.addEventListener("click",function(){st.ser=ix;save();render();});
-        elVoics.appendChild(b);
-      })(i);
-    }
-  }
-  buildVoics();
   elUp.addEventListener("click",function(){if(st.nudge<2){st.nudge++;save();render();}});
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
@@ -1343,6 +1330,8 @@ footer b{font-family:var(--mono);font-weight:700}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     moveTab();
+    // タムが乗る高さは、口径ごとの張力の目安に収まるものを自動で選ぶ
+    st.ser=recommend(st.live);
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc";
     if(st.view==="doc") syncLine();
@@ -1350,10 +1339,9 @@ footer b{font-family:var(--mono);font-weight:700}
     elKeySum.textContent=st.free
       ? "キー指定なし ・ 鳴っている音を読む"
       : keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
-        +" ・ 上タム"+SERDEG[st.ser]+"度"
+
         +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
     E("rowKeys").hidden=st.free;
-    E("rowVoic").hidden=st.free;
     E("rowNudge").hidden=st.free;
 
     Array.prototype.forEach.call(elModes.children,function(b){
@@ -1386,14 +1374,6 @@ footer b{font-family:var(--mono);font-weight:700}
       w.appendChild(t); w.appendChild(x); elPicked.appendChild(w);
     });
 
-    if(elVoics.children.length!==serMax()) buildVoics();
-    if(st.ser>=serMax()) st.ser=serMax()-1;
-    var rec=recommend(st.live);
-    Array.prototype.forEach.call(elVoics.children,function(b){
-      var ix=parseInt(b.dataset.ser,10);
-      b.setAttribute("aria-pressed",ix===st.ser?"true":"false");
-      b.querySelector("small").hidden=ix!==rec;
-    });
     elNV.textContent=(st.nudge>0?"+":st.nudge<0?"−":"±")+Math.abs(st.nudge)+" 半音";
     elUp.disabled=st.nudge>=2; elDn.disabled=st.nudge<=-2;
 
@@ -1413,7 +1393,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function rRecipe(){
     var flat=!!FLATK[rootOf(st.live,st.mode)];
     var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg&&!(d.rcal>0);});
-    var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.ser==="low")||(offs(st.live,st.mode)===-2&&st.ser==="high"));
+    var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.ser===2)||(offs(st.live,st.mode)===-2&&st.ser===1));
     elBand.innerHTML="";
     elBand.hidden=st.free;
     var tg=document.createElement("span");
@@ -1427,6 +1407,13 @@ footer b{font-family:var(--mono);font-weight:700}
       : keyName(st.live)+" ／ 基準レシピを "+(dd===0?"そのまま":(dd>0?"+":"−")+Math.abs(dd)+"半音")
         +" 移調"+(stock?"":"、音の高さを調整")+"した値です。";
     if(!st.free) elBand.appendChild(tx);
+    var t0=toms()[0];
+    if(t0){
+      var tf=calc(st.live,st.mode,st.ser,st.nudge,t0).fund, tn=noteOf(tf,flat);
+      var ts=document.createElement("span");
+      ts.textContent="タムは "+(tn?tn.name:"—")+" から3度ずつ下がります。";
+      elBand.appendChild(ts);
+    }
     var ncal=st.drums.filter(function(x){return x.rcal>0;}).length;
     if(ncal){
       var t2=document.createElement("span");
@@ -1574,11 +1561,6 @@ footer b{font-family:var(--mono);font-weight:700}
       elCmpW.hidden=false;
       var h="<thead><tr><th>ドラム</th>";
       st.keys.forEach(function(k){h+='<th class="'+(k===st.live?"on":"")+'">'+keyName(k)+"</th>";});
-      h+='</tr><tr><th style="font-weight:400">タムの高さ</th>';
-      st.keys.forEach(function(k){
-        h+='<th class="'+(k===st.live?"on":"")+'" style="font-weight:400">'
-          +((k===st.live?st.ser:recommend(k))==="low"?"低":"高")+"</th>";
-      });
       h+="</tr></thead><tbody>";
       st.drums.forEach(function(d){
         h+="<tr><td>"+d.name+"</td>";
@@ -1639,7 +1621,7 @@ footer b{font-family:var(--mono);font-weight:700}
     var L=[],d2=new Date();
     function p2(x){return (x<10?"0":"")+x;}
     L.push("TAUT v1.0　"+d2.getFullYear()+"-"+p2(d2.getMonth()+1)+"-"+p2(d2.getDate()));
-    L.push("キー "+keyName(st.live)+"　タム"+(st.ser==="low"?"低め":"高め")
+    L.push("キー "+keyName(st.live)
       +(st.nudge?"　"+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":""));
     L.push("");
     var any=false;
@@ -2125,7 +2107,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-235118";
+  var BUILD="20261022-000230";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
