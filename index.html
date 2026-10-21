@@ -78,7 +78,7 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
 /* ─── header ─── */
-header{display:flex;align-items:center;gap:12px;padding-block:14px 12px}
+header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .brand{flex:1;min-width:0;display:flex;align-items:center;gap:9px}
 .mark{width:26px;height:26px;flex:none;color:var(--fg)}
 .brand h1{align-self:center}
@@ -99,13 +99,13 @@ header{display:flex;align-items:center;gap:12px;padding-block:14px 12px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tabs{box-shadow:0 -2px 18px rgba(0,0,0,.5)}}
 :root[data-theme="dark"] .tabs{box-shadow:0 -2px 18px rgba(0,0,0,.5)}
 
-.pane{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;display:grid;gap:16px;margin-bottom:11px;box-shadow:var(--sh)}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;display:grid;gap:16px;margin-bottom:9px;box-shadow:var(--sh)}
 .row{display:grid;gap:9px}
 .row>.cap{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 
 /* ─── key panel ─── */
 .keyp{padding:0;gap:0;overflow:hidden}
-.keyp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;font-size:13px;font-weight:700;color:var(--acc);letter-spacing:.02em}
+.keyp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 15px;font-size:13px;font-weight:700;color:var(--acc);letter-spacing:.02em}
 .keyp>summary::-webkit-details-marker{display:none}
 .keyp>summary::before{content:"";width:7px;height:7px;flex:none;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px var(--acc-soft)}
 .keyp>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);opacity:.6;transition:transform .28s var(--ease)}
@@ -203,7 +203,7 @@ th.on{color:var(--acc)}
 .rr{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint)}
 
 /* ─── tuner ─── */
-.tune{display:grid;justify-items:center;gap:11px;padding:2px 0 4px}
+.tune{display:grid;justify-items:center;gap:8px;padding:0 0 2px}
 .dr{display:flex;gap:5px;overflow-x:auto;width:100%;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .dr::-webkit-scrollbar{display:none}
 .dr button{flex:none;font-size:12.5px;font-weight:700;letter-spacing:.02em;min-height:42px;padding:9px 15px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:13px;transition:background .22s var(--ease),color .22s,border-color .22s,transform .13s var(--ease)}
@@ -211,9 +211,15 @@ th.on{color:var(--acc)}
 .dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
 .dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
 .dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
-.tune .segs{width:100%;max-width:306px}
+.hsl{position:relative;display:flex;gap:0;padding:3px;border-radius:999px;background:var(--sunk);
+  border:1px solid var(--line);margin-top:2px}
+.hsl i.hin{position:absolute;top:3px;bottom:3px;border-radius:999px;background:var(--acc);
+  box-shadow:var(--sh);transition:left .3s var(--ease),width .3s var(--ease);z-index:0}
+.hsl button{position:relative;z-index:1;border:0;background:none;color:var(--dim);font-size:11.5px;
+  font-weight:700;letter-spacing:.06em;padding:7px 18px;border-radius:999px;transition:color .22s var(--ease)}
+.hsl button[aria-pressed="true"]{color:var(--acc-fg)}
 
-.dial{position:relative;width:100%;max-width:min(100%,318px);display:grid;place-items:center}
+.dial{position:relative;width:100%;max-width:min(100%,292px);display:grid;place-items:center}
 svg.hd{width:100%;height:auto;display:block;touch-action:manipulation;overflow:visible}
 svg.hd .lug{cursor:pointer}
 svg.hd .lugbody,svg.hd .chkdot{transition:fill .3s var(--ease),stroke .3s var(--ease)}
@@ -229,11 +235,12 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro .dev.muted{opacity:.3}
 .ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
 .ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
-.car{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:-10px 0 0;
+.car{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:-14px 0 -6px;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .car::-webkit-scrollbar{display:none}
 .slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center}
-.slide svg{width:100%;max-width:234px;height:auto;display:block;overflow:visible}
+.slide svg{width:100%;max-width:208px;height:auto;display:block;overflow:visible}
+svg .hit{cursor:pointer}
 .cdots{display:flex;gap:5px;justify-content:center;margin:-6px 0 2px}
 .cdots i{width:5px;height:5px;border-radius:3px;background:var(--faint);opacity:.3;
   transition:opacity .25s var(--ease),background .25s,width .25s var(--ease)}
@@ -269,7 +276,7 @@ svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 .opt .bd{padding:0 15px 15px;display:grid;gap:14px}
 
 /* ─── reference ─── */
-.refs{margin-top:34px;display:grid;gap:9px}
+.refs{margin-top:4px;display:grid;gap:9px}
 details{background:var(--card);border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:var(--sh)}
 summary{padding:14px 16px;cursor:pointer;font-size:13.5px;font-weight:700;letter-spacing:.02em;list-style:none;display:flex;align-items:center;gap:11px}
 summary::-webkit-details-marker{display:none}
@@ -319,12 +326,12 @@ footer b{font-family:var(--mono);font-weight:700}
     </div>
     <div class="thm" id="thm" role="group" aria-label="配色"></div>
   </header>
-  <p class="sub">ラグ値から追い込むドラムチューニング</p>
 
   <div class="tabs" role="group" aria-label="表示"><i class="ind" id="tabInd"></i>
     <button class="tab" type="button" data-v="tune" aria-pressed="true">チューナー</button>
     <button class="tab" type="button" data-v="recipe" aria-pressed="false">レシピ</button>
     <button class="tab" type="button" data-v="kit" aria-pressed="false">キット</button>
+    <button class="tab" type="button" data-v="doc" aria-pressed="false">説明</button>
   </div>
 
   <details class="pane keyp" id="keyPane">
@@ -366,9 +373,10 @@ footer b{font-family:var(--mono);font-weight:700}
   <div id="vTune" hidden>
     <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
-      <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
+
       <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
       <div class="cdots" id="cdots" aria-hidden="true"></div>
+      <div class="hsl" id="heads" role="group" aria-label="ヘッド"><i class="hin" id="hInd"></i></div>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -392,13 +400,6 @@ footer b{font-family:var(--mono);font-weight:700}
       </div>
       <div class="dg" id="tDg" hidden></div>
       <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz" hidden>
-      <div class="tl">
-        <button id="tPlay" type="button">目標音</button>
-        <button id="tDrone" type="button" aria-pressed="false">持続</button>
-        <button id="tClr" type="button">クリア</button>
-        <button id="tCal" type="button" hidden>補正を解除</button>
-        <button id="tNext" type="button" class="nx">次へ →</button>
-      </div>
       <div class="mn" id="mn" hidden></div>
     </div>
     <details class="opt">
@@ -408,6 +409,9 @@ footer b{font-family:var(--mono);font-weight:700}
           <div class="segs" id="advs" role="group" aria-label="記録したあとの動作"></div></div>
         <div class="row"><div class="cap">ラグを回る順</div>
           <div class="segs" id="ords" role="group" aria-label="ラグを回る順"></div></div>
+        <div class="row"><div class="cap">このヘッドの測定値</div>
+          <div class="segs"><button class="sg" id="tClr" type="button">クリア</button>
+          <button class="sg" id="tCal" type="button" hidden>補正を解除</button></div></div>
       </div>
     </details>
   </div>
@@ -440,8 +444,7 @@ footer b{font-family:var(--mono);font-weight:700}
     </div>
   </div>
 
-  <div class="refs">
-    <div class="cap" style="padding-left:3px">リファレンス</div>
+  <div class="refs" id="vDoc" hidden>
 
     <details>
       <summary>アプリとして入れる</summary>
@@ -753,7 +756,6 @@ footer b{font-family:var(--mono);font-weight:700}
   function stopTone(){
     if(shot){ try{shot.os.forEach(function(o){o.stop();});}catch(e){} shot=null; }
     droneOff();
-    if(elDrone){ elDrone.setAttribute("aria-pressed","false"); elDrone.textContent="持続"; }
   }
   function droneOff(){
     if(!drone) return;
@@ -764,15 +766,6 @@ footer b{font-family:var(--mono);font-weight:700}
       setTimeout(function(){old.os.forEach(function(o){try{o.stop();}catch(e){}});},250);
     }catch(e){}
     drone=null;
-  }
-  function droneOn(hz){
-    var a=ctx(); if(!a||!(hz>0)) return;
-    droneOff();
-    var v=voice(hz,a),n=a.currentTime;
-    v.g.gain.setValueAtTime(0,n);
-    v.g.gain.linearRampToValueAtTime(0.32,n+0.05);
-    v.os.forEach(function(o){o.start(n);});
-    drone=v;
   }
 
   /* ---------- mic（ウェブサイトとして開いたときのみ） ---------- */
@@ -846,7 +839,6 @@ footer b{font-family:var(--mono);font-weight:700}
     try{if(mic.src) mic.src.disconnect();}catch(e){}
     try{if(mic.stream) mic.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
     mic.stream=null;mic.src=null;mic.an=null;
-    elDrone.disabled=false;
   }
   // チューナーを開いた時点で一度だけ許可を求める。ボタンは置かない
   function micStart(){
@@ -862,8 +854,7 @@ footer b{font-family:var(--mono);font-weight:700}
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
         mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
-        droneOff(); elDrone.setAttribute("aria-pressed","false");
-        elDrone.textContent="持続"; elDrone.disabled=true;
+        droneOff();
         elMn.hidden=true;
         render(); micLoop();
       })
@@ -903,12 +894,12 @@ footer b{font-family:var(--mono);font-weight:700}
   var elKeys=E("keys"),elPicked=E("picked"),elModes=E("modes"),elVoics=E("voics"),
       elCards=E("cards"),elBand=E("band"),elNV=E("nv"),elUp=E("up"),elDn=E("dn"),
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
-      elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),
+      elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elRoDev=E("roDev"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
-      elCar=E("car"),elCdots=E("cdots"),elTabInd=E("tabInd"),
-      elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
+      elCar=E("car"),elCdots=E("cdots"),elHInd=E("hInd"),elTabInd=E("tabInd"),
+      elKit=E("kitList"),elTomN=E("tomN"),
       elMn=E("mn"),elChips=E("chips"),
       elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
@@ -997,14 +988,18 @@ footer b{font-family:var(--mono);font-weight:700}
       st.view=t.dataset.v; stopTone(); edit=null;
       if(st.view!=="tune") micPause();
       save(); render();
-      anim(st.view==="recipe"?elVR:st.view==="tune"?elVT:elVK,"swap",280);
-      if(st.view==="tune"){ mic.on?micResume():micStart(); anim(elSVG,"zoom",400); }
+      anim({recipe:elVR,tune:elVT,kit:elVK,doc:elVD}[st.view],"swap",280);
+      if(st.view==="tune"){ micResume(); anim(elSVG,"zoom",400); }
     });
   });
+  function setHead(h){
+    if(st.thead===h) return;
+    st.thead=h; lug=0; edit=null; stopTone(); save(); render();
+  }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
-    b.type="button"; b.className="sg"; b.dataset.head=p[0]; b.textContent=p[1];
-    b.addEventListener("click",function(){st.thead=p[0];lug=0;edit=null;stopTone();save();render();});
+    b.type="button"; b.dataset.head=p[0]; b.textContent=p[1];
+    b.addEventListener("click",function(){setHead(p[0]);});
     elHeads.appendChild(b);
   });
   Object.keys(PRE).forEach(function(id){
@@ -1037,29 +1032,6 @@ footer b{font-family:var(--mono);font-weight:700}
   elCal.addEventListener("click",function(){
     var d=byId(st.tid); if(!d) return;
     delete d.rcal; save(); render();
-  });
-  E("tPlay").addEventListener("click",function(){
-    var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
-    ping(st.thead==="top"?c.top:c.bot,null);
-  });
-  E("tNext").addEventListener("click",function(){
-    if(st.thead==="top") st.thead="bot";
-    else if(st.thead==="bot") st.thead="fund";
-    else{
-      st.thead="top";
-      var i=st.drums.indexOf(byId(st.tid));
-      st.tid=st.drums[(i+1)%st.drums.length].id;
-    }
-    lug=0; edit=null; stopTone();
-    save(); render();
-  });
-  elDrone.addEventListener("click",function(){
-    if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";return;}
-    var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
-    droneOn(st.thead==="top"?c.top:c.bot);
-    elDrone.setAttribute("aria-pressed","true"); elDrone.textContent="止める";
   });
   // 記録ボタンは置かない。打ち終わって少し待つと自動で記録される
   elIn.addEventListener("input",function(){clearTimeout(inT);inT=setTimeout(commit,600);});
@@ -1138,8 +1110,9 @@ footer b{font-family:var(--mono);font-weight:700}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     moveTab();
-    elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune"; elVK.hidden=st.view!=="kit";
-    elKeyPane.hidden=st.view==="kit";
+    elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
+    elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc";
+    elKeyPane.hidden=st.view!=="recipe"&&st.view!=="tune";
     elKeySum.textContent=keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
       +" ・ タム"+(st.voic==="low"?"低め":"高め")
       +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
@@ -1293,7 +1266,7 @@ footer b{font-family:var(--mono);font-weight:700}
       go.type="button"; go.className="go"; go.textContent="合わせる";
       go.addEventListener("click",function(){
         st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null;
-        zoom=true; save(); render(); micStart();
+        zoom=true; save(); render();
         anim(elVT,"enter-right",340);
       });
       cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(go);
@@ -1661,6 +1634,14 @@ footer b{font-family:var(--mono);font-weight:700}
       p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 + 3).toFixed(1) + '" ry="' +
         (ry + 3).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6" opacity=".95"/>');
 
+    // 当たり判定（透明）。上＝打面、下＝裏面、胴＝実音
+    p.push('<ellipse class="hit" data-h="top" cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) +
+      '" ry="' + ry.toFixed(1) + '" fill="transparent"/>');
+    p.push('<ellipse class="hit" data-h="bot" cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) +
+      '" ry="' + ry.toFixed(1) + '" fill="transparent"/>');
+    p.push('<rect class="hit" data-h="fund" x="' + (cx - W / 2).toFixed(1) + '" y="' + (topY + ry).toFixed(1) +
+      '" width="' + W.toFixed(1) + '" height="' + Math.max(6, H - ry * 2).toFixed(1) + '" fill="transparent"/>');
+
     if (d.kind === "snare")
       p.push('<rect x="' + (cx + W / 2 - 6).toFixed(1) + '" y="' + (topY + H * 0.18).toFixed(1) +
         '" width="9" height="' + (H * 0.6).toFixed(1) + '" rx="3" fill="url(#crm)"/>');
@@ -1689,6 +1670,17 @@ footer b{font-family:var(--mono);font-weight:700}
     elCar.scrollLeft=keep;
     elCdots.innerHTML=st.drums.map(function(){return "<i></i>";}).join("");
   }
+  // 絵を直接タップしても面やドラムが変わる
+  elCar.addEventListener("click",function(e){
+    var sl=e.target.closest ? e.target.closest(".slide") : null;
+    if(!sl) return;
+    var i=Array.prototype.indexOf.call(elCar.children,sl);
+    if(i>=0&&st.drums[i]&&st.drums[i].id!==st.tid){
+      st.tid=st.drums[i].id; lug=0; edit=null; stopTone(); save(); render(); return;
+    }
+    var h=e.target.getAttribute&&e.target.getAttribute("data-h");
+    if(h) setHead(h);
+  });
   // スワイプで止まった位置のドラムに切り替える
   elCar.addEventListener("scroll",function(){
     if(carProg) return;
@@ -1717,9 +1709,14 @@ footer b{font-family:var(--mono);font-weight:700}
       });
       elDrums.appendChild(b);
     });
+    var hi=0;
     Array.prototype.forEach.call(elHeads.children,function(b){
-      b.setAttribute("aria-pressed",b.dataset.head===st.thead?"true":"false");
+      if(!b.dataset.head) return;
+      var on=b.dataset.head===st.thead;
+      b.setAttribute("aria-pressed",on?"true":"false");
+      if(on) hi=b;
     });
+    if(hi&&elHInd){ elHInd.style.left=hi.offsetLeft+"px"; elHInd.style.width=hi.offsetWidth+"px"; }
 
     var isF=st.thead==="fund";
     var flat=!!FLATK[rootOf(st.live,st.mode)];
@@ -1788,15 +1785,15 @@ footer b{font-family:var(--mono);font-weight:700}
     if(pop){ pop=false; anim(elSVG,"pop",620); }
   }
   render();
-  if(st.view==="tune") micStart();
   // 初回表示には操作が伴わないので、許可が出なかった場合に最初のタップで一度だけ試し直す
+  // 読み込み直後は操作が伴わないため許可ダイアログが出ない。最初の操作で一度だけ掴む
   document.addEventListener("click",function once(){
     document.removeEventListener("click",once,true);
-    if(st.view==="tune"&&!mic.on){ mic.failed=false; micStart(); }
+    if(!mic.on) micStart();
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-112737";
+  var BUILD="20261021-113816";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
@@ -1847,13 +1844,14 @@ footer b{font-family:var(--mono);font-weight:700}
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
       .then(function(r){return r.ok?r.json():null;})
-      .then(function(j){ if(j&&j.build&&j.build!==BUILD) location.reload(); })
+      .then(function(j){ if(j&&j.build&&j.build!==BUILD&&!mic.on) location.reload(); })
       .catch(function(){});
   }
   checkUpdate();
+  // 戻るたびにマイクを掴み直すとiOSがオーディオセッションを切り替えて音が出るので、
+  // ストリームは保持したままにする。更新も鳴動の原因になるため、マイク作動中は読み込み直さない。
   document.addEventListener("visibilitychange",function(){
-    if(document.hidden){ stopTone(); micStop(); }
-    else { checkUpdate(); if(st.view==="tune") micStart(); }
+    if(document.hidden) stopTone(); else checkUpdate();
   });
 
   if(window.matchMedia){
