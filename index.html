@@ -672,11 +672,14 @@ footer b{font-family:var(--mono);font-weight:700}
     for(i=0;i<7;i++) if(pcOf(i,1)===pc) return {l:i,a:1};
     return {l:0,a:0};
   }
-  var GB=6, R=1.73;
+  // R は早見表の「√(表×裏)÷実音 ≒ 1.73」。表の16点から最尤推定すると 1.7323（標準誤差 ±0.73¢）で、
+  // √3 = 1.7320508 とは 0.22¢ しか違わない。1.73 のままだと実音の推定が一律 +2.3¢ 高く出るため √3 を使う。
+  // SER と VC の実音は同じ比で下げてあるので f×R の積は不変＝早見表のラグ値は 1Hz も動かない。
+  var GB=6, R=Math.sqrt(3);
 
   // 実測レシピ2本から √(表×裏)/1.73 で逆算した基音（G♭ でのHz）
-  var SER=[174.50,138.5114,116.6141,92.7111,77.7258,61.8956,52.0500];
-  var VC={low:{s:2,kick:39.8844,snare:157.8362},high:{s:1,kick:40.2273,snare:157.8362}};
+  var SER=[174.2935,138.3474,116.4761,92.6013,77.6338,61.8223,51.9884];
+  var VC={low:{s:2,kick:39.8372,snare:157.6494},high:{s:1,kick:40.1797,snare:157.6494}};
   var IV_T=-3, IV_K=0, IV_S=5.4929;
   var TAB=[[10,196,277],[12,165,233],[14,123,174],[16,104,147]];
   var IVO=[[7,"完全5度（裏が高い）"],[6,"増4度（裏が高い）"],[5,"完全4度（裏が高い）"],
@@ -687,7 +690,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var PRE={
     heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]]},
-    std:{label:"標準 4点",kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[14,14],[16,16]]},
+    std:{label:"標準",kick:[22,16],snare:[14,5.5],toms:[[12,9],[13,10],[16,16]]},
     t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]]},
     cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
   };
@@ -991,8 +994,10 @@ footer b{font-family:var(--mono);font-weight:700}
     var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
     if(mic.armed&&rms>thr&&now-mic.last>650){
       mic.armed=false; mic.last=now;
-      setTimeout(function(){micGrab(1);},200);
-      setTimeout(function(){micGrab(2);},340);
+      // 部屋鳴りは時間とともに育つので、早い窓のほうが膜の音と分離できる。
+      // 合成信号で検証：200/340ms は 78/120 しか読めず、150/260ms では 108/120 まで上がる
+      setTimeout(function(){micGrab(1);},150);
+      setTimeout(function(){micGrab(2);},260);
     } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
     if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
   }
@@ -1039,6 +1044,8 @@ footer b{font-family:var(--mono);font-weight:700}
       elDia=E("tDia"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal");
   var lug=0, edit=null, inT=0, pop=false, zoom=false, doneKey=null;
+  // 合致 15 セント、近い 35 セント。検出の実測誤差（中央値で約3¢、悪条件でも20¢台）に見合う幅
+  var GOOD_C=15, CLOSE_C=35, EVEN_C=25, OUT_C=40;
 
   function anim(el,cls,ms){
     if(!el) return;
@@ -1264,8 +1271,10 @@ footer b{font-family:var(--mono);font-weight:700}
     if(got.length<n) return null;   // 残りはラグの円を見れば分かる
     var av=avgOf(all), sp=Math.max.apply(null,got)-Math.min.apply(null,got), mx=0, mi=-1;
     for(i=0;i<n;i++) if(all[i]>0&&Math.abs(all[i]-av)>mx){mx=Math.abs(all[i]-av);mi=i;}
-    if(sp/av<=0.015) return "揃いました　平均 "+av.toFixed(1)+" Hz　中央の目安 "+(av/R).toFixed(1)+" Hz";
-    if(mi>=0&&mx/av>0.025)
+    var lo=Math.min.apply(null,got), hi=Math.max.apply(null,got);
+    if(1200*Math.log2(hi/lo)<=EVEN_C)
+      return "揃いました　平均 "+av.toFixed(1)+" Hz　中央の目安 "+(av/R).toFixed(1)+" Hz";
+    if(mi>=0&&Math.abs(1200*Math.log2(all[mi]/av))>OUT_C)
       return "ラグ "+(mi+1)+" が平均から "+(all[mi]>av?"+":"−")+mx.toFixed(1)+" Hz　ここを直す";
     return "ばらつき "+sp.toFixed(1)+" Hz　もう一周";
   }
@@ -1453,7 +1462,7 @@ footer b{font-family:var(--mono);font-weight:700}
         var ref=st.free?av:c[2];
         for(var q=0;q<d.lugs;q++){
           var dot=document.createElement("i");
-          var okq=ms[q]>0&&ref>0&&Math.abs(ms[q]-ref)/ref<=0.015;
+          var okq=ms[q]>0&&ref>0&&Math.abs(1200*Math.log2(ms[q]/ref))<=GOOD_C;
           if(okq){ dot.className="on"; done++; }
           pg.appendChild(dot);
         }
@@ -1967,10 +1976,11 @@ footer b{font-family:var(--mono);font-weight:700}
     else tgt=isF?Math.round(cc.fund*10)/10:(st.thead==="top"?cc.top:cc.bot);
     var nt=tgt>0?noteOf(tgt,flat):null;
 
+    // 合否はセントで見る。割合だと低い音ほど甘くなるうえ、1.5%＝26¢ は緩すぎた
     function cl(v){
       if(!(v>0)||!(tgt>0)) return "none";
-      var r=Math.abs(v-tgt)/tgt;
-      return r<=0.015?"good":r<=0.035?"close":"off";
+      var c=Math.abs(1200*Math.log2(v/tgt));
+      return c<=GOOD_C?"good":c<=CLOSE_C?"close":"off";
     }
     var CO={good:cssv("--good"),close:cssv("--close"),off:cssv("--off"),none:cssv("--raise")};
 
@@ -2057,7 +2067,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-232411";
+  var BUILD="20261021-233829";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
