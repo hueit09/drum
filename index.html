@@ -229,7 +229,15 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro .dev.muted{opacity:.3}
 .ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
 .ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
-svg.dw{width:100%;max-width:236px;height:auto;display:block;margin:-10px 0 -14px;overflow:visible}
+.car{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:-10px 0 0;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.car::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center}
+.slide svg{width:100%;max-width:234px;height:auto;display:block;overflow:visible}
+.cdots{display:flex;gap:5px;justify-content:center;margin:-6px 0 2px}
+.cdots i{width:5px;height:5px;border-radius:3px;background:var(--faint);opacity:.3;
+  transition:opacity .25s var(--ease),background .25s,width .25s var(--ease)}
+.cdots i.on{opacity:1;background:var(--acc);width:15px}
 svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
@@ -359,7 +367,8 @@ footer b{font-family:var(--mono);font-weight:700}
     <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
       <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
-      <svg class="dw" id="dwg" viewBox="0 0 238 158" role="img" aria-label="ドラム図"></svg>
+      <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
+      <div class="cdots" id="cdots" aria-hidden="true"></div>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -898,7 +907,7 @@ footer b{font-family:var(--mono);font-weight:700}
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elRoDev=E("roDev"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
-      elDwg=E("dwg"),elTabInd=E("tabInd"),
+      elCar=E("car"),elCdots=E("cdots"),elTabInd=E("tabInd"),
       elKit=E("kitList"),elTomN=E("tomN"),elDrone=E("tDrone"),
       elMn=E("mn"),elChips=E("chips"),
       elDia=E("tDia"),elLugs=E("tLugs"),elAdvs=E("advs"),elOrds=E("ords"),
@@ -1554,7 +1563,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   // キットの実寸比で描くドラム。全ドラム共通の倍率なので大きさが正しく比較できる。
   // ラグは円周上の位置から投影するので、端に寄るほど詰まって見える。
-  function drawDrum(d, head) {
+  function drumSVG(d, head, uid) {
     var S = 5.6;                                   // inch → 描画単位（全ドラム共通）
     var W = d.dia * S, H = d.dep * S;
     var cx = 119, ry = W * 0.145;
@@ -1666,8 +1675,32 @@ footer b{font-family:var(--mono);font-weight:700}
     p.push('<text x="8" y="15" font-family="-apple-system, system-ui, sans-serif" font-size="10" ' +
       'font-weight="700" fill="' + DIMC + '">' + d.dia + '×' + d.dep + '"</text>');
 
-    elDwg.innerHTML = p.join("");
+    return '<svg viewBox="0 0 238 158" role="img" aria-label="' + d.name + '">' +
+      p.join("").replace(/id="(\w+)"/g, 'id="$1' + uid + '"').replace(/url\(#(\w+)\)/g, 'url(#$1' + uid + ')') +
+      '</svg>';
   }
+
+  var carKey="", carT=0, carProg=false;
+  function buildCar(head){
+    var h=[];
+    st.drums.forEach(function(x,i){ h.push('<div class="slide">'+drumSVG(x,head,"_"+i)+'</div>'); });
+    var keep=elCar.scrollLeft;
+    elCar.innerHTML=h.join("");
+    elCar.scrollLeft=keep;
+    elCdots.innerHTML=st.drums.map(function(){return "<i></i>";}).join("");
+  }
+  // スワイプで止まった位置のドラムに切り替える
+  elCar.addEventListener("scroll",function(){
+    if(carProg) return;
+    clearTimeout(carT);
+    carT=setTimeout(function(){
+      var w=elCar.clientWidth; if(!w) return;
+      var i=Math.max(0,Math.min(st.drums.length-1,Math.round(elCar.scrollLeft/w)));
+      if(st.drums[i]&&st.drums[i].id!==st.tid){
+        st.tid=st.drums[i].id; lug=0; edit=null; stopTone(); save(); render();
+      }
+    },110);
+  });
 
   function rTuner(){
     var d=byId(st.tid);
@@ -1708,7 +1741,17 @@ footer b{font-family:var(--mono);font-weight:700}
     paintHead(n,isF,arr,cl,CO);
     paintTicks(cur,tgt,cl);
     paintReadout(cur,tgt,isF,cl,flat);
-    drawDrum(d,st.thead);
+    var ck=st.drums.map(function(x){return x.id+x.dia+x.dep+x.lugs;}).join()+"|"+st.thead+"|"+st.theme;
+    if(ck!==carKey){ carKey=ck; buildCar(st.thead); }
+    var di=st.drums.indexOf(d), cw=elCar.clientWidth;
+    Array.prototype.forEach.call(elCdots.children,function(n,i){
+      n.className=i===di?"on":"";
+    });
+    if(cw&&Math.round(elCar.scrollLeft/cw)!==di){
+      carProg=true;
+      elCar.scrollTo({left:di*cw,behavior:"smooth"});
+      setTimeout(function(){carProg=false;},500);
+    }
 
     elChips.hidden=!!edit;
     elEd.hidden=!edit;
@@ -1753,7 +1796,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-111004";
+  var BUILD="20261021-112737";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
