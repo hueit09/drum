@@ -96,6 +96,33 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .sres .go2:active{transform:scale(.97)}
 .snote{margin:0;font-size:11.5px;line-height:1.75;color:var(--faint)}
 
+/* ─── 音作りの輪 ─── */
+.sheet{position:fixed;inset:0;z-index:55;background:rgba(10,14,22,.5);
+  display:flex;align-items:flex-end;justify-content:center;padding:0;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.sheetin{width:100%;max-width:520px;background:var(--card);border-radius:22px 22px 0 0;
+  padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:var(--sh-lift);
+  display:grid;justify-items:center;gap:8px}
+@media (prefers-reduced-motion:no-preference){
+  .sheet .sheetin{animation:sheetup .3s var(--ease)}
+  @keyframes sheetup{0%{transform:translateY(16px);opacity:0}100%{transform:none;opacity:1}}
+}
+.shead{width:100%;display:flex;align-items:center;gap:10px}
+.shead b{flex:1;font-size:14px;font-weight:700;letter-spacing:.04em}
+.shut{width:34px;height:34px;border:0;border-radius:50%;background:var(--sunk);color:var(--dim);
+  font-size:18px;line-height:1;transition:transform .13s var(--ease)}
+.shut:active{transform:scale(.9)}
+.wh{width:100%;max-width:300px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:grab}
+.wh:active{cursor:grabbing}
+.wh .seg{transition:stroke .25s var(--ease),opacity .25s var(--ease)}
+.wh .knob{transition:cx .22s var(--ease),cy .22s var(--ease)}
+.whv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:300px;text-align:center}
+.whv div{display:grid;gap:2px}
+.whv span{font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--faint)}
+.whv b{font-family:var(--mono);font-size:19px;font-weight:800}
+.whv i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.whv .c1 b{color:var(--top)} .whv .c2 b{color:var(--bot)} .whv .c3 b{color:var(--acc)}
+
 /* ─── 動き ─── */
 .slidebox{overflow:hidden;
   transition:height .26s var(--ease),padding-top .26s var(--ease),padding-bottom .26s var(--ease),opacity .22s var(--ease)}
@@ -258,7 +285,7 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .cf label{font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;letter-spacing:.03em}
 .cf select{font-family:var(--sans);font-size:12.5px;font-weight:500;padding:9px 11px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:100%}
-.cf .go{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:.03em;padding:9px 18px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .13s var(--ease),background .2s}
+.cf .go{font-size:12px;font-weight:700;letter-spacing:.03em;padding:9px 18px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .13s var(--ease),background .2s}
 .cf .go:active{transform:scale(.93)}
 .warn{display:flex;gap:9px;align-items:baseline;padding:9px 13px;border-radius:13px;background:var(--off-soft);color:var(--off);font-size:11.5px;line-height:1.6}
 .warn b{font-size:10px;font-weight:700;flex:none;letter-spacing:.05em}
@@ -526,6 +553,16 @@ footer b{font-family:var(--mono);font-weight:700}
         </div>
       </div>
       <textarea id="kOut" class="exp" hidden readonly aria-label="書き出した測定データ"></textarea>
+    </div>
+  </div>
+
+  <div class="sheet" id="wheelSheet" hidden>
+    <div class="sheetin">
+      <div class="shead"><b id="whName">—</b><button class="shut" id="whClose" type="button" aria-label="閉じる">×</button></div>
+      <svg class="wh" id="whSvg" viewBox="0 0 240 240" role="group" aria-label="音作りの輪"></svg>
+      <div class="whv" id="whVals"></div>
+      <p class="snote">外側の輪＝実音。回すと太鼓ごと移調します。<br>
+        中間＝裏面、中心＝打面。ここを回すと実音を保ったまま表裏の開きだけ変わります。</p>
     </div>
   </div>
 
@@ -862,7 +899,11 @@ footer b{font-family:var(--mono);font-weight:700}
       st.drums.forEach(function(d){
         if(d.kind!=="tom") return;
         var r=rangeFor(d.dia); if(!r) return;
-        var t=calc(ki,st.mode,v,0,d).top;
+        // 表裏の開きは既定値で見る。1台の開きを変えただけでキット全体の高さが
+        // 選び直されると、その太鼓の実音が飛んでしまう
+        var b=baseFund(v,d);
+        var f=b*Math.pow(2,(offs(ki,st.mode)+scaleShift(b,GB,d.deg||0))/12);
+        var t=Math.round(f*rOf(d)/Math.pow(2,dfltIv(d)/24));
         if(t<r[0]*0.97||t>r[1]*1.03) n++;
       });
       return n;
@@ -1557,6 +1598,10 @@ footer b{font-family:var(--mono);font-weight:700}
         sel.appendChild(op);
       });
       sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
+      var mk=document.createElement("button");
+      mk.type="button"; mk.className="go"; mk.textContent="音を作る";
+      mk.style.marginLeft="auto";
+      mk.addEventListener("click",function(){ wheelOpen(d); });
       var go=document.createElement("button");
       go.type="button"; go.className="go"; go.textContent="合わせる";
       go.addEventListener("click",function(){
@@ -1564,8 +1609,8 @@ footer b{font-family:var(--mono);font-weight:700}
         zoom=true; save(); render();
         anim(elVT,"enter-right",340);
       });
-      lb.hidden=st.free; sel.hidden=st.free;
-      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(go);
+      lb.hidden=st.free; sel.hidden=st.free; mk.hidden=st.free;
+      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(mk); cf.appendChild(go);
       card.appendChild(cf);
 
       if(p.warn){
@@ -2131,7 +2176,134 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-001649";
+  var BUILD="20261022-002310";
+
+  /* ---------- 音作りの輪 ---------- */
+  // 三重の輪。外＝実音、中＝裏面、内＝打面。
+  // 実音は「打面と裏面の相乗平均 ÷ R」で決まるので、自由に動かせるのは二つだけ。
+  //   外の輪を回す … 太鼓ごと移調。表裏は比を保って一緒に動く
+  //   中・内を回す … 実音はそのままで、表裏の開きだけ変わる（左右対称に割れる）
+  // 内の輪は打面の開きを、中の輪は裏面の開きを示す。同じ一つの軸を両側から見ている。
+  var WH={d:null,ring:0};
+  var elWhSheet=E("wheelSheet"),elWhSvg=E("whSvg"),elWhName=E("whName"),elWhVals=E("whVals");
+  var WH_R=[106,79,52], WH_W=22;                 // 外・中・内の半径
+  var WH_A0=-150, WH_SPAN=300;                   // 下に切れ目を作る（ロゴと同じ）
+
+  function whPt(r,t){                             // t は 0〜1
+    var th=(WH_A0+WH_SPAN*t)*Math.PI/180;
+    return {x:120+r*Math.sin(th), y:120-r*Math.cos(th)};
+  }
+  function whArc(r,t0,t1){
+    var a=whPt(r,t0), b=whPt(r,t1);
+    var big=(t1-t0)*WH_SPAN>180?1:0;
+    return "M"+a.x.toFixed(1)+" "+a.y.toFixed(1)+"A"+r+" "+r+" 0 "+big+" 1 "+b.x.toFixed(1)+" "+b.y.toFixed(1);
+  }
+  function degList(){ var a=[],i; for(i=7;i>=-7;i--) a.push(i); return a; }   // 上が高い
+  function ivList(){ return IVO.map(function(o){return o[0];}); }             // 上が「裏が高い」
+
+  function wheelOpen(d){
+    WH.d=d; elWhSheet.hidden=false; whDraw();
+  }
+  function wheelClose(){ elWhSheet.hidden=true; WH.d=null; }
+
+  function whDraw(){
+    var d=WH.d; if(!d) return;
+    var degs=degList(), ivs=ivList();
+    var di=degs.indexOf(d.deg||0); if(di<0){ di=degs.indexOf(0); }
+    var ii=ivs.indexOf(d.iv); if(ii<0) ii=ivs.indexOf(0);
+    var c=calc(st.live,st.mode,st.ser,st.nudge,d);
+    var flat=!!FLATK[rootOf(st.live,st.mode)];
+    var p=[],i,t,q;
+    var COL=[cssv("--acc"),cssv("--bot"),cssv("--top")];
+    var DIM=cssv("--line-hi");
+
+    // 三本のレール
+    for(i=0;i<3;i++){
+      p.push('<path d="'+whArc(WH_R[i],0,1)+'" fill="none" stroke="'+cssv("--sunk")
+        +'" stroke-width="'+WH_W+'" stroke-linecap="round"/>');
+    }
+    // 目盛り
+    function ticks(ri,n,sel,col){
+      var out=[],k,a,b;
+      for(k=0;k<n;k++){
+        t=n>1?k/(n-1):0.5;
+        a=whPt(WH_R[ri]-WH_W/2+4,t); b=whPt(WH_R[ri]+WH_W/2-4,t);
+        out.push('<path class="seg" d="M'+a.x.toFixed(1)+' '+a.y.toFixed(1)+'L'+b.x.toFixed(1)+' '+b.y.toFixed(1)
+          +'" stroke="'+(k===sel?col:DIM)+'" stroke-width="'+(k===sel?3.4:1.6)
+          +'" stroke-linecap="round" opacity="'+(k===sel?1:.5)+'"/>');
+      }
+      q=whPt(WH_R[ri],n>1?sel/(n-1):0.5);
+      out.push('<circle class="knob" cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="'+(WH_W/2-1)
+        +'" fill="'+col+'" opacity="0.18"/>');
+      out.push('<circle class="knob" cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="5.5" fill="'+col+'"/>');
+      return out.join("");
+    }
+    p.push(ticks(0,degs.length,di,COL[0]));
+    p.push(ticks(1,ivs.length,ii,COL[1]));
+    p.push(ticks(2,ivs.length,ivs.length-1-ii,COL[2]));   // 内は裏の鏡
+    // 中心：実際にラグで出す値
+    p.push('<circle cx="120" cy="120" r="30" fill="'+cssv("--sunk")+'"/>');
+    p.push('<text x="120" y="117" text-anchor="middle" font-size="21" font-weight="800" fill="'
+      +cssv("--top")+'" font-family="'+cssv("--mono").replace(/"/g,"&quot;")+'">'+c.top+'</text>');
+    p.push('<text x="120" y="131" text-anchor="middle" font-size="9" font-weight="700" fill="'
+      +cssv("--faint")+'">打面 Hz</text>');
+    elWhSvg.innerHTML=p.join("");
+
+    var fn=noteOf(c.fund,flat), tn=noteOf(c.top,flat), bn=noteOf(c.bot,flat);
+    elWhName.textContent=d.name+"　"+d.dia+"×"+d.dep+" inch";
+    elWhVals.innerHTML="";
+    [["c3","実音",c.fund.toFixed(1),fn?fn.name:""],
+     ["c1","打面",String(c.top),tn?tn.name:""],
+     ["c2","裏面",String(c.bot),bn?bn.name:""]].forEach(function(r){
+      var w=document.createElement("div"); w.className=r[0];
+      var s1=document.createElement("span"); s1.textContent=r[1];
+      var b1=document.createElement("b"); b1.textContent=r[2];
+      var i1=document.createElement("i"); i1.textContent=r[3];
+      w.appendChild(s1); w.appendChild(b1); w.appendChild(i1); elWhVals.appendChild(w);
+    });
+  }
+
+  function whFrom(ev){
+    var r=elWhSvg.getBoundingClientRect();
+    var x=(ev.clientX-r.left)/r.width*240, y=(ev.clientY-r.top)/r.height*240;
+    var dx=x-120, dy=y-120, rad=Math.hypot(dx,dy);
+    var th=Math.atan2(dx,-dy)*180/Math.PI;          // 12時から時計回り
+    var t=(th-WH_A0)/WH_SPAN;
+    return {rad:rad,t:Math.max(0,Math.min(1,t)),inGap:th<WH_A0-3||th>WH_A0+WH_SPAN+3};
+  }
+  function whRingOf(rad){
+    for(var i=0;i<3;i++) if(Math.abs(rad-WH_R[i])<=WH_W/2+7) return i;
+    return -1;
+  }
+  function whSet(ring,t){
+    var d=WH.d; if(!d) return;
+    var degs=degList(), ivs=ivList(), k;
+    if(ring===0){
+      k=Math.round(t*(degs.length-1));
+      if(d.deg!==degs[k]){ d.deg=degs[k]; save(); whDraw(); render(); }
+    } else {
+      k=Math.round(t*(ivs.length-1));
+      if(ring===2) k=ivs.length-1-k;               // 内は裏の鏡
+      if(d.iv!==ivs[k]){ d.iv=ivs[k]; save(); whDraw(); render(); }
+    }
+  }
+  elWhSvg.addEventListener("pointerdown",function(e){
+    var f=whFrom(e), r=whRingOf(f.rad);
+    if(r<0||f.inGap) return;
+    WH.ring=r; elWhSvg.setPointerCapture(e.pointerId);
+    whSet(r,f.t); e.preventDefault();
+  });
+  elWhSvg.addEventListener("pointermove",function(e){
+    if(!elWhSvg.hasPointerCapture||!elWhSvg.hasPointerCapture(e.pointerId)) return;
+    var f=whFrom(e);
+    if(!f.inGap) whSet(WH.ring,f.t);
+  });
+  elWhSvg.addEventListener("pointerup",function(e){
+    if(elWhSvg.releasePointerCapture&&elWhSvg.hasPointerCapture(e.pointerId))
+      elWhSvg.releasePointerCapture(e.pointerId);
+  });
+  E("whClose").addEventListener("click",wheelClose);
+  elWhSheet.addEventListener("click",function(e){ if(e.target===elWhSheet) wheelClose(); });
 
   /* ---------- 曲からキーとテンポを推定する ---------- */
   // 考え方：曲を12の音名に振り分けた分布（クロマ）を作り、
