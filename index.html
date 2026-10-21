@@ -71,7 +71,7 @@
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
-.wrap{max-width:700px;margin:0 auto;padding-left:max(17px,env(safe-area-inset-left,0px));padding-right:max(17px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:700px;margin:0 auto;padding-left:max(17px,env(safe-area-inset-left,0px));padding-right:max(17px,env(safe-area-inset-right,0px));padding-block:0 104px}
 button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2.5px solid var(--acc);outline-offset:3px;border-radius:4px}
 .cap{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
@@ -90,10 +90,14 @@ header{display:flex;align-items:center;gap:12px;padding-block:22px 16px}
 .thm button[aria-pressed="true"]{background:var(--card);color:var(--acc);box-shadow:var(--sh)}
 
 /* ─── tabs ─── */
-.tabs{position:relative;display:flex;gap:0;background:var(--sunk);padding:4px;border-radius:14px;border:1px solid var(--line);margin-bottom:13px}
-.tabs i.ind{position:absolute;top:4px;bottom:4px;border-radius:10px;background:var(--acc);box-shadow:var(--sh-lift);transition:left .34s var(--ease),width .34s var(--ease);z-index:0}
-.tab{position:relative;z-index:1;flex:1;padding:11px 4px;border:0;background:none;color:var(--dim);font-size:13.5px;font-weight:700;letter-spacing:.03em;transition:color .22s var(--ease)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;gap:0;background:var(--card);
+  border-top:1px solid var(--line);box-shadow:0 -2px 18px rgba(0,0,0,.07);
+  padding:6px max(12px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px))}
+.tabs i.ind{position:absolute;top:6px;height:42px;border-radius:12px;background:var(--acc);box-shadow:var(--sh-lift);transition:left .34s var(--ease),width .34s var(--ease);z-index:0}
+.tab{position:relative;z-index:1;flex:1;height:42px;padding:0 4px;border:0;background:none;color:var(--dim);font-size:13px;font-weight:700;letter-spacing:.04em;transition:color .22s var(--ease)}
 .tab[aria-pressed="true"]{color:var(--acc-fg)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tabs{box-shadow:0 -2px 18px rgba(0,0,0,.5)}}
+:root[data-theme="dark"] .tabs{box-shadow:0 -2px 18px rgba(0,0,0,.5)}
 
 .pane{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;display:grid;gap:16px;margin-bottom:11px;box-shadow:var(--sh)}
 .row{display:grid;gap:9px}
@@ -310,8 +314,8 @@ footer b{font-family:var(--mono);font-weight:700}
   <p class="sub">ラグ値から追い込むドラムチューニング</p>
 
   <div class="tabs" role="group" aria-label="表示"><i class="ind" id="tabInd"></i>
-    <button class="tab" type="button" data-v="recipe" aria-pressed="true">レシピ</button>
-    <button class="tab" type="button" data-v="tune" aria-pressed="false">チューナー</button>
+    <button class="tab" type="button" data-v="tune" aria-pressed="true">チューナー</button>
+    <button class="tab" type="button" data-v="recipe" aria-pressed="false">レシピ</button>
     <button class="tab" type="button" data-v="kit" aria-pressed="false">キット</button>
   </div>
 
@@ -628,7 +632,7 @@ footer b{font-family:var(--mono);font-weight:700}
     return renameToms(out);
   }
 
-  var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"recipe",theme:"auto",
+  var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
           drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
   try{
@@ -1648,9 +1652,14 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   render();
   if(st.view==="tune") micStart();
+  // 初回表示には操作が伴わないので、許可が出なかった場合に最初のタップで一度だけ試し直す
+  document.addEventListener("click",function once(){
+    document.removeEventListener("click",once,true);
+    if(st.view==="tune"&&!mic.on){ mic.failed=false; micStart(); }
+  },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-101937";
+  var BUILD="20261021-102602";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
