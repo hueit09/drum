@@ -229,7 +229,7 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro .dev.muted{opacity:.3}
 .ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
 .ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
-svg.dw{width:100%;max-width:252px;height:auto;display:block;margin:-6px 0 -12px}
+svg.dw{width:100%;max-width:236px;height:auto;display:block;margin:-10px 0 -14px;overflow:visible}
 svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
@@ -359,7 +359,7 @@ footer b{font-family:var(--mono);font-weight:700}
     <div class="tune">
       <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
       <div class="segs" id="heads" role="group" aria-label="ヘッド"></div>
-      <svg class="dw" id="dwg" viewBox="0 0 230 100" role="img" aria-label="ドラム図"></svg>
+      <svg class="dw" id="dwg" viewBox="0 0 238 158" role="img" aria-label="ドラム図"></svg>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -740,6 +740,12 @@ footer b{font-family:var(--mono);font-weight:700}
     shot=v;
     if(btn){btn.classList.add("on");setTimeout(function(){btn.classList.remove("on");},1800);}
   }
+  // 鳴っているものを全部止める
+  function stopTone(){
+    if(shot){ try{shot.os.forEach(function(o){o.stop();});}catch(e){} shot=null; }
+    droneOff();
+    if(elDrone){ elDrone.setAttribute("aria-pressed","false"); elDrone.textContent="持続"; }
+  }
   function droneOff(){
     if(!drone) return;
     try{
@@ -762,7 +768,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   /* ---------- mic（ウェブサイトとして開いたときのみ） ---------- */
   var mic={on:false,stream:null,src:null,an:null,buf:null,raf:0,armed:true,last:0,floor:0.002,
-           failed:false,starting:false};
+           failed:false,starting:false,reading:false};
   function dsample(buf,sr,tgt){
     var f=Math.max(1,Math.floor(sr/tgt)),n=Math.floor(buf.length/f);
     var o=new Float32Array(n),i,j,s;
@@ -814,8 +820,18 @@ footer b{font-family:var(--mono);font-weight:700}
     elMn.innerHTML='この画面ではマイクを使えません。ページがアプリの中に埋め込まれているあいだは、'
       +'ブラウザの権限設定にかかわらずマイクが届かないためです。<strong>ウェブサイトとして開いた場合は、このボタンから使えます。</strong>';
   }
+  // 画面を離れただけならストリームは保持する。掴み直すとiOSが
+  // オーディオセッションを切り替えて、そのたびに音が出てしまうため
+  function micPause(){
+    if(mic.raf) cancelAnimationFrame(mic.raf);
+    mic.raf=0; mic.reading=false;
+  }
+  function micResume(){
+    if(!mic.on||mic.reading) return;
+    mic.reading=true; mic.armed=true; mic.floor=0.002; micLoop();
+  }
   function micStop(){
-    mic.on=false; mic.starting=false;
+    mic.on=false; mic.starting=false; mic.reading=false;
     if(mic.raf) cancelAnimationFrame(mic.raf);
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
@@ -836,7 +852,7 @@ footer b{font-family:var(--mono);font-weight:700}
         mic.stream=s; mic.src=a.createMediaStreamSource(s);
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
-        mic.on=true; mic.armed=true; mic.last=0; mic.floor=0.002;
+        mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
         droneOff(); elDrone.setAttribute("aria-pressed","false");
         elDrone.textContent="持続"; elDrone.disabled=true;
         elMn.hidden=true;
@@ -845,7 +861,7 @@ footer b{font-family:var(--mono);font-weight:700}
       .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); });
   }
   function micLoop(){
-    if(!mic.on) return;
+    if(!mic.on||!mic.reading) return;
     mic.raf=requestAnimationFrame(micLoop);
     var an=mic.an,b=mic.buf; if(!an) return;
     an.getFloatTimeDomainData(b);
@@ -969,17 +985,17 @@ footer b{font-family:var(--mono);font-weight:700}
   elDn.addEventListener("click",function(){if(st.nudge>-2){st.nudge--;save();render();}});
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
     t.addEventListener("click",function(){
-      st.view=t.dataset.v; droneOff(); edit=null;
-      if(st.view!=="tune") micStop();
+      st.view=t.dataset.v; stopTone(); edit=null;
+      if(st.view!=="tune") micPause();
       save(); render();
       anim(st.view==="recipe"?elVR:st.view==="tune"?elVT:elVK,"swap",280);
-      if(st.view==="tune"){ micStart(); anim(elSVG,"zoom",400); }
+      if(st.view==="tune"){ mic.on?micResume():micStart(); anim(elSVG,"zoom",400); }
     });
   });
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
     b.type="button"; b.className="sg"; b.dataset.head=p[0]; b.textContent=p[1];
-    b.addEventListener("click",function(){st.thead=p[0];lug=0;edit=null;save();render();});
+    b.addEventListener("click",function(){st.thead=p[0];lug=0;edit=null;stopTone();save();render();});
     elHeads.appendChild(b);
   });
   Object.keys(PRE).forEach(function(id){
@@ -1026,8 +1042,7 @@ footer b{font-family:var(--mono);font-weight:700}
       var i=st.drums.indexOf(byId(st.tid));
       st.tid=st.drums[(i+1)%st.drums.length].id;
     }
-    lug=0; edit=null;
-    if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
+    lug=0; edit=null; stopTone();
     save(); render();
   });
   elDrone.addEventListener("click",function(){
@@ -1537,108 +1552,119 @@ footer b{font-family:var(--mono);font-weight:700}
     }
   }
 
-  // キットの実寸どおりに描くドラム。いま触っている面が光り、反対面は沈む
+  // キットの実寸比で描くドラム。全ドラム共通の倍率なので大きさが正しく比較できる。
+  // ラグは円周上の位置から投影するので、端に寄るほど詰まって見える。
   function drawDrum(d, head) {
-    var W = Math.max(72, Math.min(172, d.dia * 7.6));
-    var H = Math.max(20, Math.min(44, d.dep * 2.4));
-    var cx = 115, ry = W * 0.132, topY = 46 - H / 2, botY = 46 + H / 2;
+    var S = 5.6;                                   // inch → 描画単位（全ドラム共通）
+    var W = d.dia * S, H = d.dep * S;
+    var cx = 119, ry = W * 0.145;
+    var topY = 70 - H / 2, botY = 70 + H / 2;
     var isF = head === "fund", lit = { top: head === "top" || isF, bot: head === "bot" || isF };
-    var ACC = cssv("--acc"), DIMC = cssv("--faint"), N = Math.min(d.lugs, 12);
-    var p = [], i, a, fx;
+    var ACC = cssv("--acc"), AFG = cssv("--acc-fg"), DIMC = cssv("--faint");
+    var N = d.lugs, p = [], i;
 
     p.push('<defs>' +
-      // 胴（木目の円筒）
       '<linearGradient id="shl" x1="0" x2="1">' +
-        '<stop offset="0" stop-color="#190F0C"/><stop offset=".09" stop-color="#432718"/>' +
-        '<stop offset=".24" stop-color="#7A4A30"/><stop offset=".38" stop-color="#9A6240"/>' +
-        '<stop offset=".5" stop-color="#7E4F2F"/><stop offset=".68" stop-color="#5B3620"/>' +
-        '<stop offset=".86" stop-color="#2C1A11"/><stop offset="1" stop-color="#150D09"/></linearGradient>' +
-      // クローム
+        '<stop offset="0" stop-color="#140C09"/><stop offset=".06" stop-color="#301B12"/>' +
+        '<stop offset=".17" stop-color="#54341F"/><stop offset=".3" stop-color="#7A5234"/>' +
+        '<stop offset=".4" stop-color="#8E6342"/><stop offset=".5" stop-color="#6F492E"/>' +
+        '<stop offset=".63" stop-color="#4C301D"/><stop offset=".8" stop-color="#2B1A10"/>' +
+        '<stop offset=".93" stop-color="#1C110B"/><stop offset="1" stop-color="#120A07"/></linearGradient>' +
       '<linearGradient id="crm" x1="0" x2="1">' +
-        '<stop offset="0" stop-color="#5E6671"/><stop offset=".08" stop-color="#C6CFD9"/>' +
-        '<stop offset=".2" stop-color="#FAFCFE"/><stop offset=".33" stop-color="#A4AEBA"/>' +
-        '<stop offset=".48" stop-color="#E9EEF3"/><stop offset=".63" stop-color="#8A94A0"/>' +
-        '<stop offset=".8" stop-color="#D6DCE4"/><stop offset="1" stop-color="#596271"/></linearGradient>' +
-      // ヘッド
-      '<radialGradient id="hdg" cx="38%" cy="26%" r="86%">' +
-        '<stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#EDF1F6"/>' +
-        '<stop offset="1" stop-color="#C4CCD6"/></radialGradient>' +
+        '<stop offset="0" stop-color="#4E555F"/><stop offset=".07" stop-color="#B9C3CE"/>' +
+        '<stop offset=".17" stop-color="#FAFCFE"/><stop offset=".29" stop-color="#99A4B1"/>' +
+        '<stop offset=".44" stop-color="#E6ECF2"/><stop offset=".58" stop-color="#7C8795"/>' +
+        '<stop offset=".74" stop-color="#D2D9E1"/><stop offset=".9" stop-color="#6A7380"/>' +
+        '<stop offset="1" stop-color="#454C56"/></linearGradient>' +
+      '<radialGradient id="hdg" cx="36%" cy="24%" r="88%">' +
+        '<stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#F0F3F7"/>' +
+        '<stop offset=".82" stop-color="#D3DAE2"/><stop offset="1" stop-color="#B6BFCA"/></radialGradient>' +
       '<radialGradient id="shd" cx="50%" cy="50%" r="50%">' +
-        '<stop offset="0" stop-color="#000" stop-opacity=".45"/>' +
+        '<stop offset="0" stop-color="#000" stop-opacity=".5"/>' +
         '<stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>' +
       '</defs>');
 
     // 接地影
-    p.push('<ellipse cx="' + cx + '" cy="' + (botY + ry * 0.72).toFixed(1) + '" rx="' + (W * 0.56).toFixed(1) +
-      '" ry="' + (ry * 0.62).toFixed(1) + '" fill="url(#shd)"/>');
+    p.push('<ellipse cx="' + cx + '" cy="' + (botY + ry * 0.8).toFixed(1) + '" rx="' + (W * 0.58).toFixed(1) +
+      '" ry="' + (ry * 0.55).toFixed(1) + '" fill="url(#shd)"/>');
 
-    // 脚・スパー
+    // 脚・スパー（胴より先に描いて後ろに回す）
     if (d.kind === "kick") {
-      p.push('<g stroke="url(#crm)" stroke-width="3.2" stroke-linecap="round" fill="none">' +
-        '<path d="M' + (cx - W / 2 + 7).toFixed(1) + ' ' + (botY - 2).toFixed(1) + 'l-14 15"/>' +
-        '<path d="M' + (cx + W / 2 - 7).toFixed(1) + ' ' + (botY - 2).toFixed(1) + 'l14 15"/></g>');
+      p.push('<g stroke="url(#crm)" stroke-width="3.4" stroke-linecap="round" fill="none">' +
+        '<path d="M' + (cx - W / 2 + 9).toFixed(1) + ' ' + (botY - 4).toFixed(1) + 'l-15 17"/>' +
+        '<path d="M' + (cx + W / 2 - 9).toFixed(1) + ' ' + (botY - 4).toFixed(1) + 'l15 17"/></g>');
     } else if (d.kind === "tom" && d.dia >= 14) {
-      p.push('<g stroke="url(#crm)" stroke-width="2.8" stroke-linecap="round" fill="none">' +
-        '<path d="M' + (cx - W / 2 + 3).toFixed(1) + ' ' + (topY + 7).toFixed(1) + 'l-11 34"/>' +
-        '<path d="M' + (cx + W / 2 - 3).toFixed(1) + ' ' + (topY + 7).toFixed(1) + 'l11 34"/>' +
-        '<path d="M' + cx + ' ' + (botY + 2).toFixed(1) + 'l0 20"/></g>');
+      var ly0 = topY + H * 0.42, ly1 = botY + ry + 15;
+      p.push('<g stroke="url(#crm)" stroke-width="3.2" stroke-linecap="round" fill="none">' +
+        '<path d="M' + (cx - W / 2 + 1).toFixed(1) + ' ' + ly0.toFixed(1) + 'L' + (cx - W / 2 - 13).toFixed(1) + ' ' + ly1.toFixed(1) + '"/>' +
+        '<path d="M' + (cx + W / 2 - 1).toFixed(1) + ' ' + ly0.toFixed(1) + 'L' + (cx + W / 2 + 13).toFixed(1) + ' ' + ly1.toFixed(1) + '"/>' +
+        '<path d="M' + (cx + W * 0.1).toFixed(1) + ' ' + (botY + ry * 0.6).toFixed(1) + 'L' + (cx + W * 0.16).toFixed(1) + ' ' + ly1.toFixed(1) + '"/></g>');
     }
 
     // 胴
     p.push('<path d="M' + (cx - W / 2).toFixed(1) + ' ' + topY.toFixed(1) + 'V' + botY.toFixed(1) +
       'A' + (W / 2).toFixed(1) + ' ' + ry.toFixed(1) + ' 0 0 0 ' + (cx + W / 2).toFixed(1) + ' ' + botY.toFixed(1) +
       'V' + topY.toFixed(1) + 'Z" fill="url(#shl)"/>');
-    // 木目
-    for (i = 1; i < 7; i++) {
-      fx = cx - W / 2 + W * i / 7;
-      p.push('<path d="M' + fx.toFixed(1) + ' ' + (topY + 1).toFixed(1) + 'q' + (i % 2 ? 2 : -2) + ' ' +
-        (H / 2).toFixed(1) + ' 0 ' + (H - 2).toFixed(1) + '" stroke="#120B08" stroke-width="0.8" fill="none" opacity="0.22"/>');
+    // 杢目
+    for (i = 1; i < 9; i++) {
+      var gx = cx - W / 2 + W * i / 9, bow = (i % 3 - 1) * 2.4;
+      p.push('<path d="M' + gx.toFixed(1) + ' ' + (topY + 1).toFixed(1) + 'q' + bow + ' ' + (H / 2).toFixed(1) +
+        ' 0 ' + (H - 2).toFixed(1) + '" stroke="#0E0805" stroke-width="0.9" fill="none" opacity="0.2"/>');
     }
 
-    // テンションロッドとラグ
+    // ラグとテンションロッド（手前側だけ、円周上の位置から投影）
     for (i = 0; i < N; i++) {
-      fx = cx - W / 2 + 8 + (W - 16) * i / (N - 1 || 1);
-      p.push('<path d="M' + fx.toFixed(1) + ' ' + (topY + ry * 0.5).toFixed(1) + 'V' + (topY + H * 0.3).toFixed(1) +
-        '" stroke="url(#crm)" stroke-width="1.6" stroke-linecap="round"/>');
-      p.push('<rect x="' + (fx - 3).toFixed(1) + '" y="' + (topY + H * 0.3).toFixed(1) + '" width="6" height="' +
-        (H * 0.42).toFixed(1) + '" rx="2.4" fill="url(#crm)"/>');
-      p.push('<rect x="' + (fx - 3).toFixed(1) + '" y="' + (topY + H * 0.3).toFixed(1) + '" width="2" height="' +
-        (H * 0.42).toFixed(1) + '" rx="1" fill="#FFF" opacity="0.5"/>');
+      var th = 2 * Math.PI * (i + 0.5) / N, sn = Math.sin(th);
+      if (sn <= 0.1) continue;                                  // 奥側は見えない
+      var lx = cx + (W / 2) * Math.cos(th);
+      var ty = topY + ry * sn, by = botY + ry * sn;
+      var dep = 0.72 + 0.28 * sn, lw = 6.4 * dep;               // 手前ほど大きく
+      p.push('<path d="M' + lx.toFixed(1) + ' ' + (ty + 1).toFixed(1) + 'V' + (ty + H * 0.26).toFixed(1) +
+        '" stroke="url(#crm)" stroke-width="' + (1.9 * dep).toFixed(1) + '" stroke-linecap="round"/>');
+      p.push('<path d="M' + lx.toFixed(1) + ' ' + (by - H * 0.26).toFixed(1) + 'V' + (by - 1).toFixed(1) +
+        '" stroke="url(#crm)" stroke-width="' + (1.9 * dep).toFixed(1) + '" stroke-linecap="round"/>');
+      // 落ち影 → 本体 → ハイライト の順で立体に見せる
+      p.push('<rect x="' + (lx - lw / 2 + 1.4).toFixed(1) + '" y="' + (ty + H * 0.25).toFixed(1) + '" width="' + lw.toFixed(1) +
+        '" height="' + (H * 0.52).toFixed(1) + '" rx="' + (lw * 0.38).toFixed(1) + '" fill="#0B0603" opacity="0.5"/>');
+      p.push('<rect x="' + (lx - lw / 2).toFixed(1) + '" y="' + (ty + H * 0.24).toFixed(1) + '" width="' + lw.toFixed(1) +
+        '" height="' + (H * 0.52).toFixed(1) + '" rx="' + (lw * 0.38).toFixed(1) +
+        '" fill="url(#crm)" stroke="#2A3038" stroke-width="0.6"/>');
+      p.push('<rect x="' + (lx - lw / 2 + lw * 0.14).toFixed(1) + '" y="' + (ty + H * 0.27).toFixed(1) + '" width="' +
+        (lw * 0.2).toFixed(1) + '" height="' + (H * 0.46).toFixed(1) + '" rx="' + (lw * 0.1).toFixed(1) +
+        '" fill="#FFFFFF" opacity="' + (0.3 + 0.35 * sn).toFixed(2) + '"/>');
     }
 
     // 裏のフープ
     p.push('<ellipse cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) + '" ry="' + ry.toFixed(1) +
-      '" fill="none" stroke="url(#crm)" stroke-width="3.4" opacity="' + (lit.bot ? 1 : 0.45) + '"/>');
+      '" fill="none" stroke="url(#crm)" stroke-width="4" opacity="' + (lit.bot ? 1 : 0.4) + '"/>');
     if (lit.bot && !isF)
-      p.push('<ellipse cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2 + 2.6).toFixed(1) + '" ry="' +
-        (ry + 2.6).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6"/>');
+      p.push('<ellipse cx="' + cx + '" cy="' + botY.toFixed(1) + '" rx="' + (W / 2 + 3).toFixed(1) + '" ry="' +
+        (ry + 3).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6" opacity=".95"/>');
 
     // 打面
-    p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 - 2).toFixed(1) + '" ry="' +
-      (ry - 1.4).toFixed(1) + '" fill="url(#hdg)" opacity="' + (lit.top ? 1 : 0.5) + '"/>');
-    p.push('<ellipse cx="' + (cx - W * 0.13).toFixed(1) + '" cy="' + (topY - ry * 0.2).toFixed(1) + '" rx="' +
-      (W * 0.2).toFixed(1) + '" ry="' + (ry * 0.34).toFixed(1) + '" fill="#FFF" opacity="' + (lit.top ? 0.5 : 0.18) + '"/>');
+    p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 - 2.4).toFixed(1) + '" ry="' +
+      (ry - 1.6).toFixed(1) + '" fill="url(#hdg)" opacity="' + (lit.top ? 1 : 0.42) + '"/>');
+    p.push('<ellipse cx="' + (cx - W * 0.15).toFixed(1) + '" cy="' + (topY - ry * 0.26).toFixed(1) + '" rx="' +
+      (W * 0.22).toFixed(1) + '" ry="' + (ry * 0.3).toFixed(1) + '" fill="#FFF" opacity="' + (lit.top ? 0.55 : 0.14) + '"/>');
     p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2).toFixed(1) + '" ry="' + ry.toFixed(1) +
-      '" fill="none" stroke="url(#crm)" stroke-width="3.4" opacity="' + (lit.top ? 1 : 0.45) + '"/>');
+      '" fill="none" stroke="url(#crm)" stroke-width="4" opacity="' + (lit.top ? 1 : 0.4) + '"/>');
     if (lit.top && !isF)
-      p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 + 2.6).toFixed(1) + '" ry="' +
-        (ry + 2.6).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6"/>');
+      p.push('<ellipse cx="' + cx + '" cy="' + topY.toFixed(1) + '" rx="' + (W / 2 + 3).toFixed(1) + '" ry="' +
+        (ry + 3).toFixed(1) + '" fill="none" stroke="' + ACC + '" stroke-width="2.6" opacity=".95"/>');
 
-    // スネアのストレイナー
     if (d.kind === "snare")
-      p.push('<rect x="' + (cx + W / 2 - 5).toFixed(1) + '" y="' + (topY + H * 0.2).toFixed(1) +
-        '" width="8" height="' + (H * 0.55).toFixed(1) + '" rx="2.5" fill="url(#crm)"/>');
+      p.push('<rect x="' + (cx + W / 2 - 6).toFixed(1) + '" y="' + (topY + H * 0.18).toFixed(1) +
+        '" width="9" height="' + (H * 0.6).toFixed(1) + '" rx="3" fill="url(#crm)"/>');
 
-    // いま何を測っているか
+    // いま測っている面
     var lbl = isF ? "実音" : (head === "top" ? "打面" : "裏面");
-    var ly = isF ? 46 : (head === "top" ? topY : botY);
-    p.push('<g transform="translate(' + (cx + W / 2 + 13).toFixed(1) + ',' + ly.toFixed(1) + ')">' +
-      '<rect x="-15" y="-8" width="30" height="16" rx="8" fill="' + ACC + '"/>' +
-      '<text x="0" y="4.2" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" ' +
-      'font-size="9.5" font-weight="700" fill="' + cssv("--acc-fg") + '">' + lbl + '</text></g>');
-    p.push('<text x="' + (cx - W / 2 - 13).toFixed(1) + '" y="' + (46 + 3.5).toFixed(1) +
-      '" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="9" ' +
-      'font-weight="700" fill="' + DIMC + '">' + d.dia + '"</text>');
+    var ly = isF ? 70 : (head === "top" ? topY : botY);
+    p.push('<g transform="translate(' + (cx + W / 2 + 16).toFixed(1) + ',' + ly.toFixed(1) + ')">' +
+      '<rect x="-16" y="-8.5" width="32" height="17" rx="8.5" fill="' + ACC + '"/>' +
+      '<text x="0" y="4.4" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" ' +
+      'font-size="10" font-weight="700" fill="' + AFG + '">' + lbl + '</text></g>');
+    p.push('<text x="8" y="15" font-family="-apple-system, system-ui, sans-serif" font-size="10" ' +
+      'font-weight="700" fill="' + DIMC + '">' + d.dia + '×' + d.dep + '"</text>');
 
     elDwg.innerHTML = p.join("");
   }
@@ -1653,8 +1679,7 @@ footer b{font-family:var(--mono);font-weight:700}
       b.style.animationDelay=(ix*26)+"ms";
       b.setAttribute("aria-pressed",x.id===d.id?"true":"false");
       b.addEventListener("click",function(){
-        st.tid=x.id; lug=0; edit=null;
-        if(drone){droneOff();elDrone.setAttribute("aria-pressed","false");elDrone.textContent="持続";}
+        st.tid=x.id; lug=0; edit=null; stopTone();
         save(); render();
       });
       elDrums.appendChild(b);
@@ -1728,7 +1753,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-104354";
+  var BUILD="20261021-111004";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
@@ -1783,7 +1808,10 @@ footer b{font-family:var(--mono);font-weight:700}
       .catch(function(){});
   }
   checkUpdate();
-  document.addEventListener("visibilitychange",function(){ if(!document.hidden) checkUpdate(); });
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden){ stopTone(); micStop(); }
+    else { checkUpdate(); if(st.view==="tune") micStart(); }
+  });
 
   if(window.matchMedia){
     try{
