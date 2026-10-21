@@ -576,14 +576,19 @@ footer b{font-family:var(--mono);font-weight:700}
     cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
   };
 
-  // タムの呼び名（高→低）。本数で使う組が変わる
-  var TOMN={1:["ハイタム"],2:["ハイタム","フロアタム"],3:["ハイタム","ロータム","フロアタム"],
-            4:["テンタム","ハイタム","ロータム","フロアタム"],
-            5:["テンタム","ハイタム","ロータム","フロアタム","フロア2"]};
+  // タムの呼び名。14インチ以上はフロアタム扱い、それ未満は口径で決める
   function renameToms(list){
     var ts=list.filter(function(d){return d.kind==="tom";});
-    var nm=TOMN[ts.length]||TOMN[5];
-    ts.forEach(function(d,i){d.name=nm[i]||("タム "+(i+1));});
+    var fl=0, used={};
+    ts.forEach(function(d){
+      var nm;
+      if(d.dia>=14){ fl++; nm=(fl===1?"フロアタム":"フロア"+fl); }
+      else if(d.dia<=10) nm="テンタム";
+      else if(d.dia<=12) nm="ハイタム";
+      else nm="ロータム";
+      if(used[nm]){ used[nm]++; nm=nm+" "+used[nm]; } else used[nm]=1;
+      d.name=nm;
+    });
     return list;
   }
 
@@ -1659,7 +1664,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-102602";
+  var BUILD="20261021-103224";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
