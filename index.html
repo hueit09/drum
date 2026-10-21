@@ -183,7 +183,14 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 
 .hh{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 @media (max-width:430px){.hh{grid-template-columns:1fr}}
-.h{border-radius:14px;padding:11px 14px;display:grid;gap:3px;min-width:0}
+.h{border-radius:14px;padding:11px 14px;display:grid;gap:3px;min-width:0;
+  cursor:pointer;transition:transform .14s var(--ease),box-shadow .22s var(--ease)}
+.h:active{transform:scale(.975)}
+.h.done{box-shadow:inset 0 0 0 2px var(--good)}
+.h .pg{display:flex;align-items:center;gap:4px;margin-top:6px}
+.h .pg i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.2;transition:opacity .25s var(--ease)}
+.h .pg i.on{opacity:1}
+.h .pg s{margin-left:auto;text-decoration:none;font-family:var(--mono);font-size:9.5px;font-weight:700;opacity:.5}
 .h.t{background:var(--top-soft)} .h.b{background:var(--bot-soft)}
 .h .hl{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.09em}
 .h.t .hl{color:var(--top)} .h.b .hl{color:var(--bot)}
@@ -191,6 +198,7 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .h .hl button:hover,.h .hl button.on{opacity:1;transform:scale(1.18)}
 .h .big{font-family:var(--mono);font-size:30px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
 .h.t .big{color:var(--top)} .h.b .big{color:var(--bot)}
+.h .big.na{opacity:.32;letter-spacing:0}
 .h .big u{text-decoration:none;font-size:11.5px;font-weight:700;margin-left:4px;opacity:.55;letter-spacing:0}
 .h .nn{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums;opacity:.85}
 .h .nn i{font-style:normal;font-weight:500;opacity:.6}
@@ -379,16 +387,16 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="cap">調</div>
       <div class="segs" id="modes" role="group" aria-label="メジャーかマイナー"></div>
     </div>
-    <div class="row">
+    <div class="row" id="rowKeys">
       <div class="cap">キー<span class="note">タップで追加。複数選ぶと下に比較が出ます</span></div>
       <div class="keys" id="keys" role="group" aria-label="キー"></div>
       <div class="picked" id="picked" hidden></div>
     </div>
-    <div class="row">
+    <div class="row" id="rowVoic">
       <div class="cap">タムの高さ<span class="note">キックに対してタム群が乗る位置</span></div>
       <div class="segs" id="voics" role="group" aria-label="タムの高さ"></div>
     </div>
-    <div class="row">
+    <div class="row" id="rowNudge">
       <div class="cap">キット全体を上下</div>
       <div class="step">
         <button id="dn" type="button" aria-label="半音下げる">−</button>
@@ -703,7 +711,7 @@ footer b{font-family:var(--mono);font-weight:700}
     return renameToms(out);
   }
 
-  var st={keys:[6],live:6,mode:"major",voic:"low",nudge:0,view:"tune",theme:"auto",
+  var st={keys:[6],live:6,mode:"major",free:false,voic:"low",nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
           drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
   try{
@@ -713,6 +721,7 @@ footer b{font-family:var(--mono);font-weight:700}
       if(!st.keys.length) st.keys=[6];
       st.live=st.keys.indexOf(sv.live)>=0?sv.live:st.keys[0];
       if(sv.mode==="major"||sv.mode==="minor") st.mode=sv.mode;
+      st.free=!!sv.free;
       if(sv.voic==="low"||sv.voic==="high") st.voic=sv.voic;
       if(sv.theme==="auto"||sv.theme==="light"||sv.theme==="dark") st.theme=sv.theme;
       if(sv.adv==="manual"||sv.adv==="auto") st.adv=sv.adv;
@@ -1034,10 +1043,14 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){st.theme=p[0];applyTheme();save();render();});
     elThm.appendChild(b);
   });
-  [["major","メジャー"],["minor","マイナー"]].forEach(function(p){
+  [["major","メジャー"],["minor","マイナー"],["free","指定なし"]].forEach(function(p){
     var b=document.createElement("button");
     b.type="button"; b.className="sg"; b.dataset.mode=p[0]; b.textContent=p[1];
-    b.addEventListener("click",function(){st.mode=p[0];st.voic=recommend(st.live);save();render();});
+    b.addEventListener("click",function(){
+      if(p[0]==="free"){ st.free=true; }
+      else { st.free=false; st.mode=p[0]; st.voic=recommend(st.live); }
+      save(); render();
+    });
     elModes.appendChild(b);
   });
   KEYS.forEach(function(k,i){
@@ -1116,8 +1129,15 @@ footer b{font-family:var(--mono);font-weight:700}
   elRoDev.addEventListener("click",function(){
     if(tone){ stopTone(); render(); return; }
     var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.voic,st.nudge,d);
-    toneOn(st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot));
+    var hz;
+    if(st.free){
+      hz=st.thead==="fund"?(st.meas[d.id+"|fund"]||0):avgOf(measOf(d.id,st.thead));
+      if(!(hz>0)) return;          // まだ何も測れていないので鳴らす音がない
+    } else {
+      var c=calc(st.live,st.mode,st.voic,st.nudge,d);
+      hz=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
+    }
+    toneOn(hz);
     render();
   });
   elIn.addEventListener("input",function(){clearTimeout(inT);inT=setTimeout(commit,600);});
@@ -1199,12 +1219,18 @@ footer b{font-family:var(--mono);font-weight:700}
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc";
     elKeyPane.hidden=st.view!=="recipe"&&st.view!=="tune";
-    elKeySum.textContent=keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
-      +" ・ タム"+(st.voic==="low"?"低め":"高め")
-      +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
+    elKeySum.textContent=st.free
+      ? "キー指定なし ・ 鳴っている音を読む"
+      : keyName(st.live)+(st.keys.length>1?" 他"+(st.keys.length-1)+"キー":"")
+        +" ・ タム"+(st.voic==="low"?"低め":"高め")
+        +(st.nudge?" ・ "+(st.nudge>0?"+":"−")+Math.abs(st.nudge)+"半音":"");
+    E("rowKeys").hidden=st.free;
+    E("rowVoic").hidden=st.free;
+    E("rowNudge").hidden=st.free;
 
     Array.prototype.forEach.call(elModes.children,function(b){
-      b.setAttribute("aria-pressed",b.dataset.mode===st.mode?"true":"false");
+      b.setAttribute("aria-pressed",
+        (st.free?b.dataset.mode==="free":b.dataset.mode===st.mode)?"true":"false");
     });
     Array.prototype.forEach.call(elKeys.children,function(b,i){
       b.textContent=keyName(i);
@@ -1255,15 +1281,18 @@ footer b{font-family:var(--mono);font-weight:700}
     var stock=st.drums.every(function(d){return d.iv===dfltIv(d)&&!d.deg&&!(d.rcal>0);});
     var base=st.nudge===0&&stock&&((offs(st.live,st.mode)===0&&st.voic==="low")||(offs(st.live,st.mode)===-2&&st.voic==="high"));
     elBand.innerHTML="";
+    elBand.hidden=st.free;
     var tg=document.createElement("span");
-    tg.className="tag "+(base?"a":"b"); tg.textContent=base?"実測の基準":"算出";
-    elBand.appendChild(tg);
+    if(!st.free){
+      tg.className="tag "+(base?"a":"b"); tg.textContent=base?"実測の基準":"算出";
+      elBand.appendChild(tg);
+    }
     var tx=document.createElement("span"), dd=offs(st.live,st.mode)+st.nudge;
     tx.textContent=base
       ? keyName(st.live)+"。実際に張って詰めた基準レシピそのものの値です。"
       : keyName(st.live)+" ／ 基準レシピを "+(dd===0?"そのまま":(dd>0?"+":"−")+Math.abs(dd)+"半音")
         +" 移調"+(stock?"":"、音の高さを調整")+"した値です。";
-    elBand.appendChild(tx);
+    if(!st.free) elBand.appendChild(tx);
     var ncal=st.drums.filter(function(x){return x.rcal>0;}).length;
     if(ncal){
       var t2=document.createElement("span");
@@ -1288,14 +1317,15 @@ footer b{font-family:var(--mono);font-weight:700}
       var pv=document.createElement("div"); pv.className="pv";
       var fn=noteOf(p.fund,flat);
       var mf=st.meas[d.id+"|fund"];
-      var pb=document.createElement("b"); pb.textContent="実音 "+(fn?fn.name:"—");
+      var pb=document.createElement("b");
+      pb.textContent="実音 "+(st.free?"—":(fn?fn.name:"—"));
       var ps=document.createElement("span");
       if(mf>0){
         var mfn=noteOf(mf,flat), ce2=Math.round(1200*Math.log2(mf/p.fund));
         pb.textContent="実測 "+(mfn?mfn.name:"—");
         pb.style.color="var(--good)";
         ps.textContent=mf.toFixed(1)+" Hz　予測比 "+(ce2>0?"+":ce2<0?"−":"±")+Math.abs(ce2)+"¢";
-      } else ps.textContent=p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
+      } else ps.textContent=st.free?"未測定":p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
       pv.appendChild(pb); pv.appendChild(ps);
       var stp=document.createElement("div"); stp.className="step";
       [["−",-1],["＋",1]].forEach(function(o){
@@ -1307,29 +1337,63 @@ footer b{font-family:var(--mono);font-weight:700}
         });
         stp.appendChild(b);
       });
+      stp.hidden=st.free;
       pw.appendChild(pv); pw.appendChild(stp);
       ch.appendChild(pw); card.appendChild(ch);
 
       var hh=document.createElement("div"); hh.className="hh";
-      [["t","打面",p.top],["b","裏面",p.bot]].forEach(function(c){
+      [["t","打面",p.top,"top"],["b","裏面",p.bot,"bot"]].forEach(function(c){
         var box=document.createElement("div"); box.className="h "+c[0];
+        box.setAttribute("role","button"); box.tabIndex=0;
+        box.setAttribute("aria-label",d.name+"の"+c[1]+"を合わせる");
+        box.addEventListener("keydown",function(ev){
+          if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); box.click(); }
+        });
+        box.addEventListener("click",function(ev){
+          if(ev.target.closest("button")) return;          // ♪ は別の役目
+          st.tid=d.id; st.thead=c[3]; st.view="tune"; lug=0; edit=null;
+          zoom=true; save(); render();
+          anim(elVT,"enter-right",340);
+        });
         var hl=document.createElement("div"); hl.className="hl";
         var lt=document.createElement("span"); lt.textContent=c[1]; hl.appendChild(lt);
         var pl=document.createElement("button");
         pl.type="button"; pl.textContent="♪";
         pl.setAttribute("aria-label",d.name+" "+c[1]+"の音を鳴らす");
-        pl.addEventListener("click",function(){ping(c[2],pl);});
+        pl.addEventListener("click",function(ev){
+          ev.stopPropagation();
+          ping(st.free?avgOf(measOf(d.id,c[3])):c[2],pl);
+        });
         hl.appendChild(pl);
-        var bn=document.createElement("div"); bn.className="big"; bn.textContent=c[2];
+        var ms=measOf(d.id,c[3]), av=avgOf(ms);
+        var shown=st.free?av:c[2];                      // 指定なしのときは測った平均そのもの
+        var bn=document.createElement("div"); bn.className="big";
+        if(shown>0) bn.textContent=st.free?shown.toFixed(1):String(shown);
+        else { bn.textContent="—"; bn.classList.add("na"); }
         var u=document.createElement("u"); u.textContent="Hz"; bn.appendChild(u);
         var nn=document.createElement("div"); nn.className="nn";
-        var n1=noteOf(c[2],flat);
+        var n1=shown>0?noteOf(shown,flat):null;
         nn.textContent=n1?n1.name+" ":"";
         var ic=document.createElement("i"); ic.textContent=n1?cts(n1.cents):""; nn.appendChild(ic);
         var cc=document.createElement("div"); cc.className="cc";
-        var cen=c[2]/R, n2=noteOf(cen,flat);
-        cc.textContent="（中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"")+"）";
-        box.appendChild(hl); box.appendChild(bn); box.appendChild(nn); box.appendChild(cc);
+        if(shown>0){
+          var cen=shown/R, n2=noteOf(cen,flat);
+          cc.textContent="（中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"")+"）";
+        }
+        // ラグが何本そろったかを点で見せる
+        var pg=document.createElement("div"); pg.className="pg";
+        var done=0;
+        var ref=st.free?av:c[2];
+        for(var q=0;q<d.lugs;q++){
+          var dot=document.createElement("i");
+          var okq=ms[q]>0&&ref>0&&Math.abs(ms[q]-ref)/ref<=0.015;
+          if(okq){ dot.className="on"; done++; }
+          pg.appendChild(dot);
+        }
+        var fr=document.createElement("s"); fr.textContent=done+"/"+d.lugs; pg.appendChild(fr);
+        if(done===d.lugs) box.classList.add("done");
+        box.appendChild(hl); box.appendChild(bn); box.appendChild(nn);
+        box.appendChild(cc); box.appendChild(pg);
         hh.appendChild(box);
       });
       card.appendChild(hh);
@@ -1355,6 +1419,7 @@ footer b{font-family:var(--mono);font-weight:700}
         zoom=true; save(); render();
         anim(elVT,"enter-right",340);
       });
+      lb.hidden=st.free; sel.hidden=st.free;
       cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(go);
       card.appendChild(cf);
 
@@ -1370,7 +1435,7 @@ footer b{font-family:var(--mono);font-weight:700}
       elCards.appendChild(card);
     });
 
-    if(st.keys.length<2) elCmpW.hidden=true;
+    if(st.free||st.keys.length<2) elCmpW.hidden=true;
     else{
       elCmpW.hidden=false;
       var h="<thead><tr><th>ドラム</th>";
@@ -1560,8 +1625,9 @@ footer b{font-family:var(--mono);font-weight:700}
 
   function paintTicks(cur,tgt,cl){
     var HG={good:cssv("--h-good"),close:cssv("--h-close"),off:cssv("--h-off")};
-    var ink=cssv("--head-ink"), k=cl(cur), on=cur>0, i;
+    var ink=cssv("--head-ink"), k=cl(cur), on=cur>0&&tgt>0, i;
     var dn=on?Math.max(-1,Math.min(1,(cur-tgt)/(tgt*0.08))):0;
+    if(k==="none") k="good";
     for(i=0;i<TICK;i++){
       var fr=(i-(TICK-1)/2)/((TICK-1)/2), mid=(i===(TICK-1)/2), t=E("tk"+i);
       if(!t) continue;
@@ -1590,8 +1656,41 @@ footer b{font-family:var(--mono);font-weight:700}
     if(pop){ var c2=E("ck"+lug); if(c2&&cl(arr[lug])==="good") c2.classList.add("chk"); }
   }
 
-  function paintReadout(cur,tgt,isF,cl,flat){
+  function paintReadout(cur,tgt,isF,cl,flat,free){
     var HG={good:cssv("--h-good"),close:cssv("--h-close"),off:cssv("--h-off"),none:cssv("--h-dim")};
+    function put(txt,sub,color,muted){
+      elRoDev.innerHTML="";
+      elRoDev.appendChild(document.createTextNode(txt));
+      if(sub){ var e=document.createElement("em"); e.textContent=sub; elRoDev.appendChild(e); }
+      elRoDev.classList.toggle("muted",!!muted);
+      elRoDev.classList.toggle("ring",!!tone);
+      elRoDev.style.color=color;
+    }
+    // キー指定なし：狙いの値は持たず、鳴っている音を読んでラグ同士を揃える
+    if(free){
+      var mn=cur>0?noteOf(cur,flat):null;
+      if(cur>0&&tgt>0&&!isF&&Math.abs(cur-tgt)>0.05){
+        var dv=cur-tgt, av=Math.abs(dv), kk=cl(cur);
+        elRoLab.textContent="平均との差";
+        put((dv>0?"+":"−")+(av<10?av.toFixed(1):String(Math.round(av))),"Hz",HG[kk],false);
+        elRoNote.textContent=cur.toFixed(1)+" Hz"+(mn?"　"+mn.name+" "+cts(mn.cents):"");
+        elRoAct.style.color=HG[kk];
+        elRoAct.textContent=dv>0?"ゆるめる":"しめる";
+      } else if(cur>0){
+        elRoLab.textContent="いまの音";
+        put(mn?mn.name:"—",mn?cts(mn.cents):"",cssv("--head-ink"),false);
+        elRoNote.textContent=cur.toFixed(1)+" Hz";
+        elRoAct.style.color=cssv("--h-dim");
+        elRoAct.textContent=isF?"中央を叩く":"ラグを弾く";
+      } else {
+        elRoLab.textContent="";
+        put("—","",cssv("--h-dim"),true);
+        elRoNote.textContent="";
+        elRoAct.style.color=cssv("--h-dim");
+        elRoAct.textContent=isF?"中央を叩く":"ラグを弾く";
+      }
+      return;
+    }
     if(cur>0){
       var dv=cur-tgt,av=Math.abs(dv),k=cl(cur),mn=noteOf(cur,flat);
       elRoLab.textContent="差分";
@@ -1761,16 +1860,19 @@ footer b{font-family:var(--mono);font-weight:700}
     });
     if(hi&&elHInd){ elHInd.style.top=hi.offsetTop+"px"; elHInd.style.height=hi.offsetHeight+"px"; }
 
-    var isF=st.thead==="fund";
+    var isF=st.thead==="fund", free=!!st.free;
     var flat=!!FLATK[rootOf(st.live,st.mode)];
     var cc=calc(st.live,st.mode,st.voic,st.nudge,d);
-    var tgt=isF?Math.round(cc.fund*10)/10:(st.thead==="top"?cc.top:cc.bot);
     var n=d.lugs, arr=isF?[]:measOf(d.id,st.thead);
     var cur=isF?(st.meas[d.id+"|fund"]||0):arr[lug];
-    var nt=noteOf(tgt,flat), ctr=tgt/R, cn=noteOf(ctr,flat);
+    // キー指定なしのときは狙いの値がないので、測れたラグの平均に合わせていく
+    var tgt;
+    if(free) tgt=isF?0:avgOf(arr);
+    else tgt=isF?Math.round(cc.fund*10)/10:(st.thead==="top"?cc.top:cc.bot);
+    var nt=tgt>0?noteOf(tgt,flat):null;
 
     function cl(v){
-      if(!(v>0)) return "none";
+      if(!(v>0)||!(tgt>0)) return "none";
       var r=Math.abs(v-tgt)/tgt;
       return r<=0.015?"good":r<=0.035?"close":"off";
     }
@@ -1780,7 +1882,7 @@ footer b{font-family:var(--mono);font-weight:700}
     if(key!==svgKey){ svgKey=key; buildHead(n,isF); }
     paintHead(n,isF,arr,cl,CO);
     paintTicks(cur,tgt,cl);
-    paintReadout(cur,tgt,isF,cl,flat);
+    paintReadout(cur,tgt,isF,cl,flat,free);
     var ck=st.drums.map(function(x){return x.id+x.dia+x.dep+x.lugs;}).join()+"|"+st.thead+"|"+st.theme;
     if(ck!==carKey){ carKey=ck; buildCar(st.thead); }
     var di=st.drums.indexOf(d), cw=elCar.clientWidth;
@@ -1798,18 +1900,29 @@ footer b{font-family:var(--mono);font-weight:700}
     }
     elDia.textContent=d.dia+'"';
     elTS.innerHTML="";
-    if(cur>0) elTS.appendChild(document.createTextNode(cur.toFixed(1)+" → "));
-    var tb=document.createElement("b");
-    tb.textContent=(isF?tgt.toFixed(1):tgt)+" Hz";
-    elTS.appendChild(tb);
-    elTS.appendChild(document.createTextNode((isF?" 予測":" 目標")+(nt?"　"+nt.name:"")));
+    if(free){
+      if(tgt>0){
+        var fb=document.createElement("b"); fb.textContent=tgt.toFixed(1)+" Hz";
+        elTS.appendChild(document.createTextNode("平均 "));
+        elTS.appendChild(fb);
+        if(nt) elTS.appendChild(document.createTextNode("　"+nt.name+" "+cts(nt.cents)));
+      } else elTS.appendChild(document.createTextNode("キー指定なし"));
+    } else {
+      if(cur>0) elTS.appendChild(document.createTextNode(cur.toFixed(1)+" → "));
+      var tb=document.createElement("b");
+      tb.textContent=(isF?tgt.toFixed(1):tgt)+" Hz";
+      elTS.appendChild(tb);
+      elTS.appendChild(document.createTextNode((isF?" 予測":" 目標")+(nt?"　"+nt.name:"")));
+    }
 
     elIn.hidden=mic.on;
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
     elIn.placeholder=isF?"実音の Hz":"測った Hz";
 
     var dmsg=null;
-    if(isF){
+    if(free){
+      dmsg=isF?null:diag(d,st.thead);
+    } else if(isF){
       if(d.rcal>0) dmsg="実測 R "+d.rcal.toFixed(3)+" でこのドラムの目標ラグ値を補正しました"
         +"（早見表の 1.73 から "+(d.rcal>R?"上":"下")+"に "
         +Math.abs(Math.round(1200*Math.log2(d.rcal/R)))+" セント相当）。狙いの音が出る値に動いています。";
@@ -1848,7 +1961,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-122928";
+  var BUILD="20261021-124315";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
