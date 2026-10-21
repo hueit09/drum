@@ -204,13 +204,6 @@ th.on{color:var(--acc)}
 
 /* ─── tuner ─── */
 .tune{display:grid;justify-items:center;gap:8px;padding:0 0 2px}
-.dr{display:flex;gap:5px;overflow-x:auto;width:100%;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.dr::-webkit-scrollbar{display:none}
-.dr button{flex:none;font-size:12.5px;font-weight:700;letter-spacing:.02em;min-height:42px;padding:9px 15px;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:13px;transition:background .22s var(--ease),color .22s,border-color .22s,transform .13s var(--ease)}
-.dr button:active{transform:scale(.93)}
-.dr button[data-kind="kick"][aria-pressed="true"]{background:var(--kick);color:var(--acc-fg);border-color:var(--kick)}
-.dr button[data-kind="snare"][aria-pressed="true"]{background:var(--snare);color:var(--acc-fg);border-color:var(--snare)}
-.dr button[data-kind="tom"][aria-pressed="true"]{background:var(--tom);color:var(--acc-fg);border-color:var(--tom)}
 .hsl{position:relative;flex:0 0 auto;display:flex;flex-direction:column;gap:0;padding:3px;
   border-radius:999px;background:var(--sunk);border:1px solid var(--line)}
 .hsl i.hin{position:absolute;left:3px;right:3px;border-radius:999px;background:var(--acc);
@@ -230,6 +223,9 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;gap:1px;pointer-events:none}
 .ro .dev{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ro .dev:active{transform:scale(.95)}
+.ro .dev.ring{text-shadow:0 0 18px currentColor}
+@media (prefers-reduced-motion:no-preference){.ro .dev.ring{animation:tonepulse 1.4s ease-in-out infinite}
+@keyframes tonepulse{0%,100%{opacity:1}50%{opacity:.62}}}
 .ro{padding-top:20px}
 .ro .lab{font-size:10px;font-weight:700;letter-spacing:.17em;color:var(--head-ink);opacity:.4}
 .ro .dev{font-size:clamp(40px,13.5vw,56px);font-weight:800;line-height:1.06;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:var(--head-ink);transition:color .3s var(--ease)}
@@ -238,7 +234,14 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 .ro .nn2{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--head-ink);opacity:.5;font-variant-numeric:tabular-nums;min-height:15px}
 .ro .act{font-size:12.5px;font-weight:700;letter-spacing:.07em;margin-top:3px;min-height:17px;color:var(--head-ink);transition:color .3s var(--ease)}
 .stage{display:flex;align-items:center;gap:4px;width:100%;margin:-14px 0 -6px}
-.dnm{flex:0 0 56px;font-size:11.5px;font-weight:700;line-height:1.35;color:var(--fg);text-align:right;letter-spacing:.01em}
+.dsl{flex:0 0 auto;display:flex;flex-direction:column;gap:1px;padding:3px;border-radius:14px;
+  background:var(--sunk);border:1px solid var(--line)}
+.dsl button{border:0;background:none;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.01em;
+  padding:5px 8px;border-radius:10px;white-space:nowrap;transition:background .22s var(--ease),color .22s}
+.dsl button[aria-pressed="true"]{color:var(--acc-fg)}
+.dsl button[data-kind="kick"][aria-pressed="true"]{background:var(--kick)}
+.dsl button[data-kind="snare"][aria-pressed="true"]{background:var(--snare)}
+.dsl button[data-kind="tom"][aria-pressed="true"]{background:var(--tom)}
 .car{flex:1;min-width:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .car::-webkit-scrollbar{display:none}
@@ -274,7 +277,7 @@ svg.dw .lit{transition:fill .3s var(--ease),opacity .3s}
 .tl button[aria-pressed="true"]{background:var(--good-soft);color:var(--good);border-color:var(--good)}
 .tl button:disabled{opacity:.35;cursor:default}
 .tl .nx{background:var(--acc-soft);color:var(--acc)}
-.mn{width:100%;max-width:400px;padding:12px 15px;border-radius:13px;background:var(--acc-soft);font-size:12px;line-height:1.7;color:var(--fg)}
+.mn{width:100%;max-width:306px;padding:8px 13px;border-radius:11px;background:var(--acc-soft);font-size:11px;text-align:center;color:var(--dim)}
 .mn strong{font-weight:700}
 .opt{margin-top:2px}
 .opt .bd{padding:0 15px 15px;display:grid;gap:14px}
@@ -376,14 +379,12 @@ footer b{font-family:var(--mono);font-weight:700}
 
   <div id="vTune" hidden>
     <div class="tune">
-      <div class="dr" id="drums" role="group" aria-label="ドラム"></div>
 
       <div class="stage">
-        <div class="dnm" id="dNm"></div>
+        <div class="dsl" id="drums" role="group" aria-label="ドラム"></div>
         <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
         <div class="hsl" id="heads" role="group" aria-label="ヘッド"><i class="hin" id="hInd"></i></div>
       </div>
-      <div class="cdots" id="cdots" aria-hidden="true"></div>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <div class="ro" id="ro">
@@ -451,6 +452,14 @@ footer b{font-family:var(--mono);font-weight:700}
   </div>
 
   <div class="refs" id="vDoc" hidden>
+
+    <details>
+      <summary>TAUT について</summary>
+      <div class="bd">
+        <p><strong>TAUT v1.0</strong>　ラグ値から追い込むドラムチューニング</p>
+        <p>口径はチューナー画面のチップから、キット構成・深さ・ラグ数は「キット」タブから変更できます。設定と測定値はこの端末にだけ保存されます。</p>
+      </div>
+    </details>
 
     <details>
       <summary>アプリとして入れる</summary>
@@ -564,7 +573,6 @@ footer b{font-family:var(--mono);font-weight:700}
     </details>
   </div>
 
-  <footer><b>TAUT</b> v1.0　ラグ値から追い込むドラムチューニング<br>口径・ラグ数はチューナー画面のチップから、キット構成と深さは「キット」タブから変更できます。設定と測定値はこの端末にだけ保存されます。</footer>
 </div>
 
 <script>
@@ -732,7 +740,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function keyName(i){return st.mode==="minor"?MKEY[i]:KEYS[i];}
 
   /* ---------- audio ---------- */
-  var ac=null,shot=null,drone=null;
+  var ac=null,shot=null,tone=null;
   function ctx(){
     if(!ac){var A=window.AudioContext||window.webkitAudioContext; if(!A) return null; ac=new A();}
     if(ac.state==="suspended") ac.resume();
@@ -760,20 +768,26 @@ footer b{font-family:var(--mono);font-weight:700}
     shot=v;
     if(btn){btn.classList.add("on");setTimeout(function(){btn.classList.remove("on");},1800);}
   }
-  // 鳴っているものを全部止める
+  // 鳴っているものを全部止めて、マイクの検出を戻す
   function stopTone(){
     if(shot){ try{shot.os.forEach(function(o){o.stop();});}catch(e){} shot=null; }
-    droneOff();
+    if(tone){
+      try{ var n=ac.currentTime, old=tone;
+        old.g.gain.cancelScheduledValues(n); old.g.gain.setTargetAtTime(0,n,0.03);
+        setTimeout(function(){old.os.forEach(function(o){try{o.stop();}catch(e){}});},250);
+      }catch(e){}
+      tone=null;
+    }
+    mic.armed=true; mic.floor=0.002;
   }
-  function droneOff(){
-    if(!drone) return;
-    try{
-      var n=ac.currentTime, old=drone;
-      old.g.gain.cancelScheduledValues(n);
-      old.g.gain.setTargetAtTime(0,n,0.03);
-      setTimeout(function(){old.os.forEach(function(o){try{o.stop();}catch(e){}});},250);
-    }catch(e){}
-    drone=null;
+  // 目標音。もう一度押すまで鳴り続ける
+  function toneOn(hz){
+    var a=ctx(); if(!a||!(hz>0)) return;
+    var v=voice(hz,a), n=a.currentTime;
+    v.g.gain.setValueAtTime(0,n);
+    v.g.gain.linearRampToValueAtTime(0.3,n+0.05);
+    v.os.forEach(function(o){o.start(n);});
+    tone=v; mic.armed=false;
   }
 
   /* ---------- mic（ウェブサイトとして開いたときのみ） ---------- */
@@ -827,8 +841,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   function micMsg(){
     elMn.hidden=false;
-    elMn.innerHTML='この画面ではマイクを使えません。ページがアプリの中に埋め込まれているあいだは、'
-      +'ブラウザの権限設定にかかわらずマイクが届かないためです。<strong>ウェブサイトとして開いた場合は、このボタンから使えます。</strong>';
+    elMn.textContent="マイクが使えないので手入力モードです";
   }
   // 画面を離れただけならストリームは保持する。掴み直すとiOSが
   // オーディオセッションを切り替えて、そのたびに音が出てしまうため
@@ -862,7 +875,7 @@ footer b{font-family:var(--mono);font-weight:700}
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
         mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
-        droneOff();
+        stopTone();
         elMn.hidden=true;
         render(); micLoop();
       })
@@ -906,7 +919,7 @@ footer b{font-family:var(--mono);font-weight:700}
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elRoDev=E("roDev"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
-      elCar=E("car"),elCdots=E("cdots"),elHInd=E("hInd"),elDNm=E("dNm"),elTabInd=E("tabInd"),
+      elCar=E("car"),elHInd=E("hInd"),elTabInd=E("tabInd"),
       elKit=E("kitList"),elTomN=E("tomN"),
       elMn=E("mn"),elChips=E("chips"),
       elDia=E("tDia"),elAdvs=E("advs"),elOrds=E("ords"),
@@ -1043,12 +1056,11 @@ footer b{font-family:var(--mono);font-weight:700}
   // 記録ボタンは置かない。打ち終わって少し待つと自動で記録される
   // 中央の数字をタップすると目標音が鳴る。鳴らしているあいだはマイクの検出を止める
   elRoDev.addEventListener("click",function(){
+    if(tone){ stopTone(); render(); return; }
     var d=byId(st.tid); if(!d) return;
     var c=calc(st.live,st.mode,st.voic,st.nudge,d);
-    var hz=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
-    mic.armed=false; mic.last=(window.performance&&performance.now)?performance.now():Date.now();
-    ping(hz,null);
-    setTimeout(function(){ mic.armed=true; mic.floor=0.002; },2100);
+    toneOn(st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot));
+    render();
   });
   elIn.addEventListener("input",function(){clearTimeout(inT);inT=setTimeout(commit,600);});
   elIn.addEventListener("change",function(){clearTimeout(inT);commit();});
@@ -1530,6 +1542,7 @@ footer b{font-family:var(--mono);font-weight:700}
         :(dv>0?"+":"−")+(av<10?av.toFixed(1):String(Math.round(av)))));
       var em=document.createElement("em"); em.textContent="Hz"; elRoDev.appendChild(em);
       elRoDev.classList.remove("muted");
+      elRoDev.classList.toggle("ring",!!tone);
       elRoDev.style.color=HG[k];
       elRoNote.textContent=cur.toFixed(1)+" Hz"+(mn?"　"+mn.name+" "+cts(mn.cents):"");
       elRoAct.style.color=HG[k];
@@ -1543,6 +1556,7 @@ footer b{font-family:var(--mono);font-weight:700}
       elRoDev.appendChild(document.createTextNode(isF?tgt.toFixed(1):String(tgt)));
       var em2=document.createElement("em"); em2.textContent="Hz"; elRoDev.appendChild(em2);
       elRoDev.classList.add("muted");
+      elRoDev.classList.toggle("ring",!!tone);
       elRoDev.style.color=cssv("--head-ink");
       elRoNote.textContent="";
       elRoAct.textContent=isF?"中央を叩く":"ラグを弾く";
@@ -1682,7 +1696,6 @@ footer b{font-family:var(--mono);font-weight:700}
     var keep=elCar.scrollLeft;
     elCar.innerHTML=h.join("");
     elCar.scrollLeft=keep;
-    elCdots.innerHTML=st.drums.map(function(){return "<i></i>";}).join("");
   }
   // 絵を直接タップしても面やドラムが変わる
   elCar.addEventListener("click",function(e){
@@ -1755,9 +1768,6 @@ footer b{font-family:var(--mono);font-weight:700}
     var ck=st.drums.map(function(x){return x.id+x.dia+x.dep+x.lugs;}).join()+"|"+st.thead+"|"+st.theme;
     if(ck!==carKey){ carKey=ck; buildCar(st.thead); }
     var di=st.drums.indexOf(d), cw=elCar.clientWidth;
-    Array.prototype.forEach.call(elCdots.children,function(n,i){
-      n.className=i===di?"on":"";
-    });
     if(cw&&Math.round(elCar.scrollLeft/cw)!==di){
       carProg=true;
       elCar.scrollTo({left:di*cw,behavior:"smooth"});
@@ -1771,7 +1781,6 @@ footer b{font-family:var(--mono);font-weight:700}
       elEdV.textContent=edit==="dia"?(d.dia+'"'):(n+" ラグ");
     }
     elDia.textContent=d.dia+'"';
-    elDNm.textContent=d.name;
     elTS.innerHTML="";
     if(cur>0) elTS.appendChild(document.createTextNode(cur.toFixed(1)+" → "));
     var tb=document.createElement("b");
@@ -1806,7 +1815,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-114553";
+  var BUILD="20261021-115353";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
