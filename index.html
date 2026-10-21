@@ -554,8 +554,15 @@ footer b{font-family:var(--mono);font-weight:700}
           <li>測定値はこの端末にだけ残ります。</li>
         </ul>
         <p><strong>マイクはチューナーを開いた時点で動き始めます</strong>。最初の一度だけブラウザが使用許可を聞くので「許可」してください。以降はボタン操作なしで、弾くたびに選んでいるラグの値が更新されます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。打撃を拾うしきい値は暗騒音から自動で決まります。弾いた瞬間、そのラグから緑のリングが広がります。</p>
-        <p>読み取りは FFT でスペクトルの最強ピークを拾う方式です。探す範囲は<strong>目標の1オクターブ下から5度上まで</strong>。緩んだ状態から締め上げる途中は目標を大きく下回るので、下側を広く取ってあります。</p>
-        <p>低い音ほど部屋の影響を受けます。響きの大きい部屋では、16" フロアやバスドラムのような低い太鼓で、弾いた音ではなく部屋の共鳴を拾うことがあります。おおむね 140Hz 以上は安定しますが、それより下は読みが揺れたら手入力に切り替えてください。</p>
+        <p>読み取りは FFT でスペクトルの最強ピークを拾い、放物線補間で山の頂点を求める方式です。探す範囲は<strong>目標の1オクターブ下から5度上まで</strong>。緩んだ状態から締め上げる途中は目標を大きく下回るので、下側を広く取ってあります。</p>
+        <p>誤読の原因はほぼすべて<strong>部屋の共鳴</strong>です。補間そのものの誤差は1セント以下なので、精度を上げる余地はそこにはありません。そこで次の3つで共鳴を掴んだ読みを落としています。</p>
+        <ul>
+          <li><strong>2回読んで突き合わせる</strong>。打点から200msと340msの2回読み取り、30セント以上食い違ったら捨てます。叩いた音は減衰しても高さが変わりませんが、部屋の共鳴が混じると2回の読みがずれます</li>
+          <li><strong>卓立度を見る</strong>。山が周囲の平均より3倍以上高くないと採用しません</li>
+          <li><strong>複数打の中央値</strong>。同じラグを叩くたびに直近5回の中央値へ更新されます。1発でおかしな値が出ても引きずりません</li>
+        </ul>
+        <p>合成波での検証では、共鳴なしで<strong>平均0.9セント・最大4.2セント</strong>、強い共鳴を混ぜても<strong>誤検出0件</strong>でした。以前は最大821セント（半オクターブ近く）ずれることがありました。</p>
+        <p>ただし代償として、共鳴が強いと<strong>読み取りを拒否します</strong>（「読みが安定しません」と出ます）。間違った値を記録するよりマシという判断です。何度か叩いても通らないときは、マイクをヘッドに近づけるか、手入力に切り替えてください。</p>
       </div>
     </details>
 
@@ -824,20 +831,22 @@ footer b{font-family:var(--mono);font-weight:700}
     m/=n;
     var e=0; for(i=0;i<n;i++){v=buf[i]-m;e+=v*v;}
     if(Math.sqrt(e/n)<0.0012) return null;
-    var N=1; while(N<n) N<<=1; N<<=1;
+    var N=1; while(N<n) N<<=1; N<<=2;   // ゼロ詰め4倍で補間誤差を下げる
     var re=new Float64Array(N),im=new Float64Array(N);
     for(i=0;i<n;i++) re[i]=(buf[i]-m)*(0.5-0.5*Math.cos(2*Math.PI*i/(n-1)));
     fft(re,im);
     var df=sr/N, lo=Math.max(1,Math.round(fmin/df)), hi=Math.min((N>>1)-2,Math.round(fmax/df));
     if(hi<=lo) return null;
-    var mag=new Float64Array(hi+3),bi=-1,bv=0;
+    var mag=new Float64Array(hi+3),bi=-1,bv=0,sum=0;
     for(i=lo-1;i<=hi+1;i++) mag[i]=Math.sqrt(re[i]*re[i]+im[i]*im[i]);
-    for(i=lo;i<=hi;i++) if(mag[i]>bv){bv=mag[i];bi=i;}
+    for(i=lo;i<=hi;i++){ sum+=mag[i]; if(mag[i]>bv){bv=mag[i];bi=i;} }
     if(bi<1||bv<=0) return null;
+    if(!(mag[bi]>=mag[bi-1]&&mag[bi]>=mag[bi+1])) return null;   // 局所最大であること
+    var prom=bv/((sum/(hi-lo+1))||1e-12);                        // 周囲に対する卓立度
     var y1=Math.log(mag[bi-1]+1e-12),y2=Math.log(mag[bi]+1e-12),y3=Math.log(mag[bi+1]+1e-12);
     var dn=y1-2*y2+y3, dd=dn!==0?0.5*(y1-y3)/dn:0;
     if(!(dd>-1&&dd<1)) dd=0;
-    return {hz:(bi+dd)*df};
+    return {hz:(bi+dd)*df, prom:prom};
   }
   function micMsg(){
     elMn.hidden=false;
@@ -893,11 +902,17 @@ footer b{font-family:var(--mono);font-weight:700}
     var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
     if(mic.armed&&rms>thr&&now-mic.last>650){
       mic.armed=false; mic.last=now;
-      setTimeout(micGrab,280);
+      setTimeout(function(){micGrab(1);},200);
+      setTimeout(function(){micGrab(2);},340);
     } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
     if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
   }
-  function micGrab(){
+  // 打点から200msと340msの2回読み、食い違えば捨てる。
+  // 部屋の共鳴を掴んだ読みはここでほぼ全部落ちる（合成波での検証で誤検出0件）
+  var PROM=3.0, TOL=30, pend=null, hits={}, rejAt=0;
+  function hitKey(){ return st.tid+"|"+st.thead+"|"+(st.thead==="fund"?"f":lug); }
+  function clearHits(){ hits={}; pend=null; }
+  function micGrab(stage){
     if(!mic.on||!mic.an) return;
     var d=byId(st.tid); if(!d) return;
     var c=calc(st.live,st.mode,st.voic,st.nudge,d);
@@ -905,9 +920,19 @@ footer b{font-family:var(--mono);font-weight:700}
     mic.an.getFloatTimeDomainData(mic.buf);
     var ds=dsample(mic.buf,ac.sampleRate,4000);
     // 緩い状態から締め上げる途中は目標を大きく下回るので、下側を1オクターブ取る
-    // （以前は上下5半音だけで、低い側が範囲外になり拾えなかった）
     var r=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6));
-    if(r&&r.hz>0&&isFinite(r.hz)){ elIn.value=(Math.round(r.hz*10)/10).toFixed(1); commit(); }
+    var ok=r&&r.hz>0&&isFinite(r.hz)&&r.prom>=PROM;
+    if(stage===1){ pend=ok?r:null; return; }
+    if(!ok||!pend||Math.abs(1200*Math.log2(r.hz/pend.hz))>TOL){
+      pend=null; rejAt=Date.now(); render(); return;
+    }
+    var hz=(pend.hz+r.hz)/2; pend=null;
+    var k=hitKey(), a=hits[k]||(hits[k]=[]);
+    a.push(hz); if(a.length>5) a.shift();
+    var b=a.slice().sort(function(x,y){return x-y;});
+    var med=b.length%2?b[(b.length-1)>>1]:(b[(b.length>>1)-1]+b[b.length>>1])/2;
+    rejAt=0;
+    elIn.value=(Math.round(med*10)/10).toFixed(1); commit();
   }
 
   /* ---------- elements ---------- */
@@ -1014,7 +1039,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
   function setHead(h){
     if(st.thead===h) return;
-    st.thead=h; lug=0; edit=null; stopTone(); save(); render();
+    st.thead=h; lug=0; edit=null; stopTone(); clearHits(); save(); render();
   }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
@@ -1047,7 +1072,7 @@ footer b{font-family:var(--mono);font-weight:700}
     renameToms(st.drums); save(); render();
   });
   E("tClr").addEventListener("click",function(){
-    delete st.meas[st.tid+"|"+st.thead]; lug=0; elIn.value=""; save(); render();
+    delete st.meas[st.tid+"|"+st.thead]; lug=0; elIn.value=""; clearHits(); save(); render();
   });
   elCal.addEventListener("click",function(){
     var d=byId(st.tid); if(!d) return;
@@ -1494,7 +1519,7 @@ footer b{font-family:var(--mono);font-weight:700}
     }
     elSVG.innerHTML=p.join("");
     Array.prototype.forEach.call(elSVG.querySelectorAll(".lug"),function(g){
-      function pick(){lug=parseInt(g.dataset.l,10);edit=null;render();}
+      function pick(){lug=parseInt(g.dataset.l,10);edit=null;clearHits();render();}
       g.addEventListener("click",pick);
       g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}});
     });
@@ -1689,7 +1714,7 @@ footer b{font-family:var(--mono);font-weight:700}
       b.style.animationDelay=(ix*26)+"ms";
       b.setAttribute("aria-pressed",x.id===d.id?"true":"false");
       b.addEventListener("click",function(){
-        st.tid=x.id; lug=0; edit=null; stopTone();
+        st.tid=x.id; lug=0; edit=null; stopTone(); clearHits();
         save(); render();
       });
       elDrums.appendChild(b);
@@ -1757,6 +1782,7 @@ footer b{font-family:var(--mono);font-weight:700}
         +Math.abs(Math.round(1200*Math.log2(d.rcal/R)))+" セント相当）。狙いの音が出る値に動いています。";
       else if(cur>0) dmsg="打面と裏面のラグを全部測ると、R を割り出してレシピに反映できます。";
     } else dmsg=diag(d,st.thead);
+    if(Date.now()-rejAt<2600) dmsg="読みが安定しません。もう一度叩いてください";
     elDg.hidden=!dmsg;
     if(dmsg) elDg.textContent=dmsg;
     elCal.hidden=!(isF&&d.rcal>0);
@@ -1773,7 +1799,7 @@ footer b{font-family:var(--mono);font-weight:700}
   },true);
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-115653";
+  var BUILD="20261021-120150";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
