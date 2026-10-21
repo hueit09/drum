@@ -79,6 +79,23 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .cap{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
+.pick{display:block;position:relative;overflow:hidden;text-align:center;padding:15px;border-radius:14px;
+  background:var(--acc);color:var(--acc-fg);font-size:14px;font-weight:700;letter-spacing:.04em;
+  box-shadow:var(--sh-lift);cursor:pointer;transition:transform .14s var(--ease)}
+.pick:active{transform:scale(.97)}
+.pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.prog{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);border-radius:3px;transition:width .2s linear}
+.sres{display:grid;gap:12px}
+.sres .big2{font-family:var(--mono);font-size:34px;font-weight:800;line-height:1.1;color:var(--acc)}
+.sres .big2 u{text-decoration:none;font-size:13px;font-weight:700;margin-left:7px;opacity:.6;letter-spacing:.04em}
+.sres .kv{display:flex;gap:10px;align-items:baseline;font-size:12.5px;color:var(--dim)}
+.sres .kv b{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--fg)}
+.sres .go2{padding:14px;border:0;border-radius:14px;background:var(--acc-soft);color:var(--acc);
+  font-size:13.5px;font-weight:700;letter-spacing:.03em;transition:transform .13s var(--ease)}
+.sres .go2:active{transform:scale(.97)}
+.snote{margin:0;font-size:11.5px;line-height:1.75;color:var(--faint)}
+
 /* ─── 動き ─── */
 .slidebox{overflow:hidden;
   transition:height .26s var(--ease),padding-top .26s var(--ease),padding-bottom .26s var(--ease),opacity .22s var(--ease)}
@@ -408,6 +425,7 @@ footer b{font-family:var(--mono);font-weight:700}
     <button class="tab" type="button" data-v="tune" aria-pressed="true">チューナー</button>
     <button class="tab" type="button" data-v="recipe" aria-pressed="false">レシピ</button>
     <button class="tab" type="button" data-v="kit" aria-pressed="false">キット</button>
+    <button class="tab" type="button" data-v="song" aria-pressed="false">曲から</button>
     <button class="tab" type="button" data-v="doc" aria-pressed="false">説明</button>
   </div>
 
@@ -508,6 +526,21 @@ footer b{font-family:var(--mono);font-weight:700}
         </div>
       </div>
       <textarea id="kOut" class="exp" hidden readonly aria-label="書き出した測定データ"></textarea>
+    </div>
+  </div>
+
+  <div id="vSong" hidden>
+    <div class="pane">
+      <div class="row">
+        <div class="cap">曲を読み込む<span class="note">端末の中の音声ファイルからキーとテンポを推定します。曲は外に出ません</span></div>
+        <label class="pick" id="songPick">
+          <input type="file" accept="audio/*" id="songFile">
+          <span id="songPickT">ファイルを選ぶ</span>
+        </label>
+      </div>
+      <div class="prog" id="songProg" hidden><i id="songBar"></i></div>
+      <div class="sres" id="songRes" hidden></div>
+      <p class="snote" id="songMsg"></p>
     </div>
   </div>
 
@@ -1041,7 +1074,7 @@ footer b{font-family:var(--mono);font-weight:700}
   var elKeys=E("keys"),elAccs=E("accs"),elPicked=E("picked"),elModes=E("modes"),
       elCards=E("cards"),elBand=E("band"),
       elCmpW=E("cmpWrap"),elCmp=E("cmp"),elKeyPane=E("keyPane"),elThm=E("thm"),
-      elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),
+      elVR=E("vRecipe"),elVT=E("vTune"),elVK=E("vKit"),elVD=E("vDoc"),elVS=E("vSong"),
       elDrums=E("drums"),elHeads=E("heads"),elSVG=E("svg"),elIn=E("tIn"),
       elTS=E("tS"),elKeySum=E("keySum"),elPresets=E("presets"),
       elBurst=E("burst"),elRoDev=E("roDev"),elRoDevN=E("roDevN"),elRoDevU=E("roDevU"),elRoAct=E("roAct"),elRoLab=E("roLab"),elRoNote=E("roNote"),
@@ -1175,7 +1208,7 @@ footer b{font-family:var(--mono);font-weight:700}
       st.view=t.dataset.v; stopTone(); edit=null;
       if(st.view!=="tune") micPause();
       save(); render();
-      anim({recipe:elVR,tune:elVT,kit:elVK,doc:elVD}[st.view],"swap",280);
+      anim({recipe:elVR,tune:elVT,kit:elVK,doc:elVD,song:elVS}[st.view],"swap",280);
       if(st.view==="tune"){ micResume(); anim(elSVG,"zoom",400); }
     });
   });
@@ -1327,7 +1360,7 @@ footer b{font-family:var(--mono);font-weight:700}
     // タムが乗る高さは、口径ごとの張力の目安に収まるものを自動で選ぶ
     st.ser=recommend(st.live);
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
-    elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc";
+    elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc"; elVS.hidden=st.view!=="song";
     if(st.view==="doc") syncLine();
     elKeyPane.hidden=st.view!=="recipe"&&st.view!=="tune";
     elKeySum.textContent=st.free
@@ -2098,7 +2131,180 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-000757";
+  var BUILD="20261022-001649";
+
+  /* ---------- 曲からキーとテンポを推定する ---------- */
+  // 考え方：曲を12の音名に振り分けた分布（クロマ）を作り、
+  // 長調・短調それぞれの典型的な分布といちばん相関が高い並びを選ぶ。
+  // 解析はすべてこの端末の中だけで行う。ファイルはどこにも送らない。
+  var KKMAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+  var KKMIN=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+  function pcorr(a,b){
+    var n=a.length,i,ma=0,mb=0,sa=0,sb=0,sab=0,x,y;
+    for(i=0;i<n;i++){ma+=a[i];mb+=b[i];} ma/=n; mb/=n;
+    for(i=0;i<n;i++){x=a[i]-ma;y=b[i]-mb;sa+=x*x;sb+=y*y;sab+=x*y;}
+    return (sa>0&&sb>0)?sab/Math.sqrt(sa*sb):0;
+  }
+  function keyOf(ch){
+    var i,j,rot=new Array(12),list=[];
+    for(i=0;i<12;i++){
+      for(j=0;j<12;j++) rot[j]=ch[(i+j)%12];
+      list.push({pc:i,mode:"major",score:pcorr(rot,KKMAJ)});
+      list.push({pc:i,mode:"minor",score:pcorr(rot,KKMIN)});
+    }
+    list.sort(function(a,b){return b.score-a.score;});
+    var best=list[0];
+    // 平行調は分布がほぼ同じで入れ替わりやすいので、別の調の2位と比べる
+    var alt=null;
+    for(i=1;i<list.length;i++){
+      var r=rootOf(list[i].pc,list[i].mode), rb=rootOf(best.pc,best.mode);
+      if(r!==rb){ alt=list[i]; break; }
+    }
+    best.gap=alt?best.score-alt.score:best.score;
+    best.rel=list[1];
+    return best;
+  }
+  function bpmOf(flux,fps){
+    var n=flux.length,i,m=0;
+    if(n<60) return 0;
+    for(i=0;i<n;i++) m+=flux[i]; m/=n;
+    var e=new Float64Array(n);
+    for(i=0;i<n;i++) e[i]=Math.max(0,flux[i]-m);
+    // 自己相関。拍の間隔ぶんずらすと波形がよく重なる。
+    // 整数のずらし幅でしか測れないので、山の形から小数点以下を補間する。
+    // 人は 120 BPM あたりを基準に感じるので、その周りを少し優遇して倍・半分の取り違えを減らす
+    var loL=Math.max(2,Math.floor(fps*60/200)), hiL=Math.min(n-8,Math.ceil(fps*60/60));
+    if(hiL<=loL+2) return 0;
+    var ac=new Float64Array(hiL+2), lag,s2,j;
+    for(lag=loL;lag<=hiL;lag++){
+      s2=0;
+      for(j=0;j+lag<n;j++) s2+=e[j]*e[j+lag];
+      ac[lag]=s2/(n-lag);
+    }
+    var best=0,bv=-1,w;
+    for(lag=loL+1;lag<hiL;lag++){
+      w=Math.exp(-0.5*Math.pow(Math.log(60*fps/lag/120)/Math.LN2/0.55,2));
+      if(ac[lag]*w>bv){ bv=ac[lag]*w; best=lag; }
+    }
+    if(!best) return 0;
+    var a=ac[best-1],b=ac[best],c=ac[best+1], dn=a-2*b+c, d=dn!==0?0.5*(a-c)/dn:0;
+    if(!(d>-1&&d<1)) d=0;
+    return Math.round(60*fps/(best+d));
+  }
+  // 重い処理なので小分けにして、画面が固まらないようにする
+  function chromaOf(mono,sr,onProg,done){
+    var N=4096,H=2048,i;
+    var win=new Float64Array(N);
+    for(i=0;i<N;i++) win[i]=0.5-0.5*Math.cos(2*Math.PI*i/(N-1));
+    var re=new Float64Array(N), im=new Float64Array(N), half=N>>1;
+    var mag=new Float64Array(half), prev=new Float64Array(half), has=false;
+    var ch=new Float64Array(12), flux=[], f=0;
+    var frames=Math.floor((mono.length-N)/H);
+    if(frames<4){ done(ch,flux,sr/H); return; }
+    function batch(){
+      var end=Math.min(frames,f+24),k,o,mx,thr,hz,pc,d,sum;
+      for(;f<end;f++){
+        o=f*H;
+        for(k=0;k<N;k++){ re[k]=mono[o+k]*win[k]; im[k]=0; }
+        fft(re,im);
+        mx=0;
+        for(k=0;k<half;k++){ mag[k]=Math.sqrt(re[k]*re[k]+im[k]*im[k]); if(mag[k]>mx) mx=mag[k]; }
+        if(has){ sum=0; for(k=0;k<half;k++){ d=mag[k]-prev[k]; if(d>0) sum+=d; } flux.push(sum); }
+        for(k=0;k<half;k++) prev[k]=mag[k];
+        has=true;
+        // 山になっている所だけ数える。打楽器の帯域ノイズを拾いにくくする
+        thr=mx*0.08;
+        for(k=2;k<half-1;k++){
+          if(mag[k]<thr||mag[k]<mag[k-1]||mag[k]<mag[k+1]) continue;
+          hz=k*sr/N;
+          if(hz<60||hz>2000) continue;
+          pc=Math.round(12*Math.log2(hz/440)+69);
+          ch[((pc%12)+12)%12]+=mag[k];
+        }
+      }
+      onProg(f/frames);
+      if(f<frames) setTimeout(batch,0); else done(ch,flux,sr/H);
+    }
+    batch();
+  }
+
+  var elSongFile=E("songFile"),elSongMsg=E("songMsg"),elSongRes=E("songRes"),
+      elSongProg=E("songProg"),elSongBar=E("songBar"),elSongPickT=E("songPickT");
+  var songBusy=false;
+  function songSay(t){ elSongMsg.textContent=t; }
+  function songShow(k,bpm){
+    var flat=!!FLATK[rootOf(k.pc,k.mode)];
+    var nm=k.mode==="minor"?MKEY[k.pc]:KEYS[k.pc];
+    var conf=k.gap>=0.10?"高い":k.gap>=0.045?"ふつう":"低い";
+    elSongRes.hidden=false; elSongRes.innerHTML="";
+    var b=document.createElement("div"); b.className="big2";
+    b.textContent=nm;
+    var u=document.createElement("u"); u.textContent=k.mode==="minor"?"マイナー":"メジャー";
+    b.appendChild(u); elSongRes.appendChild(b);
+    function kv(a,c){
+      var r=document.createElement("div"); r.className="kv";
+      var s1=document.createElement("span"); s1.textContent=a;
+      var s2=document.createElement("b"); s2.textContent=c;
+      r.appendChild(s1); r.appendChild(s2); elSongRes.appendChild(r);
+    }
+    kv("確からしさ",conf);
+    if(bpm) kv("テンポ","約 "+bpm+" BPM");
+    var g=document.createElement("button");
+    g.type="button"; g.className="go2"; g.textContent="このキーでレシピを出す";
+    g.addEventListener("click",function(){
+      st.free=false; st.mode=k.mode;
+      if(st.keys.indexOf(k.pc)<0){ st.keys.push(k.pc); st.keys.sort(function(x,y){return x-y;}); }
+      st.live=k.pc;
+      var la=deriveLA(k.pc); st.ltr=la.l; st.acc=la.a;
+      st.view="recipe"; save(); render();
+      anim(elVR,"enter-right",340);
+    });
+    elSongRes.appendChild(g);
+    songSay((bpm?"テンポは半分（"+Math.round(bpm/2)+"）や倍（"+Math.round(bpm*2)+"）に取り違えることがあります。":"")
+      +"平行調（"+(k.mode==="minor"?MKEY[k.pc]+" と "+KEYS[rootOf(k.pc,k.mode)]
+      :KEYS[k.pc]+" と "+MKEY[(k.pc+9)%12])+"）は音の並びが同じなので入れ替わることがあります。"
+      +"合わない時はキー欄で隣の調に替えてみてください。");
+  }
+  function songRun(file){
+    if(songBusy) return;
+    var a=ctx();
+    if(!a||!window.FileReader){ songSay("この端末では解析できません。"); return; }
+    songBusy=true; elSongRes.hidden=true;
+    elSongProg.hidden=false; elSongBar.style.width="0%";
+    elSongPickT.textContent="読み込み中";
+    songSay("読み込んでいます。曲の長さによっては少し待ちます。");
+    var fr=new FileReader();
+    fr.onerror=function(){ songFail("ファイルを読めませんでした。"); };
+    fr.onload=function(){
+      try{
+        a.decodeAudioData(fr.result,function(ab){
+          var sr=ab.sampleRate,L=ab.length;
+          var c0=ab.getChannelData(0), c1=ab.numberOfChannels>1?ab.getChannelData(1):null;
+          // 真ん中あたりから最大2分。イントロと終わりは避ける
+          var want=Math.min(L,Math.floor(sr*120)), st0=Math.max(0,Math.floor((L-want)/2)),i;
+          var mono=new Float32Array(want);
+          for(i=0;i<want;i++) mono[i]=c1?(c0[st0+i]+c1[st0+i])/2:c0[st0+i];
+          songSay("解析しています。");
+          chromaOf(mono,sr,function(p){ elSongBar.style.width=Math.round(p*100)+"%"; },
+            function(ch,flux,fps){
+              elSongProg.hidden=true; elSongPickT.textContent="別の曲を選ぶ";
+              songBusy=false; elSongFile.value="";
+              var tot=0,j; for(j=0;j<12;j++) tot+=ch[j];
+              if(!(tot>0)){ songSay("音の高さを読み取れませんでした。"); return; }
+              songShow(keyOf(ch),bpmOf(flux,fps));
+            });
+        },function(){ songFail("この形式は読み込めませんでした。m4a・mp3・wav などで試してください。"); });
+      }catch(e){ songFail("この形式は読み込めませんでした。"); }
+    };
+    fr.readAsArrayBuffer(file);
+  }
+  function songFail(t){
+    songBusy=false; elSongProg.hidden=true; elSongPickT.textContent="ファイルを選ぶ";
+    elSongFile.value=""; songSay(t);
+  }
+  elSongFile.addEventListener("change",function(){
+    if(elSongFile.files&&elSongFile.files[0]) songRun(elSongFile.files[0]);
+  });
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
