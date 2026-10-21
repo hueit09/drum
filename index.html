@@ -77,6 +77,27 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .cap{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
 .note{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--faint)}
 
+/* ─── 起動画面 ─── */
+.splash{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;
+  padding:24px;transition:opacity .4s var(--ease)}
+.splash.gone{opacity:0;pointer-events:none}
+.sp{display:grid;justify-items:center;gap:0;text-align:center}
+.bigmark{width:74px;height:74px;color:var(--fg)}
+.sp h2{margin:18px 0 0;font-size:34px;font-weight:800;letter-spacing:.24em;text-indent:.24em;line-height:1}
+.sp p{margin:9px 0 0;font-size:12px;color:var(--faint);letter-spacing:.02em}
+.sp button{margin-top:38px;min-width:190px;padding:16px 28px;border:0;border-radius:999px;
+  background:var(--acc);color:var(--acc-fg);font-size:15px;font-weight:800;letter-spacing:.14em;
+  box-shadow:var(--sh-lift);transition:transform .14s var(--ease),opacity .2s}
+.sp button:active{transform:scale(.95)}
+.sp button:disabled{opacity:.55}
+.sp small{margin-top:16px;font-size:11px;color:var(--faint);line-height:1.6}
+@media (prefers-reduced-motion:no-preference){
+  .sp>*{animation:spin_ .5s var(--ease) backwards}
+  .sp .bigmark{animation-delay:.02s}.sp h2{animation-delay:.08s}
+  .sp p{animation-delay:.14s}.sp button{animation-delay:.2s}
+  @keyframes spin_{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+}
+
 /* ─── header ─── */
 header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .brand{flex:1;min-width:0;display:flex;align-items:center;gap:9px}
@@ -326,6 +347,16 @@ footer b{font-family:var(--mono);font-weight:700}
 
 </head>
 <body>
+<div class="splash" id="splash">
+  <div class="sp">
+    <svg class="bigmark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-linecap="round"><path d="M9.62 20.89A9.2 9.2 0 1 1 14.38 20.89" stroke="currentColor" stroke-width="2.1"/><path d="M7.6 10.8v2.4" stroke="currentColor" stroke-width="1.9" opacity=".45"/><path d="M16.4 10.8v2.4" stroke="currentColor" stroke-width="1.9" opacity=".45"/><path d="M12 8.5v7" stroke="var(--acc)" stroke-width="2.3"/></svg>
+    <h2>TAUT</h2>
+    <p>ラグ値から追い込むドラムチューニング</p>
+    <button id="btnStart" type="button">START</button>
+    <small id="spNote" hidden>マイクが使えない場合は手入力で測れます</small>
+  </div>
+</div>
+
 <div class="wrap">
   <header>
     <div class="brand">
@@ -870,25 +901,27 @@ footer b{font-family:var(--mono);font-weight:700}
     try{if(mic.stream) mic.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
     mic.stream=null;mic.src=null;mic.an=null;
   }
-  // チューナーを開いた時点で一度だけ許可を求める。ボタンは置かない
-  function micStart(){
-    if(mic.on||mic.starting||mic.failed) return;
+  // 起動画面のSTARTから一度だけ呼ぶ。掴んだストリームは離さない（画面切替で音が鳴るのを防ぐ）
+  function micStart(cb){
+    if(mic.on){ if(cb) cb(true); return; }
+    if(mic.starting){ if(cb) cb(false); return; }
     var a=ctx();
-    if(!a||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){mic.failed=true;micMsg();return;}
+    if(!a||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      mic.failed=true; micMsg(); if(cb) cb(false); return;
+    }
     mic.starting=true;
     navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})
       .then(function(s){
         mic.starting=false;
-        if(st.view!=="tune"){ s.getTracks().forEach(function(t){t.stop();}); return; }
         mic.stream=s; mic.src=a.createMediaStreamSource(s);
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
         mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
         stopTone();
         elMn.hidden=true;
-        render(); micLoop();
+        render(); micLoop(); if(cb) cb(true);
       })
-      .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); });
+      .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); if(cb) cb(false); });
   }
   function micLoop(){
     if(!mic.on||!mic.reading) return;
@@ -1791,15 +1824,31 @@ footer b{font-family:var(--mono);font-weight:700}
     if(pop){ pop=false; anim(elSVG,"pop",620); }
   }
   render();
-  // 初回表示には操作が伴わないので、許可が出なかった場合に最初のタップで一度だけ試し直す
-  // 読み込み直後は操作が伴わないため許可ダイアログが出ない。最初の操作で一度だけ掴む
-  document.addEventListener("click",function once(){
-    document.removeEventListener("click",once,true);
-    if(!mic.on) micStart();
-  },true);
+
+  // ───── 起動画面 ─────
+  // ブラウザは操作を伴わないとマイクの許可を聞いてくれないので、
+  // 最初の一押しをここで受け取る。許可されたらチューナーへ、断られても手入力で入れる。
+  var elSplash=E("splash"), elStart=E("btnStart"), elSpNote=E("spNote");
+  function enterApp(){
+    elSplash.classList.add("gone");
+    setTimeout(function(){
+      elSplash.hidden=true;
+      if(st.view==="tune") anim(elSVG,"zoom",470);
+    },420);
+  }
+  elStart.addEventListener("click",function(){
+    if(elStart.dataset.skip==="1"){ enterApp(); return; }   // 2度目の押しは手入力で進む
+    elStart.disabled=true; elStart.textContent="マイクを確認中";
+    micStart(function(ok){
+      if(ok){ enterApp(); return; }
+      elStart.disabled=false; elStart.dataset.skip="1";
+      elStart.textContent="手入力ではじめる";
+      elSpNote.hidden=false;
+    });
+  });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261021-122201";
+  var BUILD="20261021-122928";
 
   // ───── 測定値の自動送信 ─────
   // 受け口のURLが入っていれば、測り終えたドラムの要約を自動で送る。
