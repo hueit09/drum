@@ -91,10 +91,24 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
 .sres .big2 u{text-decoration:none;font-size:13px;font-weight:700;margin-left:7px;opacity:.6;letter-spacing:.04em}
 .sres .kv{display:flex;gap:10px;align-items:baseline;font-size:12.5px;color:var(--dim)}
 .sres .kv b{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--fg)}
-.sres .go2{padding:14px;border:0;border-radius:14px;background:var(--acc-soft);color:var(--acc);
+.sres .go2,.slres .go2{padding:14px;border:0;border-radius:14px;background:var(--acc-soft);color:var(--acc);
   font-size:13.5px;font-weight:700;letter-spacing:.03em;transition:transform .13s var(--ease)}
-.sres .go2:active{transform:scale(.97)}
-.sres .go2.sub{background:var(--card);color:var(--dim);font-weight:700;border:1px solid var(--line)}
+.sres .go2:active,.slres .go2:active{transform:scale(.97)}
+.sres .go2.sub,.slres .go2.sub{background:var(--card);color:var(--dim);font-weight:700;border:1px solid var(--line)}
+.slsave{display:flex;gap:8px;margin-top:11px}
+.slsave input{flex:1 1 auto;min-width:0;font:inherit;font-size:14px;font-weight:700;color:var(--fg);
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.slsave input::placeholder{color:var(--dim);font-weight:600}
+.slsave button{flex:0 0 auto;font-size:12px;font-weight:700;letter-spacing:.03em;min-height:42px;
+  padding:9px 16px;background:var(--sunk);color:var(--dim);border:2px solid transparent;
+  border-radius:999px;transition:transform .13s var(--ease),background .22s,color .22s}
+.slsave button:active{transform:scale(.93)}
+.slsaved{margin-top:9px}
+.slsaved .slchip{padding-left:4px}
+.slsaved .nm{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--acc);
+  padding:4px 4px 4px 10px}
+.sres .kv .undo{border:1px solid var(--line);background:var(--card);color:var(--dim);
+  font-size:11.5px;font-weight:700;border-radius:9px;padding:4px 9px;margin-left:2px}
 #slPick{font:inherit;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--fg);
   background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:84px}
 .sllist{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
@@ -636,6 +650,12 @@ footer b{font-family:var(--mono);font-weight:700}
         </div>
       </div>
       <div class="sllist" id="slList"></div>
+      <div class="slsave">
+        <input id="slName" type="text" inputmode="text" maxlength="24"
+               placeholder="名前（例 10/25 下北沢）" aria-label="セットリストの名前">
+        <button id="slSave" type="button">保存</button>
+      </div>
+      <div class="sllist slsaved" id="slSaved" hidden></div>
       <div class="slres" id="slRes" hidden></div>
     </div>
   </div>
@@ -700,7 +720,8 @@ footer b{font-family:var(--mono);font-weight:700}
         <p>ライブでは曲ごとに張り替えられないので、「どのキーに合わせるか」ではなく<strong>どのキーとぶつからないか</strong>を選ぶことになります。「曲から」タブの下に、その日の曲のキーを並べると、いちばんぶつからない張り方を出します。</p>
         <p><strong>見ているのは2つです。</strong>ひとつは<strong>キックがその曲の主音から見て何度に当たるか</strong>。低音域でベースと正面からぶつかるので、ここが一番効きます。もうひとつは<strong>キット全体の音が、その曲の音階にどれだけ入っているか</strong>。フィルでタムが露出したときに出ます。この2つを同じ重さで見ています。</p>
         <p>度数の良し悪しは、早見表の実測レシピそのものを基準にしています。あのレシピは<strong>キックを主音の6度上（＝平行短調の主音）に置いています</strong>。耳で詰めて決めた位置なので、6度は良い場所として扱っています。逆に♭2・増4・7度は、うなりが出るので下げています。</p>
-        <p>キーは手で足せますし、曲を解析したあとに出る「セットリストに足す」からでも入ります。消すときは各チップの×です。</p>
+        <p><strong>曲を解析すると、そのキーは自動でセットリストに並びます。</strong>読み違えていたらその場の「取り消す」か、チップの×で外してください。音源が無い曲は、プルダウンから手で足せます。</p>
+        <p><strong>名前を付けて保存できます。</strong>現場ごとにセットは変わるので、「10/25 下北沢」のように名前を付けておくと、保存済みのチップを押すだけで呼び戻せます。同じ名前で保存すると上書きされます。20件まで持てます。</p>
         <p><strong>ぶつかる曲が残ったとき</strong>は、無理に合わせにいくより<strong>その曲だけミュートを足す</strong>方が早いです。余韻が短くなれば音程はアタックに埋もれるので、何調でも破綻しません。どれだけ短くなったかは「余韻」で数字に出ます。</p>
         <p>なお、曲のキーに合わせて張り替えるのはレコーディングの技術で、ライブでは<strong>キットの中で気持ちよく下る並び</strong>のほうが支配的に聞こえます。合わせきれなくても問題ありません。キーを決めずに作りたいときは「指定なし」を使ってください。</p>
       </div>
@@ -926,7 +947,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{},setlist:[]};
+          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{},setlist:[],saved:[]};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -959,6 +980,17 @@ footer b{font-family:var(--mono);font-weight:700}
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
       if(typeof sv.tid==="string") st.tid=sv.tid;
       if(sv.thead==="top"||sv.thead==="bot"||sv.thead==="fund") st.thead=sv.thead;
+      if(Object.prototype.toString.call(sv.saved)==="[object Array]")
+        st.saved=sv.saved.filter(function(x){
+          return x&&typeof x.name==="string"
+            &&Object.prototype.toString.call(x.list)==="[object Array]";
+        }).map(function(x){
+          return {name:String(x.name).slice(0,24),
+                  list:x.list.filter(function(y){
+                    return y&&typeof y.pc==="number"&&y.pc>=0&&y.pc<12
+                      &&(y.mode==="major"||y.mode==="minor");
+                  }).slice(0,40)};
+        }).filter(function(x){return x.name&&x.list.length;}).slice(0,20);
       if(Object.prototype.toString.call(sv.setlist)==="[object Array]")
         st.setlist=sv.setlist.filter(function(x){
           return x&&typeof x.pc==="number"&&x.pc>=0&&x.pc<12&&(x.mode==="major"||x.mode==="minor");
@@ -2404,7 +2436,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-090026";
+  var BUILD="20261022-091049";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3163,16 +3195,25 @@ footer b{font-family:var(--mono);font-weight:700}
       });
       elSongRes.appendChild(g);
     }
+    // 解析したキーは、そのままセットリストに並べる。間違っていたらその場で取り消せる
     (function(){
-      var ab=document.createElement("button");
-      ab.type="button"; ab.className="go2 sub";
-      ab.textContent=(mode==="minor"?MKEY[pc]:KEYS[pc])+" をセットリストに足す";
-      ab.addEventListener("click",function(){
-        slAdd(pc,mode);
-        ab.textContent="足しました";
-        setTimeout(function(){ab.textContent=(mode==="minor"?MKEY[pc]:KEYS[pc])+" をセットリストに足す";},1600);
+      var before=st.setlist.length;
+      slAdd(pc,mode);
+      if(st.setlist.length===before) return;            // 上限に達していたら何も言わない
+      var added=st.setlist[st.setlist.length-1];
+      var row=document.createElement("div"); row.className="kv";
+      var s1=document.createElement("span"); s1.textContent="セットリスト";
+      var s2=document.createElement("b");
+      s2.textContent=(mode==="minor"?MKEY[pc]:KEYS[pc])+" を "+st.setlist.length+"曲目に追加";
+      var un=document.createElement("button");
+      un.type="button"; un.className="undo"; un.textContent="取り消す";
+      un.addEventListener("click",function(){
+        var i=st.setlist.indexOf(added);
+        if(i>=0){ st.setlist.splice(i,1); save(); rSet(); }
+        s2.textContent="取り消しました"; un.hidden=true;
       });
-      elSongRes.appendChild(ab);
+      row.appendChild(s1); row.appendChild(s2); row.appendChild(un);
+      elSongRes.appendChild(row);
     })();
     if(dr&&dr.src&&(dr.kick||dr.snare)){
       var pb=document.createElement("button");
@@ -3256,6 +3297,7 @@ footer b{font-family:var(--mono);font-weight:700}
   function rSet(){
     var L=E("slList"), R=E("slRes");
     if(!L||!R) return;
+    rSaved();
     L.innerHTML="";
     st.setlist.forEach(function(x,i){
       var c=document.createElement("span"); c.className="slchip";
@@ -3303,6 +3345,25 @@ footer b{font-family:var(--mono);font-weight:700}
     });
     R.appendChild(g);
   }
+  function rSaved(){
+    var S=E("slSaved"); if(!S) return;
+    S.innerHTML="";
+    st.saved.forEach(function(x,i){
+      var c=document.createElement("span"); c.className="slchip";
+      var b=document.createElement("button");
+      b.type="button"; b.className="nm"; b.textContent=x.name+"（"+x.list.length+"曲）";
+      b.addEventListener("click",function(){
+        st.setlist=x.list.map(function(y){return {pc:y.pc,mode:y.mode};});
+        var nm=E("slName"); if(nm) nm.value=x.name;
+        save(); rSet();
+      });
+      var d=document.createElement("button");
+      d.type="button"; d.textContent="×"; d.setAttribute("aria-label",x.name+" を消す");
+      d.addEventListener("click",function(){ st.saved.splice(i,1); save(); rSaved(); });
+      c.appendChild(b); c.appendChild(d); S.appendChild(c);
+    });
+    S.hidden=!st.saved.length;
+  }
   (function(){
     var sel=E("slPick"); if(!sel) return;
     var i;
@@ -3312,6 +3373,18 @@ footer b{font-family:var(--mono);font-weight:700}
       var v=sel.value.split("|"); slAdd(parseInt(v[0],10),v[1]);
     });
     E("slClr").addEventListener("click",function(){ st.setlist=[]; save(); rSet(); });
+    E("slSave").addEventListener("click",function(){
+      var b=this, nm=E("slName"), n=(nm.value||"").trim().slice(0,24);
+      function flash(t){ b.textContent=t; setTimeout(function(){b.textContent="保存";},1600); }
+      if(!st.setlist.length){ flash("曲がありません"); return; }
+      if(!n){ flash("名前を入れて"); nm.focus(); return; }
+      var i, found=-1;
+      for(i=0;i<st.saved.length;i++) if(st.saved[i].name===n) found=i;
+      var rec={name:n,list:st.setlist.map(function(y){return {pc:y.pc,mode:y.mode};})};
+      if(found>=0) st.saved[found]=rec; else st.saved.push(rec);
+      if(st.saved.length>20) st.saved.shift();
+      save(); rSaved(); flash(found>=0?"上書きしました":"保存しました");
+    });
   })();
 
   function songRun(file){
