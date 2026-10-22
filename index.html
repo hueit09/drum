@@ -95,6 +95,24 @@ button{font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:tra
   font-size:13.5px;font-weight:700;letter-spacing:.03em;transition:transform .13s var(--ease)}
 .sres .go2:active{transform:scale(.97)}
 .sres .go2.sub{background:var(--card);color:var(--dim);font-weight:700;border:1px solid var(--line)}
+#slPick{font:inherit;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--fg);
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:84px}
+.sllist{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.sllist:empty{display:none}
+.slchip{display:inline-flex;align-items:center;gap:7px;padding:7px 9px 7px 12px;border-radius:11px;
+  background:var(--card);border:1px solid var(--line);font-family:var(--mono);font-size:13.5px;font-weight:700}
+.slchip b{font-weight:800}
+.slchip em{font-style:normal;font-family:inherit;font-size:11px;font-weight:700;color:var(--dim)}
+.slchip button{border:0;background:transparent;color:var(--dim);font-size:15px;line-height:1;padding:2px 3px}
+.slres{margin-top:13px;display:grid;gap:9px}
+.slres .shead2{display:flex;align-items:baseline;gap:9px}
+.slres .shead2 b{font-family:var(--mono);font-size:30px;font-weight:800;color:var(--acc);line-height:1}
+.slres .shead2 span{font-size:12.5px;color:var(--dim);font-weight:700}
+.slres .slrow{display:flex;gap:9px;align-items:baseline;font-size:12.5px;color:var(--dim)}
+.slres .slrow b{font-family:var(--mono);font-size:13.5px;color:var(--fg);min-width:46px}
+.slres .slrow i{font-style:normal;font-family:var(--mono);min-width:40px}
+.slres .slrow u{text-decoration:none;font-weight:700}
+.slres .ok u{color:var(--good)} .slres .mid u{color:var(--dim)} .slres .ng u{color:var(--off)}
 .dchk{display:flex;gap:10px;align-items:flex-start;margin-top:12px;cursor:pointer}
 .dchk input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc);flex:0 0 auto}
 .dchk span{font-size:13px;font-weight:700;color:var(--fg);line-height:1.45}
@@ -607,6 +625,19 @@ footer b{font-family:var(--mono);font-weight:700}
       <div class="sres" id="songRes" hidden></div>
       <p class="snote" id="songMsg"></p>
     </div>
+
+    <div class="pane" style="margin-top:11px">
+      <div class="row">
+        <div class="cap">セットリスト<span class="note">その日に叩く曲のキーを並べると、いちばんぶつからない張り方を出します</span></div>
+        <div class="tl" style="justify-content:flex-start;flex-wrap:wrap">
+          <select id="slPick" aria-label="曲のキー"></select>
+          <button id="slAdd" type="button">足す</button>
+          <button id="slClr" type="button">全部消す</button>
+        </div>
+      </div>
+      <div class="sllist" id="slList"></div>
+      <div class="slres" id="slRes" hidden></div>
+    </div>
   </div>
 
   <div class="refs" id="vDoc" hidden>
@@ -660,6 +691,18 @@ footer b{font-family:var(--mono);font-weight:700}
         <p>この式で早見表の全列が 1Hz 以内で再現できます。<strong>表裏の音程差を変えても実音は動きません</strong>。裏を高くしても、低くしても、表と同じ値にしても使えるのはこのためです。</p>
         <p>マイナーキーは平行調のメジャーと同じチューニングになります。E♭m は G♭、C#m は E と同じです。使う音が同じなので、鳴り自体を変える必要がありません。</p>
         <p>各ドラムの「実音」はスケールの音の中で上下できます。タムの並びを変えたいとき、特定の太鼓だけ合わなく感じるときに動かしてください。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>セットリストから張り方を決める</summary>
+      <div class="bd">
+        <p>ライブでは曲ごとに張り替えられないので、「どのキーに合わせるか」ではなく<strong>どのキーとぶつからないか</strong>を選ぶことになります。「曲から」タブの下に、その日の曲のキーを並べると、いちばんぶつからない張り方を出します。</p>
+        <p><strong>見ているのは2つです。</strong>ひとつは<strong>キックがその曲の主音から見て何度に当たるか</strong>。低音域でベースと正面からぶつかるので、ここが一番効きます。もうひとつは<strong>キット全体の音が、その曲の音階にどれだけ入っているか</strong>。フィルでタムが露出したときに出ます。この2つを同じ重さで見ています。</p>
+        <p>度数の良し悪しは、早見表の実測レシピそのものを基準にしています。あのレシピは<strong>キックを主音の6度上（＝平行短調の主音）に置いています</strong>。耳で詰めて決めた位置なので、6度は良い場所として扱っています。逆に♭2・増4・7度は、うなりが出るので下げています。</p>
+        <p>キーは手で足せますし、曲を解析したあとに出る「セットリストに足す」からでも入ります。消すときは各チップの×です。</p>
+        <p><strong>ぶつかる曲が残ったとき</strong>は、無理に合わせにいくより<strong>その曲だけミュートを足す</strong>方が早いです。余韻が短くなれば音程はアタックに埋もれるので、何調でも破綻しません。どれだけ短くなったかは「余韻」で数字に出ます。</p>
+        <p>なお、曲のキーに合わせて張り替えるのはレコーディングの技術で、ライブでは<strong>キットの中で気持ちよく下る並び</strong>のほうが支配的に聞こえます。合わせきれなくても問題ありません。キーを決めずに作りたいときは「指定なし」を使ってください。</p>
       </div>
     </details>
 
@@ -883,7 +926,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{}};
+          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{},setlist:[]};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -915,7 +958,11 @@ footer b{font-family:var(--mono);font-weight:700}
       if(PRE[sv.preset]) st.preset=sv.preset;
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
       if(typeof sv.tid==="string") st.tid=sv.tid;
-      if(sv.thead==="top"||sv.thead==="bot") st.thead=sv.thead;
+      if(sv.thead==="top"||sv.thead==="bot"||sv.thead==="fund") st.thead=sv.thead;
+      if(Object.prototype.toString.call(sv.setlist)==="[object Array]")
+        st.setlist=sv.setlist.filter(function(x){
+          return x&&typeof x.pc==="number"&&x.pc>=0&&x.pc<12&&(x.mode==="major"||x.mode==="minor");
+        }).slice(0,40);
       renameToms(st.drums);
     }
   }catch(e){}
@@ -1546,6 +1593,7 @@ footer b{font-family:var(--mono);font-weight:700}
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc"; elVS.hidden=st.view!=="song";
     if(st.view==="doc") syncLine();
+    if(st.view==="song") rSet();
     elKeyPane.hidden=st.view!=="recipe"&&st.view!=="tune";
     elKeySum.textContent=st.free
       ? "キー指定なし ・ 鳴っている音を読む"
@@ -2356,7 +2404,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-083436";
+  var BUILD="20261022-090026";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3115,6 +3163,17 @@ footer b{font-family:var(--mono);font-weight:700}
       });
       elSongRes.appendChild(g);
     }
+    (function(){
+      var ab=document.createElement("button");
+      ab.type="button"; ab.className="go2 sub";
+      ab.textContent=(mode==="minor"?MKEY[pc]:KEYS[pc])+" をセットリストに足す";
+      ab.addEventListener("click",function(){
+        slAdd(pc,mode);
+        ab.textContent="足しました";
+        setTimeout(function(){ab.textContent=(mode==="minor"?MKEY[pc]:KEYS[pc])+" をセットリストに足す";},1600);
+      });
+      elSongRes.appendChild(ab);
+    })();
     if(dr&&dr.src&&(dr.kick||dr.snare)){
       var pb=document.createElement("button");
       pb.type="button"; pb.className="go2 sub"; pb.textContent=DPLAY_LBL;
@@ -3153,6 +3212,108 @@ footer b{font-family:var(--mono);font-weight:700}
       +"合わない時はキー欄で隣の調に替えてみてください。");
     songSay(msg.join(""));
   }
+  /* ---------- セットリストから、その日の張り方を決める ---------- */
+  // 曲ごとに張り替えられないライブでは、「どのキーに合わせるか」ではなく
+  // 「どのキーとぶつからないか」を選ぶ。見ているのは2つ。
+  //   ① キックが曲の主音から見て何度になるか（低音でベースと正面からぶつかるため）
+  //   ② キット全体の音が、その曲の音階にどれだけ入っているか（フィルで出る）
+  var IVN=["1度","♭2","2度","♭3","3度","4度","増4","5度","♭6","6度","♭7","7度"];
+  // 主音から見た度数ごとの収まりの良さ。6度を高く取っているのは、早見表の実測レシピ
+  // そのものがキックを6度（＝平行短調の主音）に置いているため。耳で詰めた位置を基準にする
+  var CONS=[1.00,0.00,0.45,0.82,0.82,0.88,0.08,0.95,0.72,0.92,0.60,0.18];
+  // キックとスネアは主音の6度上（＝平行短調の主音）に乗る。早見表の実音から出た位置
+  function kickPc(T){ return (T+9)%12; }
+  // 5度圏で何歩離れているか。離れるほど共通の音が減る
+  function fifthSteps(a,b){
+    var n=(((b-a)*7)%12+12)%12;
+    return Math.min(n,12-n);
+  }
+  function setScore(T){
+    var n=st.setlist.length, i, tot=0, det=[];
+    if(!n) return null;
+    for(i=0;i<n;i++){
+      var sg=st.setlist[i];
+      var iv=((kickPc(T)-sg.pc)%12+12)%12;
+      var c=CONS[iv];
+      var ov=(7-fifthSteps(T,rootOf(sg.pc,sg.mode)))/7;
+      tot+=0.5*c+0.5*ov;      // キックの位置と、音階の重なりを同じ重さで見る
+      det.push({sg:sg,iv:iv,c:c,ov:ov});
+    }
+    return {T:T,score:tot/n,det:det,
+            safe:det.filter(function(d){return d.c>=0.8;}).length};
+  }
+  function setBest(){
+    var out=[],T;
+    for(T=0;T<12;T++){ var r=setScore(T); if(r) out.push(r); }
+    out.sort(function(a,b){return b.score-a.score;});
+    return out;
+  }
+  function slName(x){ return x.mode==="minor"?MKEY[x.pc]:KEYS[x.pc]; }
+  function slAdd(pc,mode){
+    if(st.setlist.length>=40) return;
+    st.setlist.push({pc:pc,mode:mode}); save(); rSet();
+  }
+  function rSet(){
+    var L=E("slList"), R=E("slRes");
+    if(!L||!R) return;
+    L.innerHTML="";
+    st.setlist.forEach(function(x,i){
+      var c=document.createElement("span"); c.className="slchip";
+      var b=document.createElement("b"); b.textContent=slName(x);
+      var e2=document.createElement("em"); e2.textContent=String(i+1);
+      var x2=document.createElement("button");
+      x2.type="button"; x2.textContent="×"; x2.setAttribute("aria-label",slName(x)+" を外す");
+      x2.addEventListener("click",function(){ st.setlist.splice(i,1); save(); rSet(); });
+      c.appendChild(e2); c.appendChild(b); c.appendChild(x2);
+      L.appendChild(c);
+    });
+    var all=setBest();
+    if(!all.length){ R.hidden=true; return; }
+    R.hidden=false; R.innerHTML="";
+    var best=all[0];
+    var h=document.createElement("div"); h.className="shead2";
+    var hb=document.createElement("b"); hb.textContent=KEYS[best.T];
+    var hs=document.createElement("span");
+    hs.textContent=st.setlist.length+"曲中 "+best.safe+"曲が安全圏"
+      +(all[1]?"　次点 "+KEYS[all[1].T]+"（"+all[1].safe+"曲）":"");
+    h.appendChild(hb); h.appendChild(hs); R.appendChild(h);
+    best.det.forEach(function(d){
+      var r=document.createElement("div");
+      r.className="slrow "+(d.c>=0.8?"ok":d.c>=0.4?"mid":"ng");
+      var s1=document.createElement("b"); s1.textContent=slName(d.sg);
+      var s2=document.createElement("i"); s2.textContent=IVN[d.iv];
+      var s3=document.createElement("u");
+      s3.textContent=d.c>=0.8?"安全":d.c>=0.4?"ふつう":"ぶつかる";
+      r.appendChild(s1); r.appendChild(s2); r.appendChild(s3);
+      R.appendChild(r);
+    });
+    var note=document.createElement("p"); note.className="snote";
+    note.style.margin="2px 0 0";
+    note.textContent="度数は「その曲の主音から見て、キックが何度に当たるか」です。"
+      +"1度・5度・6度・4度・3度なら気になりません。♭2・増4・7度の曲があるときは、"
+      +"その曲だけミュートを足すか、静かな曲の隣に置かないようにしてください。";
+    R.appendChild(note);
+    var g=document.createElement("button");
+    g.type="button"; g.className="go2"; g.textContent=KEYS[best.T]+" で張る";
+    g.addEventListener("click",function(){
+      st.free=false; st.mode="major"; st.live=best.T; st.ser=recommend(best.T); st.nudge=0;
+      if(st.keys.indexOf(best.T)<0){ st.keys.push(best.T); st.keys.sort(function(a,b2){return a-b2;}); }
+      var la=deriveLA(best.T); st.ltr=la.l; st.acc=la.a;
+      st.view="recipe"; save(); render(); anim(elVR,"enter-right",340);
+    });
+    R.appendChild(g);
+  }
+  (function(){
+    var sel=E("slPick"); if(!sel) return;
+    var i;
+    for(i=0;i<12;i++){ var o=document.createElement("option"); o.value=i+"|major"; o.textContent=KEYS[i]; sel.appendChild(o); }
+    for(i=0;i<12;i++){ var o2=document.createElement("option"); o2.value=i+"|minor"; o2.textContent=MKEY[i]; sel.appendChild(o2); }
+    E("slAdd").addEventListener("click",function(){
+      var v=sel.value.split("|"); slAdd(parseInt(v[0],10),v[1]);
+    });
+    E("slClr").addEventListener("click",function(){ st.setlist=[]; save(); rSet(); });
+  })();
+
   function songRun(file){
     if(songBusy) return;
     drumStop();
