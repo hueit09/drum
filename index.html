@@ -296,7 +296,8 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
   padding:11px 8px 10px;min-height:0;white-space:normal;flex:1 1 42%}
 /* 最後の1個が横いっぱいに伸びないように。保存したキットの方には効かせない */
 #presets .kitbtn{max-width:calc(50% - 2px)}
-#presets button,#mkSaved .kitchip{touch-action:none}
+/* 縦スクロールは残しつつ、長押しからの並べ替えを受ける */
+#presets button,#mkSaved .kitchip{touch-action:pan-y}
 .sorting{opacity:.55;transform:scale(1.05);box-shadow:var(--sh-lift);z-index:2;position:relative}
 .kiti{display:block;width:100%;max-width:104px;height:auto;fill:none;
   stroke-linecap:round;vector-effect:non-scaling-stroke}
@@ -377,6 +378,11 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .cf .acts{margin-left:auto;display:flex;gap:8px}
 .cf select{flex:1 1 150px;min-width:0}
 .cf select{font-family:var(--sans);font-size:12.5px;font-weight:500;padding:9px 11px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:100%}
+.cf .go.wgo{display:inline-flex;align-items:center;gap:7px;padding-left:13px}
+.cf .go.wgo svg{width:17px;height:17px;flex:none;fill:none;stroke-linecap:round}
+.cf .go.wgo .w1{stroke:currentColor;stroke-width:1.9;opacity:.45}
+.cf .go.wgo .w2{stroke:currentColor;stroke-width:1.9;opacity:.7}
+.cf .go.wgo .w3{stroke:currentColor;stroke-width:2.2}
 .cf .go{font-size:12px;font-weight:700;letter-spacing:.03em;padding:12px 18px;min-height:44px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .13s var(--ease),background .2s}
 .cf .go:active{transform:scale(.93)}
 .warn{display:flex;gap:9px;align-items:baseline;padding:9px 13px;border-radius:13px;background:var(--off-soft);color:var(--off);font-size:11.5px;line-height:1.6}
@@ -407,9 +413,13 @@ th.on{color:var(--acc)}
   border-radius:999px;background:var(--sunk);border:1px solid var(--line)}
 .hsl i.hin{position:absolute;left:3px;right:3px;border-radius:999px;background:var(--acc);
   box-shadow:var(--sh);transition:top .3s var(--ease),height .3s var(--ease);z-index:0}
-.hsl button{position:relative;z-index:1;border:0;background:none;color:var(--dim);font-size:10.5px;
-  font-weight:700;letter-spacing:.04em;padding:8px 7px;min-width:40px;min-height:40px;
-  border-radius:999px;transition:color .22s var(--ease)}
+.hsl button{position:relative;z-index:1;border:0;background:none;color:var(--dim);font-size:9.5px;
+  font-weight:700;letter-spacing:.02em;padding:6px 6px 7px;min-width:46px;min-height:46px;
+  border-radius:999px;transition:color .22s var(--ease);
+  display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
+.hsl button svg{width:19px;height:19px;fill:none;stroke-linecap:round;display:block}
+.hsl button svg .off{stroke:currentColor;stroke-width:1.8;opacity:.3}
+.hsl button svg .on{stroke:currentColor;stroke-width:2.6}
 .hsl button[aria-pressed="true"]{color:var(--acc-fg)}
 
 .dial{position:relative;width:100%;max-width:min(100%,292px);display:grid;place-items:center}
@@ -1151,6 +1161,11 @@ footer b{font-family:var(--mono);font-weight:700}
 
   /* ---------- audio ---------- */
   var ac=null,shot=null,tone=null;
+  // iOS はマイクを掴むと、音の出口を受話口に切り替えてしまうことがある。
+  // 「録りながら鳴らす」用途だと明示して、スピーカーから出るようにする
+  function audioSess(t){
+    try{ if(navigator.audioSession) navigator.audioSession.type=t; }catch(e){}
+  }
   function ctx(){
     // 閉じてしまった音声処理は作り直す。これを放っておくと、
     // 音が鳴らず・マイクも無音のまま、という状態から戻れなくなる
@@ -1326,6 +1341,7 @@ footer b{font-family:var(--mono);font-weight:700}
         mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
         mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
         mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
+        audioSess("play-and-record");
         stopTone();
         elMn.hidden=true;
         render(); micLoop(); if(cb) cb(true);
@@ -1414,13 +1430,22 @@ footer b{font-family:var(--mono);font-weight:700}
     }
     var r=detect(ds.d,ds.sr,lo,hi);
     var ok=r&&r.hz>0&&isFinite(r.hz)&&r.prom>=PROM;
+    // 覚えた範囲で読めないときは、締め上げて音程が動いた可能性がある。
+    // その場で広く探し直し、しっかりした山が外に見つかったら覚え直す
+    if(!ok&&lockHz[lk]>0){
+      var w=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6));
+      if(w&&w.hz>0&&isFinite(w.hz)&&w.prom>=PROM){
+        delete lockHz[lk]; delete lockMiss[lk]; delete lockCand[lk];
+        r=w; ok=true;
+      }
+    }
     if(stage===1){ pend=ok?r:null; return; }
     if(!ok||!pend||Math.abs(1200*Math.log2(r.hz/pend.hz))>TOL){
       pend=null; rejAt=Date.now();
       // 覚えた基音のあたりで何度も読めないなら、それは外れている。覚え直す
       if(lockHz[lk]>0){
         lockMiss[lk]=(lockMiss[lk]||0)+1;
-        if(lockMiss[lk]>=4){ delete lockHz[lk]; delete lockMiss[lk]; }
+        if(lockMiss[lk]>=3){ delete lockHz[lk]; delete lockMiss[lk]; delete lockCand[lk]; }
       }
       render(); return;
     }
@@ -1658,9 +1683,21 @@ footer b{font-family:var(--mono);font-weight:700}
     if(st.thead===h) return;
     st.thead=h; lug=0; edit=null; DEC=null; stopTone(); clearHits(); lockClear(); save(); render();
   }
+  // 「打面／裏面／実音」は言葉だけだと分かりにくいので、音作りの輪と同じ絵で示す。
+  // 中心＝打面、中間＝裏面、外側＝実音。選んでいる輪だけを濃く描く
+  function headIcon(which){
+    function arc(d,cls){ return '<path d="'+d+'" class="'+cls+'"/>'; }
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">'
+      +arc("M8.9 21.3A10.6 10.6 0 1 1 15.1 21.3", which==="fund"?"on":"off")
+      +arc("M9.9 17.3A6.8 6.8 0 1 1 14.1 17.3",   which==="bot" ?"on":"off")
+      +arc("M10.8 13.4A3.1 3.1 0 1 1 13.2 13.4",  which==="top" ?"on":"off")
+      +"</svg>";
+  }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
-    b.type="button"; b.dataset.head=p[0]; b.textContent=p[1];
+    b.type="button"; b.dataset.head=p[0];
+    b.innerHTML=headIcon(p[0])+"<span>"+p[1]+"</span>";
+    b.setAttribute("aria-label",p[1]);
     b.addEventListener("click",function(){setHead(p[0]);});
     elHeads.appendChild(b);
   });
@@ -1848,7 +1885,7 @@ footer b{font-family:var(--mono);font-weight:700}
         });
         renameToms(st.drums);
         st.drums.forEach(trimMeas);
-        st.preset=""; st.serAuto=false;
+        st.preset=""; st.serAuto=false; clearHits(); lockClear();
         if(!byId(st.tid)) st.tid=st.drums[2]?st.drums[2].id:"kick";
         st.ser=Math.max(0,Math.min(st.ser,serMax()-1));
         lug=0; save(); render();
@@ -1893,7 +1930,7 @@ footer b{font-family:var(--mono);font-weight:700}
     b.innerHTML=kitBtnHTML(buildKit(id),PRE[id].label);
     b.setAttribute("aria-label",PRE[id].label);
     b.addEventListener("click",function(){
-      st.drums=buildKit(id); st.preset=id; st.meas={};
+      st.drums=buildKit(id); st.preset=id; st.meas={}; clearHits(); lockClear();
       st.tid=st.drums[2].id; lug=0; st.serAuto=true; st.ser=recommend(st.live); save(); render();
     });
     elPresets.appendChild(b);
@@ -1906,7 +1943,7 @@ footer b{font-family:var(--mono);font-weight:700}
     var last=ts[ts.length-1], i=ts.length, dia=Math.min(18,(last?last.dia:14)+2);
     st.drums.push({id:"t"+i,kind:"tom",name:"",dia:dia,dep:last?last.dep:14,
                    lugs:lugsFor("tom",dia),iv:IV_T,deg:0});
-    renameToms(st.drums); save(); render();
+    renameToms(st.drums); clearHits(); lockClear(); save(); render();
   });
   E("tomDn").addEventListener("click",function(){
     var ts=toms(); if(ts.length<=1) return;
@@ -1914,7 +1951,7 @@ footer b{font-family:var(--mono);font-weight:700}
     st.drums=st.drums.filter(function(d){return d!==g;});
     delete st.meas[g.id+"|top"]; delete st.meas[g.id+"|bot"];
     if(st.tid===g.id) st.tid=st.drums[st.drums.length-1].id;
-    renameToms(st.drums); save(); render();
+    renameToms(st.drums); clearHits(); lockClear(); save(); render();
   });
   E("tClr").addEventListener("click",function(){
     delete st.meas[st.tid+"|"+st.thead]; lug=0; elIn.value=""; clearHits(); save(); render();
@@ -2239,7 +2276,13 @@ footer b{font-family:var(--mono);font-weight:700}
       sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
       var acts=document.createElement("div"); acts.className="acts";
       var mk=document.createElement("button");
-      mk.type="button"; mk.className="go"; mk.textContent="音を作る";
+      mk.type="button"; mk.className="go wgo";
+      // 何が開くのかがひと目で分かるよう、三重の輪をボタンに描く
+      mk.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'
+        +'<path d="M8.9 21.3A10.6 10.6 0 1 1 15.1 21.3" class="w1"/>'
+        +'<path d="M9.9 17.3A6.8 6.8 0 1 1 14.1 17.3" class="w2"/>'
+        +'<path d="M10.8 13.4A3.1 3.1 0 1 1 13.2 13.4" class="w3"/>'
+        +'</svg><span>音を作る</span>';
       mk.addEventListener("click",function(){ wheelOpen(d); });
       var go=document.createElement("button");
       go.type="button"; go.className="go"; go.textContent="合わせる";
@@ -2402,7 +2445,7 @@ footer b{font-family:var(--mono);font-weight:700}
       return;
     }
     b.dataset.armed="0"; b.textContent="測定値を全消去";
-    st.meas={}; st.drums.forEach(function(d){delete d.rcal;});
+    st.meas={}; st.drums.forEach(function(d){delete d.rcal;}); clearHits(); lockClear();
     lug=0; E("kOut").hidden=true; save(); render();
   });
 
@@ -2883,7 +2926,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-134540";
+  var BUILD="20261022-222256";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3649,6 +3692,8 @@ footer b{font-family:var(--mono);font-weight:700}
     // 解析したキーは、そのままセットリストに並べる。間違っていたらその場で取り消せる
     (function(){
       var before=st.setlist.length;
+      var last=st.setlist[st.setlist.length-1];
+      if(last&&last.pc===pc&&last.mode===mode) return;   // 直前と同じキーなら足さない
       slAdd(pc,mode);
       if(st.setlist.length===before) return;            // 上限に達していたら何も言わない
       var added=st.setlist[st.setlist.length-1];
