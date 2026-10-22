@@ -453,6 +453,12 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 svg .hit{cursor:pointer}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
+.lvl{position:relative;width:min(100%,260px);height:6px;border-radius:999px;background:var(--sunk);
+  overflow:visible;margin:2px auto -2px}
+.lvl i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--acc);
+  opacity:.5;transition:width .06s linear}
+.lvl i.hot{opacity:1}
+.lvl b{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;background:var(--off);opacity:.8}
 .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:11px 13px;min-height:42px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .13s var(--ease),border-color .2s,color .2s}
 .chip:active{transform:scale(.9)}
 .chip::after{content:"";display:inline-block;width:4px;height:4px;margin-left:6px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg) translateY(-1.5px);opacity:.5}
@@ -594,6 +600,7 @@ footer b{font-family:var(--mono);font-weight:700}
           <div class="act" id="roAct"></div>
         </div>
       </div>
+      <div class="lvl" id="lvl" hidden><i id="lvlI"></i><b id="lvlT"></b></div>
       <div class="chips" id="chips">
         <button class="chip" id="tDia" type="button">—</button>
         <span class="tgt" id="tS"></span>
@@ -1291,6 +1298,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   function micStop(){
     mic.on=false; mic.starting=false; mic.reading=false; DEC=null;
+    if(elLvl) elLvl.hidden=true;
     if(mic.raf) cancelAnimationFrame(mic.raf);
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
@@ -1319,7 +1327,9 @@ footer b{font-family:var(--mono);font-weight:700}
       })
       .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); if(cb) cb(false); });
   }
-  var silSince=0;
+  var silSince=0, lvlAt=0;
+  var elLvl=document.getElementById("lvl"), elLvlI=document.getElementById("lvlI"),
+      elLvlT=document.getElementById("lvlT");
   function micLoop(){
     if(!mic.on||!mic.reading) return;
     mic.raf=requestAnimationFrame(micLoop);
@@ -1339,11 +1349,24 @@ footer b{font-family:var(--mono);font-weight:700}
       }
     }
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
-    var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
+    // 拾うかどうかの条件。ここを緩めても、読んだ値の正しさは、この後の
+    // 「山の立ち方（prominence）」と「2つの窓の一致」で守られる
+    var thr=Math.max(0.0026,mic.floor*3.6), rel=Math.max(0.0013,mic.floor*2.0);
+    // 入り具合を出す。しきい値の位置も重ねて、届いているかどうかが見えるようにする
+    if(elLvl){
+      if(elLvl.hidden) elLvl.hidden=false;
+      if(now-lvlAt>60){
+        lvlAt=now;
+        var top=Math.max(thr*2.6,0.02);
+        elLvlI.style.width=Math.min(100,rms/top*100).toFixed(1)+"%";
+        elLvlI.className=rms>thr?"hot":"";
+        elLvlT.style.left=Math.min(100,thr/top*100).toFixed(1)+"%";
+      }
+    }
     // 余韻の測定は実音モードでチューナーを見ているときだけ。裏で重い計算を回さない
     if(DEC&&(st.view!=="tune"||st.thead!=="fund")) DEC=null;
     if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
-    if(mic.armed&&rms>thr&&now-mic.last>650){
+    if(mic.armed&&rms>thr&&now-mic.last>400){
       mic.armed=false; mic.last=now;
       // 中央を叩いたときだけ、余韻の長さも測る
       decFinish();
@@ -1355,7 +1378,7 @@ footer b{font-family:var(--mono);font-weight:700}
       // 合成信号で検証：200/340ms は 78/120 しか読めず、150/260ms では 108/120 まで上がる
       setTimeout(function(){micGrab(1);},150);
       setTimeout(function(){micGrab(2);},260);
-    } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
+    } else if(!mic.armed&&(rms<rel||now-mic.last>1600)) mic.armed=true;
     if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
   }
   // 打点から200msと340msの2回読み、食い違えば捨てる。
@@ -2814,7 +2837,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-131210";
+  var BUILD="20261022-131854";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
