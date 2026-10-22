@@ -1140,9 +1140,21 @@ footer b{font-family:var(--mono);font-weight:700}
   /* ---------- audio ---------- */
   var ac=null,shot=null,tone=null;
   function ctx(){
+    // 閉じてしまった音声処理は作り直す。これを放っておくと、
+    // 音が鳴らず・マイクも無音のまま、という状態から戻れなくなる
+    if(ac&&ac.state==="closed") ac=null;
     if(!ac){var A=window.AudioContext||window.webkitAudioContext; if(!A) return null; ac=new A();}
     if(ac.state==="suspended") ac.resume();
     return ac;
+  }
+  // 音声処理ごと作り直してマイクを掴み直す。最後の手段
+  function audioReset(cb){
+    try{ micStop(); }catch(e){}
+    try{ stopTone(); }catch(e){}
+    try{ if(ac) ac.close(); }catch(e){}
+    ac=null; shot=null; tone=null;
+    ctx();
+    micStart(function(ok){ if(cb) cb(ok); });
   }
   function voice(hz,a){
     var g=a.createGain(),os=[];
@@ -1259,9 +1271,12 @@ footer b{font-family:var(--mono);font-weight:700}
     var m=document.getElementById("mn"); if(!m) return;
     m.addEventListener("click",function(){
       try{ if(ac&&ac.state!=="running") ac.resume(); }catch(e){}
-      if(mic.on||mic.starting){ m.hidden=true; silSince=0; return; }
       mic.failed=false; m.textContent="マイクを確認中";
-      micStart(function(ok){ if(ok){ m.hidden=true; silSince=0; } else micMsg(); render(); });
+      // 無音のまま戻らないことがあるので、ここでは音声処理ごと作り直す
+      audioReset(function(ok){
+        if(ok){ m.hidden=true; silSince=0; } else micMsg();
+        render();
+      });
     });
   })();
   // 画面を離れただけならストリームは保持する。掴み直すとiOSが
@@ -2799,7 +2814,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-131047";
+  var BUILD="20261022-131210";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
