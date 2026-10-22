@@ -289,17 +289,21 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
   padding:11px 8px 10px;min-height:0;white-space:normal;flex:1 1 42%}
 /* 最後の1個が横いっぱいに伸びないように。保存したキットの方には効かせない */
 #presets .kitbtn{max-width:calc(50% - 2px)}
+#presets button,#mkSaved .kitchip{touch-action:none}
+.sorting{opacity:.55;transform:scale(1.05);box-shadow:var(--sh-lift);z-index:2;position:relative}
 .kiti{display:block;width:100%;max-width:104px;height:auto;fill:none;
   stroke-linecap:round;vector-effect:non-scaling-stroke}
-.kiti .kt{stroke:currentColor;stroke-width:2;opacity:.55}
-.kiti .ks{stroke:currentColor;stroke-width:2;opacity:.75}
-.kiti .kk{stroke:var(--acc);stroke-width:2.4}
+.kiti .kt{stroke:currentColor;stroke-width:1.8;opacity:.42}
+.kiti .ks{stroke:currentColor;stroke-width:2.6;opacity:.9}
+.kiti .kk{stroke:var(--acc);stroke-width:3.2}
 .sg[aria-pressed="true"] .kiti .kk{stroke:var(--acc-fg)}
 .vob{flex:1 1 30%;display:flex;flex-direction:column;align-items:center;gap:2px;
   white-space:normal;padding:9px 6px;line-height:1.25}
 .vob i{font-style:normal;font-size:12.5px;font-weight:800}
 .vob small{font-size:9.5px;font-weight:700;opacity:.72;margin:0;letter-spacing:0}
-.kitl{font-size:11.5px;font-weight:700;letter-spacing:.02em;line-height:1.2}
+.kitl{font-size:12px;font-weight:800;letter-spacing:.02em;line-height:1.2}
+.kits{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.01em;
+  opacity:.6;line-height:1.2;margin-top:-1px}
 .kitchip{display:inline-flex;align-items:center;gap:2px;padding:6px 2px 6px 6px;border-radius:13px;
   background:var(--card);border:1px solid var(--line)}
 .kitchip .nm{display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -613,7 +617,7 @@ footer b{font-family:var(--mono);font-weight:700}
   <div id="vKit" hidden>
     <div class="pane">
       <div class="row">
-        <div class="cap">プリセット<span class="note">読み込んだあと自由に書き換えられます</span></div>
+        <div class="cap">プリセット<span class="note">読み込んだあと自由に書き換えられます。長押しで並べ替え</span></div>
         <div class="segs" id="presets"></div>
       </div>
       <div class="row">
@@ -631,7 +635,7 @@ footer b{font-family:var(--mono);font-weight:700}
     </div>
     <div class="pane" style="margin-top:11px">
       <div class="row">
-        <div class="cap">このキットを保存<span class="note">口径・深さ・ラグ数・本数をまとめて覚えます</span></div>
+        <div class="cap">このキットを保存<span class="note">口径・深さ・ラグ数・本数をまとめて覚えます。長押しで並べ替え</span></div>
       </div>
       <div class="slsave">
         <input id="mkName" type="text" maxlength="20" placeholder="名前（例 街スタ）" aria-label="キットの名前">
@@ -929,13 +933,13 @@ footer b{font-family:var(--mono);font-weight:700}
            [-5,"完全4度下（裏が低い）"],[-6,"増4度下（裏が低い）"],[-7,"完全5度下（裏が低い）"]];
 
   var PRE={
-    // ラグ数は実機の写真から。タムは口径によらず8本
-    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]],lugs:{tom:8}},
     // 貸しスタジオの定番。少し前の年式は 12/14、最近の年式は 10/12 のラックタムが多い
     std1:{label:"標準1",kick:[22,16],snare:[14,5.5],toms:[[12,9],[14,14],[16,16]]},
     std2:{label:"標準2",kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[16,16]]},
     t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]]},
-    cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]}
+    cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]},
+    // ラグ数は実機の写真から。タムは口径によらず8本
+    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]],lugs:{tom:8}}
   };
 
   // タムの呼び名。14インチ以上はフロアタム扱い、それ未満は口径で決める
@@ -1002,7 +1006,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true};
+          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true,preOrd:[]};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -1037,6 +1041,8 @@ footer b{font-family:var(--mono);font-weight:700}
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
       if(typeof sv.tid==="string") st.tid=sv.tid;
       if(sv.thead==="top"||sv.thead==="bot"||sv.thead==="fund") st.thead=sv.thead;
+      if(Object.prototype.toString.call(sv.preOrd)==="[object Array]")
+        st.preOrd=sv.preOrd.filter(function(x){return typeof x==="string";}).slice(0,20);
       if(Object.prototype.toString.call(sv.myKits)==="[object Array]")
         st.myKits=sv.myKits.filter(function(x){
           return x&&typeof x.name==="string"
@@ -1547,6 +1553,57 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){setHead(p[0]);});
     elHeads.appendChild(b);
   });
+  // 長押しで掴んで並べ替える。指の下のカードの位置に差し込むだけの単純な作り。
+  // 画面のスクロールと取り合いにならないよう、掴めるカードだけ touch-action を切る。
+  var SORT_HOLD=320;
+  function makeSortable(box,sel,done){
+    if(!box) return;
+    var drag=null, timer=null, moved=false, sx=0, sy=0;
+    function pick(e){
+      var t=e.target;
+      while(t&&t!==box&&!(t.matches&&t.matches(sel))) t=t.parentNode;
+      return (t&&t!==box&&t.parentNode===box)?t:null;
+    }
+    box.addEventListener("pointerdown",function(e){
+      var t=pick(e); if(!t) return;
+      sx=e.clientX; sy=e.clientY; moved=false;
+      if(timer) clearTimeout(timer);
+      timer=setTimeout(function(){
+        timer=null; drag=t; t.classList.add("sorting");
+        try{ t.setPointerCapture(e.pointerId); }catch(err){}
+      },SORT_HOLD);
+    });
+    box.addEventListener("pointermove",function(e){
+      if(!drag){
+        if(timer&&(Math.abs(e.clientX-sx)>8||Math.abs(e.clientY-sy)>8)){ clearTimeout(timer); timer=null; }
+        return;
+      }
+      moved=true;
+      var kids=Array.prototype.slice.call(box.children), i, r, tgt=null;
+      for(i=0;i<kids.length;i++){
+        if(kids[i]===drag) continue;
+        r=kids[i].getBoundingClientRect();
+        if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){ tgt=kids[i]; break; }
+      }
+      if(tgt){
+        var di=kids.indexOf(drag), ti=kids.indexOf(tgt);
+        box.insertBefore(drag, ti>di ? tgt.nextSibling : tgt);
+      }
+    });
+    function end(){
+      if(timer){ clearTimeout(timer); timer=null; }
+      if(!drag) return;
+      drag.classList.remove("sorting"); drag=null;
+      if(moved) done(Array.prototype.slice.call(box.children));
+    }
+    box.addEventListener("pointerup",end);
+    box.addEventListener("pointercancel",end);
+    // 並べ替えた直後の指離しで、カードが選ばれてしまわないように
+    box.addEventListener("click",function(e){
+      if(moved){ moved=false; e.stopPropagation(); e.preventDefault(); }
+    },true);
+  }
+
   // キットを小さな絵にする。ロゴと同じ「下に切れ目のある輪」で太鼓を描く。
   // 大きさは口径そのまま、並びは上がタム・下にキックとスネア。
   var KI_W=104, KI_H=58, KI_GAP=15;            // 切れ目はロゴと同じ上下30度ぶん
@@ -1566,9 +1623,9 @@ footer b{font-family:var(--mono);font-weight:700}
     var mx=0;
     ds.forEach(function(d){ if(d.dia>mx) mx=d.dia; });
     if(!(mx>0)) mx=22;
-    var sc=21/mx, parts=[];                     // いちばん大きい太鼓の半径が 21 になるよう揃える
+    var sc=22/mx, parts=[];                     // いちばん大きい太鼓の半径が 22 になるよう揃える
     function ring(d,cx,cy,cls){
-      var r=Math.max(3.4,d.dia*0.5*sc);
+      var r=Math.max(3.6,d.dia*0.5*sc);
       parts.push('<path d="'+kiArc(cx,cy,r)+'" class="'+cls+'"/>');
       return r;
     }
@@ -1588,8 +1645,20 @@ footer b{font-family:var(--mono);font-weight:700}
     if(snare) ring(snare,KI_W*0.17,ky+2,"ks");
     return '<svg class="kiti" viewBox="0 0 '+KI_W+' '+KI_H+'" aria-hidden="true">'+parts.join("")+"</svg>";
   }
+  // 寸法を文字でも出す。絵だけだと似て見えるので、ここがいちばん効く
+  function kitSizes(drums){
+    var k=null, t=[];
+    (drums||[]).forEach(function(d){
+      if(d.kind==="kick") k=d.dia;
+      else if(d.kind==="tom") t.push(d.dia);
+    });
+    t.sort(function(a,b){return a-b;});
+    return (k?k+'" / ':"")+t.join("·");
+  }
   function kitBtnHTML(drums,label){
-    return kitSvg(drums)+'<span class="kitl">'+label+"</span>";
+    return kitSvg(drums)
+      +(label?'<span class="kitl">'+label+"</span>":"")
+      +'<span class="kits">'+kitSizes(drums)+"</span>";
   }
 
   // 音作り：キーとは別に「高さ」と「表裏の開き」だけを決める。
@@ -1653,10 +1722,12 @@ footer b{font-family:var(--mono);font-weight:700}
       var c=document.createElement("span"); c.className="slchip";
       var b=document.createElement("button");
       b.type="button"; b.className="nm kitbtn";
-      b.innerHTML=kitBtnHTML(x.drums,"");
+      b.innerHTML=kitSvg(x.drums);
       var nm2=document.createElement("span"); nm2.className="kitl";
       nm2.textContent=x.name;
-      b.appendChild(nm2);
+      var sz2=document.createElement("span"); sz2.className="kits";
+      sz2.textContent=kitSizes(x.drums);
+      b.appendChild(nm2); b.appendChild(sz2);
       b.setAttribute("aria-label",x.name+" を読み込む");
       b.addEventListener("click",function(){
         st.drums=x.drums.map(function(d){
@@ -1673,11 +1744,18 @@ footer b{font-family:var(--mono);font-weight:700}
       d2.type="button"; d2.className="kx"; d2.textContent="×";
       d2.setAttribute("aria-label",x.name+" を消す");
       d2.addEventListener("click",function(){ st.myKits.splice(i,1); save(); rMyKits(); });
-      c.className="kitchip";
+      c.className="kitchip"; c.dataset.name=x.name;
       c.appendChild(b); c.appendChild(d2); S.appendChild(c);
     });
     S.hidden=!st.myKits.length;
   }
+  makeSortable(E("mkSaved"),".kitchip",function(kids){
+    var map={}, i;
+    for(i=0;i<st.myKits.length;i++) map[st.myKits[i].name]=st.myKits[i];
+    st.myKits=kids.map(function(c){ return map[c.dataset.name]; })
+                  .filter(function(x){return !!x;});
+    save(); rMyKits();
+  });
   E("mkSave").addEventListener("click",function(){
     var b=this, nm=E("mkName"), n=(nm.value||"").trim().slice(0,20);
     function flash(t){ b.textContent=t; setTimeout(function(){b.textContent="保存";},1600); }
@@ -1690,7 +1768,13 @@ footer b{font-family:var(--mono);font-weight:700}
     save(); rMyKits(); flash(found>=0?"上書きしました":"保存しました");
   });
 
-  Object.keys(PRE).forEach(function(id){
+  function preOrder(){
+    var ids=Object.keys(PRE), out=[], i;
+    for(i=0;i<st.preOrd.length;i++) if(PRE[st.preOrd[i]]&&out.indexOf(st.preOrd[i])<0) out.push(st.preOrd[i]);
+    for(i=0;i<ids.length;i++) if(out.indexOf(ids[i])<0) out.push(ids[i]);   // 新しく増えた分は後ろへ
+    return out;
+  }
+  preOrder().forEach(function(id){
     var b=document.createElement("button");
     b.type="button"; b.className="sg kitbtn"; b.dataset.pre=id;
     b.innerHTML=kitBtnHTML(buildKit(id),PRE[id].label);
@@ -1700,6 +1784,9 @@ footer b{font-family:var(--mono);font-weight:700}
       st.tid=st.drums[2].id; lug=0; st.serAuto=true; st.ser=recommend(st.live); save(); render();
     });
     elPresets.appendChild(b);
+  });
+  makeSortable(elPresets,"button",function(kids){
+    st.preOrd=kids.map(function(b){return b.dataset.pre;}); save();
   });
   E("tomUp").addEventListener("click",function(){
     var ts=toms(); if(ts.length>=5) return;
@@ -2650,7 +2737,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-100627";
+  var BUILD="20261022-104724";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
