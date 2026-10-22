@@ -458,6 +458,10 @@ svg .hit{cursor:pointer}
 .lvl i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--acc);
   opacity:.5;transition:width .06s linear}
 .lvl i.hot{opacity:1}
+.lockb{margin:7px auto 0;display:block;border:1px solid var(--line);background:var(--card);
+  color:var(--dim);font-family:var(--mono);font-size:10.5px;font-weight:700;
+  padding:8px 13px;min-height:40px;border-radius:999px}
+.lockb:active{transform:scale(.96)}
 .lvl b{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;background:var(--off);opacity:.8}
 .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:11px 13px;min-height:42px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .13s var(--ease),border-color .2s,color .2s}
 .chip:active{transform:scale(.9)}
@@ -601,6 +605,7 @@ footer b{font-family:var(--mono);font-weight:700}
         </div>
       </div>
       <div class="lvl" id="lvl" hidden><i id="lvlI"></i><b id="lvlT"></b></div>
+      <button class="lockb" id="lockB" type="button" hidden>基音を保持中　—　タップで解除</button>
       <div class="chips" id="chips">
         <button class="chip" id="tDia" type="button">—</button>
         <span class="tgt" id="tS"></span>
@@ -1385,6 +1390,13 @@ footer b{font-family:var(--mono);font-weight:700}
   // 打点から200msと340msの2回読み、食い違えば捨てる。
   // 部屋の共鳴を掴んだ読みはここでほぼ全部落ちる（合成波での検証で誤検出0件）
   var PROM=3.0, TOL=30, pend=null, hits={}, rejAt=0;
+  // 膜はいくつものモードで鳴るので、叩き方や他の太鼓の残響しだいで
+  // 毎回ちがうモードが最強になり、読みが飛ぶ。
+  // いちど捉えた基音を覚えておき、次からはその周りだけを探す。
+  // 探す幅は上下4半音。締めても緩めても追えるだけの余裕はある。
+  var LOCK_R=1.26, lockHz={}, lockMiss={}, lockCand={};
+  function lockKey(){ return st.tid+"|"+st.thead; }
+  function lockClear(){ lockHz={}; lockMiss={}; lockCand={}; }
   function hitKey(){ return st.tid+"|"+st.thead+"|"+(st.thead==="fund"?"f":lug); }
   function clearHits(){ hits={}; pend=null; }
   function micGrab(stage){
@@ -1395,13 +1407,34 @@ footer b{font-family:var(--mono);font-weight:700}
     mic.an.getFloatTimeDomainData(mic.buf);
     var ds=dsample(mic.buf,ac.sampleRate,4000);
     // 緩い状態から締め上げる途中は目標を大きく下回るので、下側を1オクターブ取る
-    var r=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6));
+    var lo=Math.max(28,tg*0.5), hi=Math.min(600,tg*1.6), lk=lockKey(), L=lockHz[lk];
+    if(L>0){
+      if(L>=lo&&L<=hi){ lo=Math.max(lo,L/LOCK_R); hi=Math.min(hi,L*LOCK_R); }
+      else { delete lockHz[lk]; delete lockMiss[lk]; L=0; }   // 目標が遠くに動いたら外す
+    }
+    var r=detect(ds.d,ds.sr,lo,hi);
     var ok=r&&r.hz>0&&isFinite(r.hz)&&r.prom>=PROM;
     if(stage===1){ pend=ok?r:null; return; }
     if(!ok||!pend||Math.abs(1200*Math.log2(r.hz/pend.hz))>TOL){
-      pend=null; rejAt=Date.now(); render(); return;
+      pend=null; rejAt=Date.now();
+      // 覚えた基音のあたりで何度も読めないなら、それは外れている。覚え直す
+      if(lockHz[lk]>0){
+        lockMiss[lk]=(lockMiss[lk]||0)+1;
+        if(lockMiss[lk]>=4){ delete lockHz[lk]; delete lockMiss[lk]; }
+      }
+      render(); return;
     }
     var hz=(pend.hz+r.hz)/2; pend=null;
+    // 覚えるのは2打そろってから。1打だけで覚えると、たまたま別のモードが
+    // 最強だったときに、その値に居座ってしまう
+    if(lockHz[lk]>0){
+      lockHz[lk]=lockHz[lk]*0.6+hz*0.4;        // 締めても緩めても追えるよう少しずつ寄せる
+    } else if(lockCand[lk]>0&&Math.abs(1200*Math.log2(hz/lockCand[lk]))<=100){
+      lockHz[lk]=(lockCand[lk]+hz)/2; delete lockCand[lk];
+    } else {
+      lockCand[lk]=hz;
+    }
+    lockMiss[lk]=0;
     var k=hitKey(), a=hits[k]||(hits[k]=[]);
     a.push(hz); if(a.length>5) a.shift();
     var b=a.slice().sort(function(x,y){return x-y;});
@@ -1623,7 +1656,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
   function setHead(h){
     if(st.thead===h) return;
-    st.thead=h; lug=0; edit=null; DEC=null; stopTone(); clearHits(); save(); render();
+    st.thead=h; lug=0; edit=null; DEC=null; stopTone(); clearHits(); lockClear(); save(); render();
   }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
@@ -2771,6 +2804,13 @@ footer b{font-family:var(--mono);font-weight:700}
       elTS.appendChild(document.createTextNode(" "+t60Word(t60)));
     }
 
+    (function(){
+      var lb=document.getElementById("lockB");
+      if(!lb) return;
+      var L=mic.on?lockHz[st.tid+"|"+st.thead]:0;
+      if(L>0){ lb.hidden=false; lb.textContent="基音を保持中 "+L.toFixed(1)+" Hz　タップで解除"; }
+      else lb.hidden=true;
+    })();
     elIn.hidden=mic.on;
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
     elIn.placeholder=isF?"実音の Hz":"測った Hz";
@@ -2818,6 +2858,11 @@ footer b{font-family:var(--mono);font-weight:700}
     try{ if(ac&&ac.state!=="running") ac.resume(); }catch(e){}
   },true);
 
+  (function(){
+    var lb=document.getElementById("lockB"); if(!lb) return;
+    lb.addEventListener("click",function(){ lockClear(); clearHits(); render(); });
+  })();
+
   var elSplash=E("splash"), elStart=E("btnStart"), elSpNote=E("spNote");
   function enterApp(){
     elSplash.classList.add("gone");
@@ -2838,7 +2883,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-133003";
+  var BUILD="20261022-134540";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
