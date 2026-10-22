@@ -1349,9 +1349,10 @@ footer b{font-family:var(--mono);font-weight:700}
       }
     }
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
-    // 拾うかどうかの条件。ここを緩めても、読んだ値の正しさは、この後の
-    // 「山の立ち方（prominence）」と「2つの窓の一致」で守られる
-    var thr=Math.max(0.0026,mic.floor*3.6), rel=Math.max(0.0013,mic.floor*2.0);
+    // しきい値を下げたら、部屋の共鳴のような「ずっと鳴っている音」を叩きと
+    // 誤認するようになった。定常音は2つの窓で当然一致してしまうので、
+    // 一致の検査では落とせない。入口で切るしかないため元の値に戻した
+    var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
     // 入り具合を出す。しきい値の位置も重ねて、届いているかどうかが見えるようにする
     if(elLvl){
       if(elLvl.hidden) elLvl.hidden=false;
@@ -1366,7 +1367,7 @@ footer b{font-family:var(--mono);font-weight:700}
     // 余韻の測定は実音モードでチューナーを見ているときだけ。裏で重い計算を回さない
     if(DEC&&(st.view!=="tune"||st.thead!=="fund")) DEC=null;
     if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
-    if(mic.armed&&rms>thr&&now-mic.last>400){
+    if(mic.armed&&rms>thr&&now-mic.last>650){
       mic.armed=false; mic.last=now;
       // 中央を叩いたときだけ、余韻の長さも測る
       decFinish();
@@ -1378,7 +1379,7 @@ footer b{font-family:var(--mono);font-weight:700}
       // 合成信号で検証：200/340ms は 78/120 しか読めず、150/260ms では 108/120 まで上がる
       setTimeout(function(){micGrab(1);},150);
       setTimeout(function(){micGrab(2);},260);
-    } else if(!mic.armed&&(rms<rel||now-mic.last>1600)) mic.armed=true;
+    } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
     if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
   }
   // 打点から200msと340msの2回読み、食い違えば捨てる。
@@ -2837,7 +2838,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-131854";
+  var BUILD="20261022-133003";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
