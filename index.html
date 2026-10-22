@@ -589,6 +589,10 @@ footer b{font-family:var(--mono);font-weight:700}
         <div class="segs" id="presets"></div>
       </div>
       <div class="row">
+        <div class="cap">音作り<span class="note">キーとは別に、高さと表裏の開きだけを決めます。キーはそのまま</span></div>
+        <div class="segs" id="voices"></div>
+      </div>
+      <div class="row">
         <div class="cap">タムの本数</div>
         <div class="step">
           <button id="tomDn" type="button" aria-label="減らす">−</button>
@@ -596,6 +600,16 @@ footer b{font-family:var(--mono);font-weight:700}
           <button id="tomUp" type="button" aria-label="増やす">＋</button>
         </div>
       </div>
+    </div>
+    <div class="pane" style="margin-top:11px">
+      <div class="row">
+        <div class="cap">このキットを保存<span class="note">口径・深さ・ラグ数・本数をまとめて覚えます</span></div>
+      </div>
+      <div class="slsave">
+        <input id="mkName" type="text" maxlength="20" placeholder="名前（例 街スタ）" aria-label="キットの名前">
+        <button id="mkSave" type="button">保存</button>
+      </div>
+      <div class="sllist slsaved" id="mkSaved" hidden></div>
     </div>
     <div class="cards" id="kitList"></div>
     <div class="pane" style="margin-top:11px">
@@ -711,6 +725,17 @@ footer b{font-family:var(--mono);font-weight:700}
         <p>この式で早見表の全列が 1Hz 以内で再現できます。<strong>表裏の音程差を変えても実音は動きません</strong>。裏を高くしても、低くしても、表と同じ値にしても使えるのはこのためです。</p>
         <p>マイナーキーは平行調のメジャーと同じチューニングになります。E♭m は G♭、C#m は E と同じです。使う音が同じなので、鳴り自体を変える必要がありません。</p>
         <p>各ドラムの「実音」はスケールの音の中で上下できます。タムの並びを変えたいとき、特定の太鼓だけ合わなく感じるときに動かしてください。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>音作りとキットの保存</summary>
+      <div class="bd">
+        <p>キットタブの<strong>「音作り」</strong>は、キーとは別に<strong>音の高さと表裏の開きだけ</strong>を決めます。キーは触りません。「何調で張るか」と「どんな音にするか」は別の話なので、別の軸にしてあります。</p>
+        <p><strong>基準</strong>は早見表どおりで、高さは口径に合わせて自動で選びます。それ以外を選ぶと高さが固定され、キーを変えても音作りはそのまま残ります。自動に戻したいときは「基準」を押してください。</p>
+        <p>ジャンル名の中身は、このアプリの用語に置き換えた一般的な作り方です。ジャズは高めで表裏均等（＝よく伸びる）、メタルは低めで裏を4度下げる（＝短く締まる）、といった具合です。<strong>実測ではありません。</strong>合わなければキットタブで太鼓ごとに直してください。直した値が青栁さんの基準になります。</p>
+        <p>スネアの表裏だけは、どの音作りでも早見表の値から動かしていません。実際に張って詰めた数字なので、そこは基準として置いています。</p>
+        <p><strong>キットの保存。</strong>口径・深さ・ラグ数・本数をまとめて名前で覚えられます。「街スタ」「Heritage」のように分けておけば、場所ごとに呼び戻すだけで済みます。12件まで、同じ名前は上書きです。測定値は太鼓ごとに残るので、呼び戻しても消えません。</p>
       </div>
     </details>
 
@@ -947,7 +972,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{},setlist:[],saved:[]};
+          drums:buildKit("heritage"),preset:"heritage",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -960,6 +985,7 @@ footer b{font-family:var(--mono);font-weight:700}
       st.ltr=(typeof sv.ltr==="number"&&sv.ltr>=0&&sv.ltr<7&&pcOf(sv.ltr,
               (sv.acc===-1||sv.acc===0||sv.acc===1)?sv.acc:0)===st.live)?sv.ltr:la.l;
       st.acc=(sv.acc===-1||sv.acc===0||sv.acc===1)&&pcOf(st.ltr,sv.acc)===st.live?sv.acc:la.a;
+      st.serAuto=(sv.serAuto===false)?false:true;
       if(typeof sv.ser==="number"&&sv.ser>=0&&sv.ser<SER.length) st.ser=sv.ser;
       else if(sv.voic==="high") st.ser=1;          // 旧「高め／低め」からの移行
       else if(sv.voic==="low") st.ser=2;
@@ -980,6 +1006,11 @@ footer b{font-family:var(--mono);font-weight:700}
       if(sv.meas&&typeof sv.meas==="object") st.meas=sv.meas;
       if(typeof sv.tid==="string") st.tid=sv.tid;
       if(sv.thead==="top"||sv.thead==="bot"||sv.thead==="fund") st.thead=sv.thead;
+      if(Object.prototype.toString.call(sv.myKits)==="[object Array]")
+        st.myKits=sv.myKits.filter(function(x){
+          return x&&typeof x.name==="string"
+            &&Object.prototype.toString.call(x.drums)==="[object Array]"&&x.drums.length>=3;
+        }).slice(0,12);
       if(Object.prototype.toString.call(sv.saved)==="[object Array]")
         st.saved=sv.saved.filter(function(x){
           return x&&typeof x.name==="string"
@@ -1174,7 +1205,7 @@ footer b{font-family:var(--mono);font-weight:700}
   // オーディオセッションを切り替えて、そのたびに音が出てしまうため
   function micPause(){
     if(mic.raf) cancelAnimationFrame(mic.raf);
-    mic.raf=0; mic.reading=false;
+    mic.raf=0; mic.reading=false; DEC=null;
   }
   function micResume(){
     if(!mic.on||mic.reading) return;
@@ -1444,14 +1475,14 @@ footer b{font-family:var(--mono);font-weight:700}
     b.type="button"; b.className="sg"; b.dataset.mode=p[0]; b.textContent=p[1];
     b.addEventListener("click",function(){
       if(p[0]==="free"){ st.free=true; }
-      else { st.free=false; st.mode=p[0]; st.ser=recommend(st.live); }
+      else { st.free=false; st.mode=p[0]; }
       save(); render();
     });
     elModes.appendChild(b);
   });
   function pickKey(pc){
     if(st.keys.indexOf(pc)<0){ st.keys.push(pc); st.keys.sort(function(a,c){return a-c;}); }
-    st.live=pc; st.ser=recommend(pc); st.nudge=0; save(); render();
+    st.live=pc; st.nudge=0; save(); render();
   }
   [[-1,"♭"],[0,"♮"],[1,"♯"]].forEach(function(p){
     var b=document.createElement("button");
@@ -1477,7 +1508,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
   function setHead(h){
     if(st.thead===h) return;
-    st.thead=h; lug=0; edit=null; stopTone(); clearHits(); save(); render();
+    st.thead=h; lug=0; edit=null; DEC=null; stopTone(); clearHits(); save(); render();
   }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
@@ -1485,12 +1516,103 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){setHead(p[0]);});
     elHeads.appendChild(b);
   });
+  // 音作り：キーとは別に「高さ」と「表裏の開き」だけを決める。
+  // ser が小さいほど高い（SER は上から下へ降りる列）。iv は表裏の開き。
+  // スネアだけは実測レシピの値を動かさない。実際に張って詰めた数字なので基準にする。
+  // ジャンル名は目安で、値はこのアプリの用語に置き換えた一般的な作り方。
+  // 実測ではないので、合わなければキットタブの各ドラムで直してください。
+  var VOICE=[
+    ["base","基準","早見表どおり・高さは自動",2,0,IV_T],
+    ["jazz","ジャズ","高め・よく伸びる",1,0,0],
+    ["rock","ロック","中くらい・ほどよく締まる",2,0,-3],
+    ["funk","ファンク／R&B","高め・締まる",1,0,-4],
+    ["metal","メタル／ラウド","低め・短く締まる",3,0,-5],
+    ["ballad","バラード","低め・よく伸ばす",3,0,0]
+  ];
+  function voiceOf(){
+    for(var i=0;i<VOICE.length;i++){
+      var v=VOICE[i];
+      var auto=(v[0]==="base");
+      if(auto!==(st.serAuto!==false)) continue;
+      if(!auto&&st.ser!==Math.max(0,Math.min(v[3],serMax()-1))) continue;
+      var ok=true;
+      st.drums.forEach(function(d){
+        if(d.kind==="kick"&&d.iv!==v[4]) ok=false;
+        if(d.kind==="tom"&&d.iv!==v[5]) ok=false;
+      });
+      if(ok) return v[0];
+    }
+    return null;
+  }
+  function applyVoice(v){
+    st.serAuto=(v[0]==="base");
+    if(!st.serAuto) st.ser=Math.max(0,Math.min(v[3],serMax()-1));
+    else st.ser=recommend(st.live);
+    st.drums.forEach(function(d){
+      if(d.kind==="kick") d.iv=v[4];
+      else if(d.kind==="tom") d.iv=v[5];
+    });
+    st.nudge=0; save(); render();
+  }
+  VOICE.forEach(function(v){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sg"; b.dataset.voice=v[0];
+    b.textContent=v[1]; b.title=v[2];
+    b.setAttribute("aria-label",v[1]+" "+v[2]);
+    b.addEventListener("click",function(){ applyVoice(v); });
+    E("voices").appendChild(b);
+  });
+
+  // ---------- 自分のキットを保存する ----------
+  function mkSnap(){
+    return st.drums.map(function(d){
+      return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0};
+    });
+  }
+  function rMyKits(){
+    var S=E("mkSaved"); if(!S) return;
+    S.innerHTML="";
+    st.myKits.forEach(function(x,i){
+      var c=document.createElement("span"); c.className="slchip";
+      var b=document.createElement("button");
+      b.type="button"; b.className="nm";
+      b.textContent=x.name+"（"+x.drums.filter(function(d){return d.kind==="tom";}).length+"タム）";
+      b.addEventListener("click",function(){
+        st.drums=x.drums.map(function(d){
+          return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0};
+        });
+        renameToms(st.drums);
+        st.drums.forEach(trimMeas);
+        st.preset=""; st.serAuto=false;
+        if(!byId(st.tid)) st.tid=st.drums[2]?st.drums[2].id:"kick";
+        st.ser=Math.max(0,Math.min(st.ser,serMax()-1));
+        lug=0; save(); render();
+      });
+      var d2=document.createElement("button");
+      d2.type="button"; d2.textContent="×"; d2.setAttribute("aria-label",x.name+" を消す");
+      d2.addEventListener("click",function(){ st.myKits.splice(i,1); save(); rMyKits(); });
+      c.appendChild(b); c.appendChild(d2); S.appendChild(c);
+    });
+    S.hidden=!st.myKits.length;
+  }
+  E("mkSave").addEventListener("click",function(){
+    var b=this, nm=E("mkName"), n=(nm.value||"").trim().slice(0,20);
+    function flash(t){ b.textContent=t; setTimeout(function(){b.textContent="保存";},1600); }
+    if(!n){ flash("名前を入れて"); nm.focus(); return; }
+    var i,found=-1;
+    for(i=0;i<st.myKits.length;i++) if(st.myKits[i].name===n) found=i;
+    var rec={name:n,drums:mkSnap()};
+    if(found>=0) st.myKits[found]=rec; else st.myKits.push(rec);
+    if(st.myKits.length>12) st.myKits.shift();
+    save(); rMyKits(); flash(found>=0?"上書きしました":"保存しました");
+  });
+
   Object.keys(PRE).forEach(function(id){
     var b=document.createElement("button");
     b.type="button"; b.className="sg"; b.dataset.pre=id; b.textContent=PRE[id].label;
     b.addEventListener("click",function(){
       st.drums=buildKit(id); st.preset=id; st.meas={};
-      st.tid=st.drums[2].id; lug=0; st.ser=recommend(st.live); save(); render();
+      st.tid=st.drums[2].id; lug=0; st.serAuto=true; st.ser=recommend(st.live); save(); render();
     });
     elPresets.appendChild(b);
   });
@@ -1620,8 +1742,10 @@ footer b{font-family:var(--mono);font-weight:700}
       t.setAttribute("aria-pressed",t.dataset.v===st.view?"true":"false");
     });
     moveTab();
-    // タムが乗る高さは、口径ごとの張力の目安に収まるものを自動で選ぶ
-    st.ser=recommend(st.live);
+    // タムが乗る高さは、口径ごとの張力の目安に収まるものを自動で選ぶ。
+    // ただし「音作り」や曲の照合で高さを指定したときは、その指定を残す
+    if(st.serAuto!==false) st.ser=recommend(st.live);
+    st.ser=Math.max(0,Math.min(st.ser,serMax()-1));
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc"; elVS.hidden=st.view!=="song";
     if(st.view==="doc") syncLine();
@@ -1652,13 +1776,13 @@ footer b{font-family:var(--mono);font-weight:700}
       var w=document.createElement("span");
       w.className="pk"; w.dataset.live=k===st.live?"1":"0";
       var t=document.createElement("b"); t.textContent=keyName(k);
-      t.addEventListener("click",function(){st.live=k;st.ser=recommend(k);st.nudge=0;save();render();});
+      t.addEventListener("click",function(){st.live=k;st.nudge=0;save();render();});
       var x=document.createElement("button");
       x.type="button"; x.textContent="×"; x.setAttribute("aria-label",keyName(k)+" を外す");
       x.addEventListener("click",function(){
         if(st.keys.length<=1) return;
         st.keys=st.keys.filter(function(v){return v!==k;});
-        if(st.live===k){st.live=st.keys[0];st.ser=recommend(st.live);st.nudge=0;}
+        if(st.live===k){st.live=st.keys[0];st.nudge=0;}
         save();render();
       });
       w.appendChild(t); w.appendChild(x); elPicked.appendChild(w);
@@ -1876,6 +2000,11 @@ footer b{font-family:var(--mono);font-weight:700}
   }
 
   function rKit(){
+    var vnow=voiceOf();
+    Array.prototype.forEach.call(E("voices").children,function(b){
+      b.setAttribute("aria-pressed",b.dataset.voice===vnow?"true":"false");
+    });
+    rMyKits();
     Array.prototype.forEach.call(elPresets.children,function(b){
       b.setAttribute("aria-pressed",b.dataset.pre===st.preset?"true":"false");
     });
@@ -2436,7 +2565,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-091049";
+  var BUILD="20261022-092109";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -2920,6 +3049,10 @@ footer b{font-family:var(--mono);font-weight:700}
     var wO=null, wH=null, wde=null, wnb=Math.floor(1200*Math.log2(DFHI/DFLO)/DFBIN)+2;
 
     function step(){
+      try{ step0(); }
+      catch(err){ done(res||null); }          // 途中で転んでも画面を固めない
+    }
+    function step0(){
       var t0=Date.now(), j,k,o,q,v,b,m;
       while(Date.now()-t0<40){
         if(stage===0){                                  // 短時間フーリエ変換
@@ -3226,7 +3359,9 @@ footer b{font-family:var(--mono);font-weight:700}
       fb.type="button"; fb.className="go2";
       fb.textContent=KEYS[fit.ki]+" でこのレシピにする";
       fb.addEventListener("click",function(){
-        st.free=false; st.mode="major"; st.live=fit.ki; st.ser=fit.ser; st.nudge=0;
+        st.free=false; st.mode="major"; st.live=fit.ki; st.nudge=0;
+        st.serAuto=false;
+        st.ser=Math.max(0,Math.min(fit.ser,serMax()-1));
         if(st.keys.indexOf(fit.ki)<0){ st.keys.push(fit.ki); st.keys.sort(function(x,y){return x-y;}); }
         var la2=deriveLA(fit.ki); st.ltr=la2.l; st.acc=la2.a;
         st.view="recipe"; save(); render();
@@ -3338,7 +3473,7 @@ footer b{font-family:var(--mono);font-weight:700}
     var g=document.createElement("button");
     g.type="button"; g.className="go2"; g.textContent=KEYS[best.T]+" で張る";
     g.addEventListener("click",function(){
-      st.free=false; st.mode="major"; st.live=best.T; st.ser=recommend(best.T); st.nudge=0;
+      st.free=false; st.mode="major"; st.live=best.T; st.nudge=0;
       if(st.keys.indexOf(best.T)<0){ st.keys.push(best.T); st.keys.sort(function(a,b2){return a-b2;}); }
       var la=deriveLA(best.T); st.ltr=la.l; st.acc=la.a;
       st.view="recipe"; save(); render(); anim(elVR,"enter-right",340);
@@ -3400,7 +3535,7 @@ footer b{font-family:var(--mono);font-weight:700}
     fr.onerror=function(){ songFail("ファイルを読めませんでした。"); };
     fr.onload=function(){
       try{
-        a.decodeAudioData(fr.result,function(ab){
+        var dec=a.decodeAudioData(fr.result,function(ab){
           var sr=ab.sampleRate,L=ab.length;
           var c0=ab.getChannelData(0), c1=ab.numberOfChannels>1?ab.getChannelData(1):null;
           // 真ん中あたりから最大2分。イントロと終わりは避ける
@@ -3434,6 +3569,9 @@ footer b{font-family:var(--mono);font-weight:700}
               }
             });
         },function(){ songFail("この形式は読み込めませんでした。m4a・mp3・wav などで試してください。"); });
+        // 新しいブラウザはコールバックとは別に Promise も返す。
+        // 受けておかないと、読めないファイルのたびに未処理の拒否が出る
+        if(dec&&dec.catch) dec.catch(function(){});
       }catch(e){ songFail("この形式は読み込めませんでした。"); }
     };
     fr.readAsArrayBuffer(file);
