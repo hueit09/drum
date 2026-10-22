@@ -1258,9 +1258,10 @@ footer b{font-family:var(--mono);font-weight:700}
     // ここは要素をまとめて取る前なので、直接引く
     var m=document.getElementById("mn"); if(!m) return;
     m.addEventListener("click",function(){
-      if(mic.on||mic.starting) return;
+      try{ if(ac&&ac.state!=="running") ac.resume(); }catch(e){}
+      if(mic.on||mic.starting){ m.hidden=true; silSince=0; return; }
       mic.failed=false; m.textContent="マイクを確認中";
-      micStart(function(ok){ if(ok){ m.hidden=true; } else micMsg(); render(); });
+      micStart(function(ok){ if(ok){ m.hidden=true; silSince=0; } else micMsg(); render(); });
     });
   })();
   // 画面を離れただけならストリームは保持する。掴み直すとiOSが
@@ -1303,6 +1304,7 @@ footer b{font-family:var(--mono);font-weight:700}
       })
       .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); if(cb) cb(false); });
   }
+  var silSince=0;
   function micLoop(){
     if(!mic.on||!mic.reading) return;
     mic.raf=requestAnimationFrame(micLoop);
@@ -1311,6 +1313,16 @@ footer b{font-family:var(--mono);font-weight:700}
     var n=b.length,i,s=0;
     for(i=n-1024;i<n;i++) s+=b[i]*b[i];
     var rms=Math.sqrt(s/1024), now=(window.performance&&performance.now)?performance.now():Date.now();
+    // まったくの無音が続くのは、端末が音声処理を止めている合図。黙っていると
+    // 「叩いても反応しない」になるので、気づけるように出す
+    if(rms>0){ silSince=0; if(!elMn.hidden&&mic.on&&!mic.failed) elMn.hidden=true; }
+    else {
+      if(!silSince) silSince=now;
+      else if(now-silSince>2500&&elMn.hidden){
+        elMn.hidden=false;
+        elMn.textContent="マイクが止まっています　画面をタップで再開";
+      }
+    }
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
     var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
     if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
@@ -2758,6 +2770,13 @@ footer b{font-family:var(--mono);font-weight:700}
     });
   })();
 
+  // 画面を離れて戻ると、端末が音声処理を止めたままにすることがある。
+  // そのままだとマイクは掴めていても無音しか届かず、叩いても反応しない。
+  // どの操作でも起こし直す（すでに動いていれば何もしない）
+  document.addEventListener("pointerdown",function(){
+    try{ if(ac&&ac.state!=="running") ac.resume(); }catch(e){}
+  },true);
+
   var elSplash=E("splash"), elStart=E("btnStart"), elSpNote=E("spNote");
   function enterApp(){
     elSplash.classList.add("gone");
@@ -2778,7 +2797,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-124438";
+  var BUILD="20261022-130408";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3868,7 +3887,7 @@ footer b{font-family:var(--mono);font-weight:700}
       +"　※送りっぱなしの方式なので、この件数は届いた証拠にはなりません。";
   }
 
-  function checkUpdate(){
+  function checkUpdate(soft){
     if(!window.fetch||BUILD.charAt(0)==="_") return;
     fetch("version.json?t="+Date.now(),{cache:"no-store"})
       .then(function(r){return r.ok?r.json():null;})
@@ -3876,7 +3895,7 @@ footer b{font-family:var(--mono);font-weight:700}
         if(!j||!j.build||j.build===BUILD) return;
         // マイクを掴んだまま読み込み直すと iOS が音を鳴らすので、
         // 作動中は黙って見送らず、押してもらってから入れ替える
-        if(mic.on){ var u=E("updBar"); if(u) u.hidden=false; }
+        if(mic.on||soft){ var u=E("updBar"); if(u) u.hidden=false; }
         else location.reload();
       })
       .catch(function(){});
@@ -3897,18 +3916,12 @@ footer b{font-family:var(--mono);font-weight:700}
     if(mic.on){ micHeld=true; micStop(); render(); }
   }
   function appVisible(){
-    checkUpdate();
+    // 戻った直後に読み込み直すと、操作の途中で初期画面へ飛ばされる。
+    // 新しい版があっても、ここでは帯を出すだけにする
+    checkUpdate(true);
     if(!micHeld) return;
     micHeld=false;
-    micStart(function(ok){
-      if(!ok){ render(); return; }
-      // 復帰直後は音を扱う権利が止まっていることがあるので、最初の操作で戻す
-      var once=function(){
-        try{ ctx(); }catch(e){}
-        document.removeEventListener("pointerdown",once,true);
-      };
-      document.addEventListener("pointerdown",once,true);
-    });
+    micStart(function(ok){ if(!ok) render(); });
   }
   document.addEventListener("visibilitychange",function(){
     if(document.hidden) appHidden(); else appVisible();
