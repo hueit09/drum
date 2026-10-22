@@ -1325,6 +1325,8 @@ footer b{font-family:var(--mono);font-weight:700}
     }
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
     var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
+    // 余韻の測定は実音モードでチューナーを見ているときだけ。裏で重い計算を回さない
+    if(DEC&&(st.view!=="tune"||st.thead!=="fund")) DEC=null;
     if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
     if(mic.armed&&rms>thr&&now-mic.last>650){
       mic.armed=false; mic.last=now;
@@ -2797,7 +2799,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-130408";
+  var BUILD="20261022-131047";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3909,22 +3911,15 @@ footer b{font-family:var(--mono);font-weight:700}
   // 切り替えて音が出るため、そちらは micPause で止めるだけ）。
   // ただし別のアプリに移ったときは離す。掴みっぱなしだと録音中の表示が出たままになり、
   // 他のアプリがマイクを使えず、電池も減り続けるため。
-  var micHeld=false;
+  // 別アプリに移ったときマイクを離す作りを試したが、戻ったあとの読みが
+  // 不安定になったため取りやめ。掴んだままにして、確実に鳴る方を優先する。
+  // （掴みっぱなしの件は、原因を切り分けてから作り直す）
   function appHidden(){
     stopTone();
     try{ drumStop(); }catch(e){}
-    if(mic.on){ micHeld=true; micStop(); render(); }
-  }
-  function appVisible(){
-    // 戻った直後に読み込み直すと、操作の途中で初期画面へ飛ばされる。
-    // 新しい版があっても、ここでは帯を出すだけにする
-    checkUpdate(true);
-    if(!micHeld) return;
-    micHeld=false;
-    micStart(function(ok){ if(!ok) render(); });
   }
   document.addEventListener("visibilitychange",function(){
-    if(document.hidden) appHidden(); else appVisible();
+    if(document.hidden) appHidden(); else checkUpdate(true);
   });
   window.addEventListener("pagehide",appHidden);
 
