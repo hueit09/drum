@@ -282,6 +282,25 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .sg{flex:1 1 0;min-width:0;font-size:13px;font-weight:700;min-height:44px;padding:8px 10px;text-align:center;white-space:nowrap;letter-spacing:.02em;background:var(--sunk);color:var(--dim);border:2px solid transparent;border-radius:13px;transition:background .2s var(--ease),color .2s,border-color .2s,transform .13s var(--ease)}
 .sg:active{transform:scale(.95)}
 .sg[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc);box-shadow:var(--sh-lift)}
+.kitbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:11px 8px 10px;min-height:0;white-space:normal;flex:1 1 42%}
+.kiti{display:block;width:100%;max-width:104px;height:auto;fill:none;
+  stroke-linecap:round;vector-effect:non-scaling-stroke}
+.kiti .kt{stroke:currentColor;stroke-width:2;opacity:.55}
+.kiti .ks{stroke:currentColor;stroke-width:2;opacity:.75}
+.kiti .kk{stroke:var(--acc);stroke-width:2.4}
+.sg[aria-pressed="true"] .kiti .kk{stroke:var(--acc-fg)}
+.vob{flex:1 1 30%;display:flex;flex-direction:column;align-items:center;gap:2px;
+  white-space:normal;padding:9px 6px;line-height:1.25}
+.vob i{font-style:normal;font-size:12.5px;font-weight:800}
+.vob small{font-size:9.5px;font-weight:700;opacity:.72;margin:0;letter-spacing:0}
+.kitl{font-size:11.5px;font-weight:700;letter-spacing:.02em;line-height:1.2}
+.kitchip{display:inline-flex;align-items:center;gap:4px;padding:6px 8px 6px 6px;border-radius:13px;
+  background:var(--card);border:1px solid var(--line)}
+.kitchip .nm{display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:transparent;border:0;color:var(--acc);padding:2px 4px}
+.kitchip .kiti{width:86px}
+.kitchip .kx{border:0;background:transparent;color:var(--dim);font-size:15px;line-height:1;padding:2px 4px}
 .sg small{font-size:9px;font-weight:700;letter-spacing:.04em;opacity:.7;margin-left:6px}
 
 .step{display:inline-flex;align-items:center;gap:5px}
@@ -1516,6 +1535,51 @@ footer b{font-family:var(--mono);font-weight:700}
     b.addEventListener("click",function(){setHead(p[0]);});
     elHeads.appendChild(b);
   });
+  // キットを小さな絵にする。ロゴと同じ「下に切れ目のある輪」で太鼓を描く。
+  // 大きさは口径そのまま、並びは上がタム・下にキックとスネア。
+  var KI_W=104, KI_H=58, KI_GAP=15;            // 切れ目はロゴと同じ上下30度ぶん
+  function kiArc(cx,cy,r){
+    var a0=(180-KI_GAP)*Math.PI/180, a1=(180+KI_GAP)*Math.PI/180;
+    function p(a){ return [(cx+r*Math.sin(a)).toFixed(2),(cy-r*Math.cos(a)).toFixed(2)]; }
+    var s0=p(-a0), s1=p(a0);
+    return "M"+s0[0]+" "+s0[1]+"A"+r.toFixed(2)+" "+r.toFixed(2)+" 0 1 1 "+s1[0]+" "+s1[1];
+  }
+  function kitSvg(drums){
+    var ds=drums||[], kick=null, snare=null, toms=[], i;
+    for(i=0;i<ds.length;i++){
+      if(ds[i].kind==="kick") kick=ds[i];
+      else if(ds[i].kind==="snare") snare=ds[i];
+      else toms.push(ds[i]);
+    }
+    var mx=0;
+    ds.forEach(function(d){ if(d.dia>mx) mx=d.dia; });
+    if(!(mx>0)) mx=22;
+    var sc=21/mx, parts=[];                     // いちばん大きい太鼓の半径が 21 になるよう揃える
+    function ring(d,cx,cy,cls){
+      var r=Math.max(3.4,d.dia*0.5*sc);
+      parts.push('<path d="'+kiArc(cx,cy,r)+'" class="'+cls+'"/>');
+      return r;
+    }
+    // タム：上に並べる。小さい順に左から
+    var sorted=toms.slice().sort(function(a,b){return a.dia-b.dia;});
+    var tw=0;
+    sorted.forEach(function(d){ tw+=Math.max(3.4,d.dia*0.5*sc)*2; });
+    var n=sorted.length, gap=n>1?Math.min(5,(KI_W-14-tw)/(n-1)):0;
+    var x=(KI_W-(tw+gap*Math.max(0,n-1)))/2;
+    sorted.forEach(function(d){
+      var r=Math.max(3.4,d.dia*0.5*sc);
+      x+=r; ring(d,x,r+3,"kt"); x+=r+gap;
+    });
+    // キックとスネア：下に置く
+    var ky=KI_H-13, kr=kick?Math.max(5,kick.dia*0.5*sc):0;
+    if(kick) ring(kick,KI_W*0.56,ky-(kr-11),"kk");
+    if(snare) ring(snare,KI_W*0.17,ky+2,"ks");
+    return '<svg class="kiti" viewBox="0 0 '+KI_W+' '+KI_H+'" aria-hidden="true">'+parts.join("")+"</svg>";
+  }
+  function kitBtnHTML(drums,label){
+    return kitSvg(drums)+'<span class="kitl">'+label+"</span>";
+  }
+
   // 音作り：キーとは別に「高さ」と「表裏の開き」だけを決める。
   // ser が小さいほど高い（SER は上から下へ降りる列）。iv は表裏の開き。
   // スネアだけは実測レシピの値を動かさない。実際に張って詰めた数字なので基準にする。
@@ -1525,8 +1589,8 @@ footer b{font-family:var(--mono);font-weight:700}
     ["base","基準","早見表どおり・高さは自動",2,0,IV_T],
     ["jazz","ジャズ","高め・よく伸びる",1,0,0],
     ["rock","ロック","中くらい・ほどよく締まる",2,0,-3],
-    ["funk","ファンク／R&B","高め・締まる",1,0,-4],
-    ["metal","メタル／ラウド","低め・短く締まる",3,0,-5],
+    ["funk","ファンク","高め・締まる（R&B系）",1,0,-4],
+    ["metal","メタル","低め・短く締まる（ラウド系）",3,0,-5],
     ["ballad","バラード","低め・よく伸ばす",3,0,0]
   ];
   function voiceOf(){
@@ -1556,8 +1620,9 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   VOICE.forEach(function(v){
     var b=document.createElement("button");
-    b.type="button"; b.className="sg"; b.dataset.voice=v[0];
-    b.textContent=v[1]; b.title=v[2];
+    b.type="button"; b.className="sg vob"; b.dataset.voice=v[0];
+    b.innerHTML='<i>'+v[1]+'</i><small>'+v[2]+'</small>';
+    b.title=v[2];
     b.setAttribute("aria-label",v[1]+" "+v[2]);
     b.addEventListener("click",function(){ applyVoice(v); });
     E("voices").appendChild(b);
@@ -1575,8 +1640,12 @@ footer b{font-family:var(--mono);font-weight:700}
     st.myKits.forEach(function(x,i){
       var c=document.createElement("span"); c.className="slchip";
       var b=document.createElement("button");
-      b.type="button"; b.className="nm";
-      b.textContent=x.name+"（"+x.drums.filter(function(d){return d.kind==="tom";}).length+"タム）";
+      b.type="button"; b.className="nm kitbtn";
+      b.innerHTML=kitBtnHTML(x.drums,"");
+      var nm2=document.createElement("span"); nm2.className="kitl";
+      nm2.textContent=x.name;
+      b.appendChild(nm2);
+      b.setAttribute("aria-label",x.name+" を読み込む");
       b.addEventListener("click",function(){
         st.drums=x.drums.map(function(d){
           return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0};
@@ -1589,8 +1658,10 @@ footer b{font-family:var(--mono);font-weight:700}
         lug=0; save(); render();
       });
       var d2=document.createElement("button");
-      d2.type="button"; d2.textContent="×"; d2.setAttribute("aria-label",x.name+" を消す");
+      d2.type="button"; d2.className="kx"; d2.textContent="×";
+      d2.setAttribute("aria-label",x.name+" を消す");
       d2.addEventListener("click",function(){ st.myKits.splice(i,1); save(); rMyKits(); });
+      c.className="kitchip";
       c.appendChild(b); c.appendChild(d2); S.appendChild(c);
     });
     S.hidden=!st.myKits.length;
@@ -1609,7 +1680,9 @@ footer b{font-family:var(--mono);font-weight:700}
 
   Object.keys(PRE).forEach(function(id){
     var b=document.createElement("button");
-    b.type="button"; b.className="sg"; b.dataset.pre=id; b.textContent=PRE[id].label;
+    b.type="button"; b.className="sg kitbtn"; b.dataset.pre=id;
+    b.innerHTML=kitBtnHTML(buildKit(id),PRE[id].label);
+    b.setAttribute("aria-label",PRE[id].label);
     b.addEventListener("click",function(){
       st.drums=buildKit(id); st.preset=id; st.meas={};
       st.tid=st.drums[2].id; lug=0; st.serAuto=true; st.ser=recommend(st.live); save(); render();
@@ -2565,7 +2638,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-092109";
+  var BUILD="20261022-092917";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
