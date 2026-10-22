@@ -943,12 +943,15 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var PRE={
     // 貸しスタジオの定番。少し前の年式は 12/14、最近の年式は 10/12 のラックタムが多い
-    std1:{label:"標準1",kick:[22,16],snare:[14,5.5],toms:[[12,9],[14,14],[16,16]]},
-    std2:{label:"標準2",kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[16,16]]},
-    t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]]},
-    cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]]},
-    // ラグ数は実機の写真から。タムは口径によらず8本
-    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]],lugs:{tom:8}}
+    // floors ＝ 大きい方から何台がフロアタムか。14インチはキットによって
+    // ラック（ロータム）にもフロアにもなるので、口径だけでは決められない
+    std1:{label:"標準1",kick:[22,16],snare:[14,5.5],toms:[[12,9],[14,11],[16,16]],floors:1},
+    std2:{label:"標準2",kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[16,16]],floors:1},
+    t13:{label:'13"構成',kick:[22,16],snare:[14,5.5],toms:[[10,8],[12,9],[13,10],[16,16]],floors:1},
+    cmp:{label:"3点",kick:[20,14],snare:[14,5.5],toms:[[12,9],[14,14]],floors:1},
+    // ラグ数は実機の写真から。タムは口径によらず8本。14"と16"がフロア
+    heritage:{label:"Heritage",kick:[22,18],snare:[14,8],toms:[[10,10],[12,12],[14,16],[16,18]],
+              lugs:{tom:8},floors:2}
   };
 
   // タムの呼び名。14インチ以上はフロアタム扱い、それ未満は口径で決める
@@ -957,7 +960,9 @@ footer b{font-family:var(--mono);font-weight:700}
     var fl=0, used={};
     ts.forEach(function(d){
       var nm;
-      if(d.dia>=14){ fl++; nm=(fl===1?"フロアタム":"フロア"+fl); }
+      // プリセットが「フロア」と決めていればそれに従う。決まっていなければ口径で見る
+      var isFloor=(typeof d.floor==="boolean")?d.floor:(d.dia>=14);
+      if(isFloor){ fl++; nm=(fl===1?"フロアタム":"フロア"+fl); }
       else if(d.dia<=10) nm="テンタム";
       else if(d.dia<=12) nm="ハイタム";
       else nm="ロータム";
@@ -1007,8 +1012,10 @@ footer b{font-family:var(--mono);font-weight:700}
     function lg(k,d){ return (p.lugs&&p.lugs[k]>0)?p.lugs[k]:lugsFor(k,d); }
     out.push({id:"kick",kind:"kick",name:"キック",dia:p.kick[0],dep:p.kick[1],lugs:lg("kick",p.kick[0]),iv:IV_K,deg:0});
     out.push({id:"snare",kind:"snare",name:"スネア",dia:p.snare[0],dep:p.snare[1],lugs:lg("snare",p.snare[0]),iv:IV_S,deg:0});
+    var nf=(typeof p.floors==="number")?p.floors:0;
     p.toms.forEach(function(t,i){
-      out.push({id:"t"+i,kind:"tom",name:"",dia:t[0],dep:t[1],lugs:lg("tom",t[0]),iv:IV_T,deg:0});
+      out.push({id:"t"+i,kind:"tom",name:"",dia:t[0],dep:t[1],lugs:lg("tom",t[0]),iv:IV_T,deg:0,
+                floor:i>=p.toms.length-nf});
     });
     return renameToms(out);
   }
@@ -1721,7 +1728,8 @@ footer b{font-family:var(--mono);font-weight:700}
   // ---------- 自分のキットを保存する ----------
   function mkSnap(){
     return st.drums.map(function(d){
-      return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0};
+      return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0,
+              floor:d.floor};
     });
   }
   function rMyKits(){
@@ -1740,7 +1748,8 @@ footer b{font-family:var(--mono);font-weight:700}
       b.setAttribute("aria-label",x.name+" を読み込む");
       b.addEventListener("click",function(){
         st.drums=x.drums.map(function(d){
-          return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0};
+          return {id:d.id,kind:d.kind,name:d.name,dia:d.dia,dep:d.dep,lugs:d.lugs,iv:d.iv,deg:d.deg||0,
+                  floor:d.floor};
         });
         renameToms(st.drums);
         st.drums.forEach(trimMeas);
@@ -2760,7 +2769,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-105703";
+  var BUILD="20261022-112514";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
