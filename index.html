@@ -1252,8 +1252,17 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   function micMsg(){
     elMn.hidden=false;
-    elMn.textContent="マイクが使えないので手入力モードです";
+    elMn.textContent="マイクが使えないので手入力モードです　タップで再試行";
   }
+  (function(){
+    // ここは要素をまとめて取る前なので、直接引く
+    var m=document.getElementById("mn"); if(!m) return;
+    m.addEventListener("click",function(){
+      if(mic.on||mic.starting) return;
+      mic.failed=false; m.textContent="マイクを確認中";
+      micStart(function(ok){ if(ok){ m.hidden=true; } else micMsg(); render(); });
+    });
+  })();
   // 画面を離れただけならストリームは保持する。掴み直すとiOSが
   // オーディオセッションを切り替えて、そのたびに音が出てしまうため
   function micPause(){
@@ -1265,7 +1274,7 @@ footer b{font-family:var(--mono);font-weight:700}
     mic.reading=true; mic.armed=true; mic.floor=0.002; micLoop();
   }
   function micStop(){
-    mic.on=false; mic.starting=false; mic.reading=false;
+    mic.on=false; mic.starting=false; mic.reading=false; DEC=null;
     if(mic.raf) cancelAnimationFrame(mic.raf);
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
@@ -2769,7 +2778,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-112514";
+  var BUILD="20261022-124438";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3877,11 +3886,34 @@ footer b{font-family:var(--mono);font-weight:700}
     try{ micStop(); }catch(e){}
     location.reload();
   });
-  // 戻るたびにマイクを掴み直すとiOSがオーディオセッションを切り替えて音が出るので、
-  // ストリームは保持したままにする。更新も鳴動の原因になるため、マイク作動中は読み込み直さない。
+  // アプリ内のタブ移動では掴んだままにする（掴み直すとiOSがオーディオセッションを
+  // 切り替えて音が出るため、そちらは micPause で止めるだけ）。
+  // ただし別のアプリに移ったときは離す。掴みっぱなしだと録音中の表示が出たままになり、
+  // 他のアプリがマイクを使えず、電池も減り続けるため。
+  var micHeld=false;
+  function appHidden(){
+    stopTone();
+    try{ drumStop(); }catch(e){}
+    if(mic.on){ micHeld=true; micStop(); render(); }
+  }
+  function appVisible(){
+    checkUpdate();
+    if(!micHeld) return;
+    micHeld=false;
+    micStart(function(ok){
+      if(!ok){ render(); return; }
+      // 復帰直後は音を扱う権利が止まっていることがあるので、最初の操作で戻す
+      var once=function(){
+        try{ ctx(); }catch(e){}
+        document.removeEventListener("pointerdown",once,true);
+      };
+      document.addEventListener("pointerdown",once,true);
+    });
+  }
   document.addEventListener("visibilitychange",function(){
-    if(document.hidden) stopTone(); else checkUpdate();
+    if(document.hidden) appHidden(); else appVisible();
   });
+  window.addEventListener("pagehide",appHidden);
 
   if(window.matchMedia){
     try{
