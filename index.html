@@ -337,8 +337,10 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px 15px;display:grid;gap:12px;box-shadow:var(--sh)}
 .card.gap{margin-top:12px}
 .ch{display:flex;align-items:center;gap:9px}
-/* 名前とサイズはひとかたまり。狭いときはここだけが折り返し、実音は右に残る */
-.cn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+/* 名前とサイズはひとかたまり。狭いときはここだけが折り返し、実音は右に残る。
+   フロアタムのような長い名前でも1行に収まるよう、ここだけ少し詰める */
+.cn{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+#cards .badge{font-size:13.5px;padding:6px 12px;gap:7px}
 .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:14.5px;font-weight:700;letter-spacing:.02em}
 .badge i{width:6px;height:6px;border-radius:50%;flex:none}
 .badge.kick{background:var(--kick-soft);color:var(--kick)} .badge.kick i{background:var(--kick)}
@@ -357,7 +359,18 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 /* 輪を進み具合の計器として置き、その横に表裏を1行ずつ。
    チューナーと同じモチーフなので、どの輪がどのヘッドか迷わない */
 .hh{display:flex;align-items:center;gap:11px;min-width:0}
-.rfig{flex:none;width:62px;height:62px}
+/* 輪そのものが「音を作る」。合わせるはその下。ボタンの行がひとつ減る */
+.hside{flex:none;width:74px;display:grid;gap:7px;justify-items:center}
+.rbtn{display:grid;justify-items:center;gap:2px;background:none;border:0;padding:0;
+  color:var(--acc);transition:transform .13s var(--ease)}
+.rbtn:active:not(:disabled){transform:scale(.93)}
+.rbtn:disabled{opacity:1}
+.rbtn span{font-size:9.5px;font-weight:700;letter-spacing:.03em}
+.hside .go.sm{width:100%;font-size:10.5px;font-weight:700;letter-spacing:.03em;
+  padding:10px 4px;min-height:40px;background:var(--acc-soft);color:var(--acc);
+  border:0;border-radius:999px;transition:transform .13s var(--ease)}
+.hside .go.sm:active{transform:scale(.93)}
+.rfig{flex:none;width:58px;height:58px}
 .rfig svg{width:100%;height:100%;display:block;fill:none;stroke-linecap:round;overflow:visible}
 .rfig .trk{stroke:var(--raise);stroke-width:2.1}
 .rfig .prg{stroke-width:2.6;transition:stroke-dasharray .5s var(--ease)}
@@ -394,16 +407,8 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 
 .cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .cf label{font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;letter-spacing:.03em}
-.cf .acts{margin-left:auto;display:flex;gap:8px}
 .cf select{flex:1 1 150px;min-width:0}
 .cf select{font-family:var(--sans);font-size:12.5px;font-weight:500;padding:9px 11px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:100%}
-.cf .go.wgo{display:inline-flex;align-items:center;gap:7px;padding-left:13px}
-.cf .go.wgo svg{width:17px;height:17px;flex:none;fill:none;stroke-linecap:round}
-.cf .go.wgo .w1{stroke:currentColor;stroke-width:1.9;opacity:.45}
-.cf .go.wgo .w2{stroke:currentColor;stroke-width:1.9;opacity:.7}
-.cf .go.wgo .w3{stroke:currentColor;stroke-width:2.2}
-.cf .go{font-size:12px;font-weight:700;letter-spacing:.03em;padding:12px 18px;min-height:44px;background:var(--acc-soft);color:var(--acc);border:0;border-radius:999px;transition:transform .13s var(--ease),background .2s}
-.cf .go:active{transform:scale(.93)}
 .warn{display:flex;gap:9px;align-items:baseline;padding:9px 13px;border-radius:13px;background:var(--off-soft);color:var(--off);font-size:11.5px;line-height:1.6}
 .warn b{font-size:10px;font-weight:700;flex:none;letter-spacing:.05em}
 
@@ -2328,8 +2333,27 @@ footer b{font-family:var(--mono);font-weight:700}
       });
 
       var hh=document.createElement("div"); hh.className="hh";
+      // 輪そのものを「音を作る」にする。何が開くのかが絵でそのまま分かるし、
+      // ボタンの行がひとつ減るぶんカードが縮む
+      var side=document.createElement("div"); side.className="hside";
+      var mk=document.createElement("button");
+      mk.type="button"; mk.className="rbtn";
+      mk.setAttribute("aria-label",d.name+"の音を作る");
       // 中心＝打面、中間＝裏面、外＝実音。揃ったラグのぶんだけ輪が濃くなる
-      hh.appendChild(ringFig(HD,d,mf>0));
+      mk.appendChild(ringFig(HD,d,mf>0));
+      var mkl=document.createElement("span"); mkl.textContent="音を作る";
+      mk.appendChild(mkl);
+      mk.addEventListener("click",function(){ wheelOpen(d); });
+      mk.disabled=st.free; mkl.hidden=st.free;
+      var go=document.createElement("button");
+      go.type="button"; go.className="go sm"; go.textContent="合わせる";
+      go.addEventListener("click",function(){
+        st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null;
+        zoom=true; save(); render();
+        anim(elVT,"enter-right",340);
+      });
+      side.appendChild(mk); side.appendChild(go);
+      hh.appendChild(side);
       var rows=document.createElement("div"); rows.className="hrows";
       HD.forEach(function(h){
         var row=document.createElement("div"); row.className="hr "+h.k;
@@ -2389,26 +2413,8 @@ footer b{font-family:var(--mono);font-weight:700}
         sel.appendChild(op);
       });
       sel.addEventListener("change",function(){d.iv=parseFloat(sel.value);save();render();});
-      var acts=document.createElement("div"); acts.className="acts";
-      var mk=document.createElement("button");
-      mk.type="button"; mk.className="go wgo";
-      // 何が開くのかがひと目で分かるよう、三重の輪をボタンに描く
-      mk.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'
-        +'<path d="M8.9 21.3A10.6 10.6 0 1 1 15.1 21.3" class="w1"/>'
-        +'<path d="M9.9 17.3A6.8 6.8 0 1 1 14.1 17.3" class="w2"/>'
-        +'<path d="M10.8 13.4A3.1 3.1 0 1 1 13.2 13.4" class="w3"/>'
-        +'</svg><span>音を作る</span>';
-      mk.addEventListener("click",function(){ wheelOpen(d); });
-      var go=document.createElement("button");
-      go.type="button"; go.className="go"; go.textContent="合わせる";
-      go.addEventListener("click",function(){
-        st.tid=d.id; st.thead="top"; st.view="tune"; lug=0; edit=null;
-        zoom=true; save(); render();
-        anim(elVT,"enter-right",340);
-      });
-      lb.hidden=st.free; sel.hidden=st.free; mk.hidden=st.free;
-      acts.appendChild(mk); acts.appendChild(go);
-      cf.appendChild(lb); cf.appendChild(sel); cf.appendChild(acts);
+      lb.hidden=st.free; sel.hidden=st.free; cf.hidden=st.free;
+      cf.appendChild(lb); cf.appendChild(sel);
       card.appendChild(cf);
 
       if(p.warn){
@@ -3091,7 +3097,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261023-093621";
+  var BUILD="20261023-095051";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
