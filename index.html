@@ -1213,8 +1213,11 @@ footer b{font-family:var(--mono);font-weight:700}
     });
   }
   function recommend(ki){
-    function miss(v){
-      var n=0;
+    // 実用レンジから外れた台数をまず見て、同点なら「帯の真ん中からの遠さ」で決める。
+    // 昔は同点のとき列2に寄せていたが、それだと上タムが12"のキットで
+    // 10"向けの列が選ばれ、タムが全部一段高く出ていた
+    function score(v){
+      var n=0, dev=0;
       st.drums.forEach(function(d){
         if(d.kind!=="tom") return;
         var r=rangeFor(d.dia); if(!r) return;
@@ -1224,11 +1227,16 @@ footer b{font-family:var(--mono);font-weight:700}
         var f=b*Math.pow(2,(offs(ki,st.mode)+scaleShift(b,GB,d.deg||0))/12);
         var t=Math.round(f*rOf(d)/Math.pow(2,dfltIv(d)/24));
         if(t<r[0]*0.97||t>r[1]*1.03) n++;
+        var c=1200*Math.log2(t/Math.sqrt(r[0]*r[1]));   // 帯の中心から何セント
+        dev+=c*c;
       });
-      return n;
+      return [n,dev];
     }
-    var best=2, bn=99, i;
-    for(i=0;i<serMax();i++){ var m=miss(i); if(m<bn-0.001||(m===bn&&Math.abs(i-2)<Math.abs(best-2))){bn=m;best=i;} }
+    var best=0, bn=1e9, bd=1e18, i, s;
+    for(i=0;i<serMax();i++){
+      s=score(i);
+      if(s[0]<bn-0.001||(s[0]===bn&&s[1]<bd-1e-6)){ bn=s[0]; bd=s[1]; best=i; }
+    }
     return best;
   }
   // いちばん下のタムまで列に収まる範囲。タムが多いほど選べる段は減る
@@ -3101,7 +3109,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261023-110044";
+  var BUILD="20261023-161443";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
