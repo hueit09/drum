@@ -1,4 +1,4 @@
-var C="taut-20261022-222256";
+var C="taut-20261023-091407";
 var SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png"];
 self.addEventListener("install",function(e){
   self.skipWaiting();

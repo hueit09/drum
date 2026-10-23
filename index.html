@@ -336,32 +336,41 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .cards{display:grid;gap:9px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px 15px;display:grid;gap:12px;box-shadow:var(--sh)}
 .card.gap{margin-top:12px}
-.ch{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ch{display:flex;align-items:center;gap:9px}
+/* 名前とサイズはひとかたまり。狭いときはここだけが折り返し、実音は右に残る */
+.cn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:14.5px;font-weight:700;letter-spacing:.02em}
 .badge i{width:6px;height:6px;border-radius:50%;flex:none}
 .badge.kick{background:var(--kick-soft);color:var(--kick)} .badge.kick i{background:var(--kick)}
 .badge.snare{background:var(--snare-soft);color:var(--snare)} .badge.snare i{background:var(--snare)}
 .badge.tom{background:var(--tom-soft);color:var(--tom)} .badge.tom i{background:var(--tom)}
 .ch .sz{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--faint);letter-spacing:.02em}
-.pitch{margin-left:auto;display:flex;align-items:center;gap:9px}
-.pitch .pv{display:grid;justify-items:end;line-height:1.35}
-.pitch .pv b{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.01em}
-.pitch .pv span{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums}
+.pitch{margin-left:auto;flex:none;display:flex;align-items:center;gap:8px}
+.pitch .pv{display:grid;justify-items:end;line-height:1.3}
+.pitch .pv b{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.pitch .pv span{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 見た目は小さく、指で押せる広さは 44px 確保する */
+.pitch .step{gap:4px}
+.pitch .step button{width:38px;height:38px;font-size:18px;position:relative}
+.pitch .step button::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 
 .hh{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 @media (max-width:430px){.hh{grid-template-columns:1fr}}
-.h{border-radius:14px;padding:11px 14px;display:grid;gap:3px;min-width:0;
+.h{border-radius:14px;padding:10px 14px 9px;display:grid;gap:2px;min-width:0;
   cursor:pointer;transition:transform .14s var(--ease),box-shadow .22s var(--ease)}
+/* 大きな Hz の右が空いていたので、音名と中央値をそこへ入れる */
+.hb{display:flex;align-items:flex-end;gap:10px;min-width:0}
+.hb .hm{margin-left:auto;text-align:right;display:grid;gap:1px;min-width:0}
 .h:active{transform:scale(.975)}
 .h.done{box-shadow:inset 0 0 0 2px var(--good)}
-.h .pg{display:flex;align-items:center;gap:4px;margin-top:6px}
+.h .pg{display:flex;align-items:center;gap:4px;margin-top:7px}
 .h .pg i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.2;transition:opacity .25s var(--ease)}
 .h .pg i.on{opacity:1}
 .h .pg s{margin-left:auto;text-decoration:none;font-family:var(--mono);font-size:9.5px;font-weight:700;opacity:.5}
 .h.t{background:var(--top-soft)} .h.b{background:var(--bot-soft)}
 .h .hl{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.09em}
 .h.t .hl{color:var(--top)} .h.b .hl{color:var(--bot)}
-.h .hl button{margin-left:auto;background:none;border:0;padding:2px 5px;font-size:15px;line-height:1;opacity:.5;border-radius:7px;transition:opacity .2s,transform .2s var(--spring);position:relative}
+.h .hl button{margin-left:auto;background:none;border:0;padding:2px 0;font-size:15px;line-height:1;opacity:.5;border-radius:7px;transition:opacity .2s,transform .2s var(--spring);position:relative}
 /* 見た目はそのままに、指で押せる広さだけ確保する */
 .h .hl button::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 .h .hl button:hover,.h .hl button.on{opacity:1;transform:scale(1.18)}
@@ -369,9 +378,9 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .h.t .big{color:var(--top)} .h.b .big{color:var(--bot)}
 .h .big.na{opacity:.32;letter-spacing:0}
 .h .big u{text-decoration:none;font-size:11.5px;font-weight:700;margin-left:4px;opacity:.55;letter-spacing:0}
-.h .nn{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums;opacity:.85}
-.h .nn i{font-style:normal;font-weight:500;opacity:.6}
-.h .cc{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--fg);opacity:.5;font-variant-numeric:tabular-nums}
+.h .nn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums;opacity:.85;white-space:nowrap}
+.h .nn i{font-style:normal;font-weight:500;opacity:.6;margin-left:2px}
+.h .cc{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--fg);opacity:.5;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 .cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .cf label{font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;letter-spacing:.03em}
@@ -400,10 +409,21 @@ th.on{color:var(--acc)}
 
 /* ─── kit ─── */
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.fi{display:grid;gap:5px;min-width:0}
-.fi label{font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--faint)}
-.fi input{width:100%;min-width:0;font-family:var(--mono);font-size:16px;font-weight:700;padding:12px 6px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums;text-align:center;transition:border-color .2s}
+.fi{display:grid;gap:4px;min-width:0}
+.fi label{font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--faint);text-align:center;white-space:nowrap}
+.fi input{width:100%;min-width:0;font-family:var(--mono);font-size:16px;font-weight:700;padding:11px 4px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums;text-align:center;transition:border-color .2s}
 .fi input:focus{border-color:var(--acc);outline:none}
+/* キットは1台1行。名前を左、数字を右に寄せて縦を詰める。
+   見出しは全行で同じなので、上に一度だけ出す */
+.kith{display:flex;justify-content:flex-end;gap:6px;padding:0 13px 5px 0}
+.kith span{width:54px;text-align:center;font-size:9.5px;font-weight:700;
+  letter-spacing:.04em;color:var(--faint);white-space:nowrap}
+.kitc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px}
+.kitc .kn{display:grid;gap:3px;justify-items:start;min-width:0}
+.kitc .kn .rr{margin-left:3px}
+.kitc .g3{margin-left:auto;display:flex;gap:6px;flex:none}
+.kitc .fi{width:54px}
+.kitc .fi label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .exp{width:100%;min-height:150px;font-family:var(--mono);font-size:10.5px;line-height:1.75;padding:12px;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:12px;resize:vertical;white-space:pre}
 .rr{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint)}
 
@@ -463,16 +483,35 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 svg .hit{cursor:pointer}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
-.lvl{position:relative;width:min(100%,260px);height:6px;border-radius:999px;background:var(--sunk);
-  overflow:visible;margin:2px auto -2px}
+/* 部屋の音と「叩きと見なす線」を同じ物差しに重ねる。
+   どこから拾うかは、言葉で選ぶより線を動かすほうが早い */
+.lvw{width:min(100%,286px);margin:11px auto 0;display:grid;gap:6px}
+.lvh{display:flex;align-items:baseline;gap:8px;font-size:9px;font-weight:700;
+  letter-spacing:.1em;color:var(--faint)}
+.lvh em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:10.5px;
+  font-weight:700;color:var(--dim);letter-spacing:0}
+.lvl{position:relative;width:100%;height:9px;border-radius:999px;background:var(--sunk);
+  overflow:visible;touch-action:none;cursor:ew-resize}
 .lvl i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--acc);
-  opacity:.5;transition:width .06s linear}
+  opacity:.45;transition:width .06s linear}
 .lvl i.hot{opacity:1}
+.lvn{display:flex;align-items:center;gap:8px;font-size:9.5px;line-height:1.55;color:var(--faint)}
+.lvn button{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--card);
+  color:var(--acc);font-size:9.5px;font-weight:700;letter-spacing:.04em;
+  padding:9px 12px;min-height:40px;border-radius:999px;white-space:nowrap}
+.lvn button:active{transform:scale(.95)}
 .lockb{margin:7px auto 0;display:block;border:1px solid var(--line);background:var(--card);
   color:var(--dim);font-family:var(--mono);font-size:10.5px;font-weight:700;
   padding:8px 13px;min-height:40px;border-radius:999px}
 .lockb:active{transform:scale(.96)}
-.lvl b{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;background:var(--off);opacity:.8}
+/* つまみ。入り具合の塗りに飲まれないよう、濃い色と地色の縁で浮かせる。
+   見た目は細いが、指のために 44px ぶんの当たり判定を持たせる */
+.lvl b{position:absolute;top:-7px;bottom:-7px;width:5px;border-radius:3px;background:var(--fg);
+  transform:translateX(-50%);z-index:2;
+  box-shadow:0 0 0 2.5px var(--bg),0 1px 3px rgba(0,0,0,.3)}
+.lvl b::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;
+  transform:translate(-50%,-50%)}
+.lvl b:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:11px 13px;min-height:42px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .13s var(--ease),border-color .2s,color .2s}
 .chip:active{transform:scale(.9)}
 .chip::after{content:"";display:inline-block;width:4px;height:4px;margin-left:6px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg) translateY(-1.5px);opacity:.5}
@@ -614,7 +653,13 @@ footer b{font-family:var(--mono);font-weight:700}
           <div class="act" id="roAct"></div>
         </div>
       </div>
-      <div class="lvl" id="lvl" hidden><i id="lvlI"></i><b id="lvlT"></b></div>
+      <div class="lvw" id="lvw" hidden>
+        <div class="lvh"><span>部屋の音</span><em id="lvlW">標準</em></div>
+        <div class="lvl" id="lvl"><i id="lvlI"></i>
+          <b id="lvlT" role="slider" tabindex="0" aria-label="叩きと見なす強さ"></b></div>
+        <div class="lvn"><span id="lvlN">線より強い音を、叩きとして読みます</span>
+          <button id="sensB" type="button" hidden>自動に戻す</button></div>
+      </div>
       <button class="lockb" id="lockB" type="button" hidden>基音を保持中　—　タップで解除</button>
       <div class="chips" id="chips">
         <button class="chip" id="tDia" type="button">—</button>
@@ -674,6 +719,7 @@ footer b{font-family:var(--mono);font-weight:700}
       </div>
       <div class="sllist slsaved" id="mkSaved" hidden></div>
     </div>
+    <div class="kith" aria-hidden="true"><span>口径 in</span><span>深さ in</span><span>ラグ</span></div>
     <div class="cards" id="kitList"></div>
     <div class="pane" style="margin-top:11px">
       <div class="row">
@@ -767,6 +813,8 @@ footer b{font-family:var(--mono);font-weight:700}
           <li>スネアはスナッピーを外し、タムはノーミュートで測ります。</li>
           <li>対角線の順に少しずつ締め、全ラグを2〜3周して揃えます。</li>
         </ul>
+        <p><strong>拾ってくれないとき／勝手に数字が出るとき。</strong>チューナーの下のバーが<strong>部屋の音</strong>です。縦の線より強い音を叩きとして読みます。線は指で動かせます。弱いデコピンを拾ってほしければ左へ、まわりがうるさくて勝手に数字が出るなら右へ。<strong>自動に戻す</strong>で部屋に合わせた既定の位置に戻ります。</p>
+        <p>線を左に寄せても、部屋の暗騒音の4倍より下には行きません。部屋の共鳴のような鳴り続ける音は、2回読んで突き合わせる検査では落とせないためです。</p>
       </div>
     </details>
 
@@ -1044,7 +1092,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true,preOrd:[]};
+          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true,preOrd:[],sensT:0};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -1058,6 +1106,7 @@ footer b{font-family:var(--mono);font-weight:700}
               (sv.acc===-1||sv.acc===0||sv.acc===1)?sv.acc:0)===st.live)?sv.ltr:la.l;
       st.acc=(sv.acc===-1||sv.acc===0||sv.acc===1)&&pcOf(st.ltr,sv.acc)===st.live?sv.acc:la.a;
       st.serAuto=(sv.serAuto===false)?false:true;
+      if(typeof sv.sensT==="number"&&sv.sensT>0) st.sensT=Math.max(0.0018,Math.min(0.05,sv.sensT));
       if(typeof sv.ser==="number"&&sv.ser>=0&&sv.ser<SER.length) st.ser=sv.ser;
       else if(sv.voic==="high") st.ser=1;          // 旧「高め／低め」からの移行
       else if(sv.voic==="low") st.ser=2;
@@ -1318,7 +1367,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   function micStop(){
     mic.on=false; mic.starting=false; mic.reading=false; DEC=null;
-    if(elLvl) elLvl.hidden=true;
+    if(elLvw) elLvw.hidden=true;
     if(mic.raf) cancelAnimationFrame(mic.raf);
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
@@ -1348,9 +1397,29 @@ footer b{font-family:var(--mono);font-weight:700}
       })
       .catch(function(){ mic.starting=false; mic.failed=true; micMsg(); render(); if(cb) cb(false); });
   }
-  var silSince=0, lvlAt=0;
-  var elLvl=document.getElementById("lvl"), elLvlI=document.getElementById("lvlI"),
-      elLvlT=document.getElementById("lvlT");
+  var silSince=0, lvlAt=0, sdrag=false;
+  var elLvw=document.getElementById("lvw"),
+      elLvl=document.getElementById("lvl"), elLvlI=document.getElementById("lvlI"),
+      elLvlT=document.getElementById("lvlT"), elLvlW=document.getElementById("lvlW");
+  // 叩きと見なす線。音の大きさは比で効くので、目盛りは dB で取る。
+  // −62dB〜−24dB をバーの左右に割り当てる。暗騒音 21%、既定の線 40%、
+  // デコピン 74% あたりに並び、動かせる範囲がバーのほぼ全幅になる
+  var LDB0=-62, LDB1=-24, SMIN=0.0018, SMAX=0.05;
+  function lpos(x){
+    if(!(x>0)) return 0;
+    return Math.max(0,Math.min(1,(20*Math.log(x)/Math.LN10-LDB0)/(LDB1-LDB0)));
+  }
+  function lrms(p){ return Math.pow(10,(LDB0+p*(LDB1-LDB0))/20); }
+  // 自動のときは今までどおり。手で動かしたときも、暗騒音の4倍は下回らせない
+  // （部屋の共鳴は定常音なので、入口でしか落とせない）
+  function sensThr(){
+    var man=st.sensT>0;
+    var base=man?Math.max(SMIN,Math.min(SMAX,st.sensT)):0.0045;
+    return Math.max(base,mic.floor*(man?4:6));
+  }
+  function sensWord(t){
+    return t<0.004?"静かな部屋":t<0.0075?"標準":t<0.013?"にぎやか":"ライブ";
+  }
   function micLoop(){
     if(!mic.on||!mic.reading) return;
     mic.raf=requestAnimationFrame(micLoop);
@@ -1372,17 +1441,19 @@ footer b{font-family:var(--mono);font-weight:700}
     // デコピンは音が小さいので、暗騒音から相対的にしきい値を取る
     // しきい値を下げたら、部屋の共鳴のような「ずっと鳴っている音」を叩きと
     // 誤認するようになった。定常音は2つの窓で当然一致してしまうので、
-    // 一致の検査では落とせない。入口で切るしかないため元の値に戻した
-    var thr=Math.max(0.0045,mic.floor*6), rel=Math.max(0.0022,mic.floor*3);
-    // 入り具合を出す。しきい値の位置も重ねて、届いているかどうかが見えるようにする
-    if(elLvl){
-      if(elLvl.hidden) elLvl.hidden=false;
+    // 一致の検査では落とせない。入口で切るしかない。
+    // そこで「どこまで下げるか」は部屋に合わせて選んでもらう。暗騒音に対する
+    // 倍率は下げすぎない（最小4倍）ので、共鳴の強い部屋では自動で守られる
+    var thr=sensThr(), rel=thr*0.49;
+    // 部屋の音と線を同じ物差しで重ねる。届いているかどうかがそのまま見える
+    if(elLvw){
+      if(elLvw.hidden) elLvw.hidden=false;
       if(now-lvlAt>60){
         lvlAt=now;
-        var top=Math.max(thr*2.6,0.02);
-        elLvlI.style.width=Math.min(100,rms/top*100).toFixed(1)+"%";
+        elLvlI.style.width=(lpos(rms)*100).toFixed(1)+"%";
         elLvlI.className=rms>thr?"hot":"";
-        elLvlT.style.left=Math.min(100,thr/top*100).toFixed(1)+"%";
+        if(!sdrag) elLvlT.style.left=(lpos(thr)*100).toFixed(1)+"%";
+        if(elLvlW) elLvlW.textContent=sensWord(thr);
       }
     }
     // 余韻の測定は実音モードでチューナーを見ているときだけ。裏で重い計算を回さない
@@ -2169,11 +2240,13 @@ footer b{font-family:var(--mono);font-weight:700}
       card.style.animationDelay=(i*32)+"ms";
 
       var ch=document.createElement("div"); ch.className="ch";
+      var cn=document.createElement("div"); cn.className="cn";
       var bdg=document.createElement("span"); bdg.className="badge "+d.kind;
       bdg.appendChild(document.createElement("i"));
       bdg.appendChild(document.createTextNode(d.name));
-      var sz=document.createElement("span"); sz.className="sz"; sz.textContent=d.dia+"×"+d.dep+" inch";
-      ch.appendChild(bdg); ch.appendChild(sz);
+      var sz=document.createElement("span"); sz.className="sz"; sz.textContent=d.dia+"×"+d.dep+'"';
+      cn.appendChild(bdg); cn.appendChild(sz);
+      ch.appendChild(cn);
 
       var pw=document.createElement("div"); pw.className="pitch";
       var pv=document.createElement("div"); pv.className="pv";
@@ -2181,14 +2254,17 @@ footer b{font-family:var(--mono);font-weight:700}
       var mf=st.meas[d.id+"|fund"];
       var pb=document.createElement("b");
       pb.textContent="実音 "+(st.free?"—":(fn?fn.name:"—"));
-      var ps=document.createElement("span");
+      var ps=document.createElement("span"), ps2=null;
       if(mf>0){
         var mfn=noteOf(mf,flat), ce2=Math.round(1200*Math.log2(mf/p.fund));
         pb.textContent="実測 "+(mfn?mfn.name:"—");
         pb.style.color="var(--good)";
-        ps.textContent=mf.toFixed(1)+" Hz　予測比 "+(ce2>0?"+":ce2<0?"−":"±")+Math.abs(ce2)+"¢";
+        ps.textContent=mf.toFixed(1)+" Hz";
+        // 予測比は行を分ける。横に並べると名前の長い太鼓で折り返してしまう
+        ps2=document.createElement("span");
+        ps2.textContent="予測比 "+(ce2>0?"+":ce2<0?"−":"±")+Math.abs(ce2)+"¢";
       } else ps.textContent=st.free?"未測定":p.fund.toFixed(1)+" Hz"+(d.kind!=="tom"?" 参考":"");
-      pv.appendChild(pb); pv.appendChild(ps);
+      pv.appendChild(pb); pv.appendChild(ps); if(ps2) pv.appendChild(ps2);
       var stp=document.createElement("div"); stp.className="step";
       [["−",-1],["＋",1]].forEach(function(o){
         var b=document.createElement("button");
@@ -2240,7 +2316,7 @@ footer b{font-family:var(--mono);font-weight:700}
         var cc=document.createElement("div"); cc.className="cc";
         if(shown>0){
           var cen=shown/R, n2=noteOf(cen,flat);
-          cc.textContent="（中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"")+"）";
+          cc.textContent="中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"");
         }
         // ラグが何本そろったかを点で見せる
         var pg=document.createElement("div"); pg.className="pg";
@@ -2254,8 +2330,12 @@ footer b{font-family:var(--mono);font-weight:700}
         }
         var fr=document.createElement("s"); fr.textContent=done+"/"+d.lugs; pg.appendChild(fr);
         if(done===d.lugs) box.classList.add("done");
-        box.appendChild(hl); box.appendChild(bn); box.appendChild(nn);
-        box.appendChild(cc); box.appendChild(pg);
+        // Hz の横が空いていたので、音名と中央値をそこに寄せる。縦も詰まる
+        var hb=document.createElement("div"); hb.className="hb";
+        var hm=document.createElement("div"); hm.className="hm";
+        hm.appendChild(nn); hm.appendChild(cc);
+        hb.appendChild(bn); hb.appendChild(hm);
+        box.appendChild(hl); box.appendChild(hb); box.appendChild(pg);
         hh.appendChild(box);
       });
       card.appendChild(hh);
@@ -2339,15 +2419,20 @@ footer b{font-family:var(--mono);font-weight:700}
     elTomN.textContent=toms().length+" 本";
     elKit.innerHTML="";
     st.drums.forEach(function(d){
-      var c=document.createElement("div"); c.className="card";
-      var kh=document.createElement("div"); kh.className="ch";
+      // 1台1行。名前は左、3つの数字は右にまとめて、縦に伸びないようにする
+      var c=document.createElement("div"); c.className="card kitc";
+      var kn=document.createElement("div"); kn.className="kn";
       var bdg=document.createElement("span"); bdg.className="badge "+d.kind;
       bdg.appendChild(document.createElement("i"));
       bdg.appendChild(document.createTextNode(d.name));
-      var rr=document.createElement("span"); rr.className="rr";
+      kn.appendChild(bdg);
       var r=d.kind==="tom"?rangeFor(d.dia):null;
-      rr.textContent=r?("実用 "+r[0]+"–"+r[1]+" Hz"):"";
-      kh.appendChild(bdg); kh.appendChild(rr); c.appendChild(kh);
+      if(r){
+        var rr=document.createElement("span"); rr.className="rr";
+        rr.textContent="実用 "+r[0]+"–"+r[1]+" Hz";
+        kn.appendChild(rr);
+      }
+      c.appendChild(kn);
 
       var g=document.createElement("div"); g.className="g3";
       function f(lbl,val,mn,mx,sp,fn){
@@ -2355,6 +2440,7 @@ footer b{font-family:var(--mono);font-weight:700}
         var l=document.createElement("label"); l.textContent=lbl;
         var inp=document.createElement("input");
         inp.type="number"; inp.value=val; inp.min=mn; inp.max=mx; inp.step=sp;
+        inp.setAttribute("aria-label",d.name+"の"+lbl);
         inp.addEventListener("change",function(){
           var v=parseFloat(inp.value);
           if(isFinite(v)) fn(Math.max(mn,Math.min(mx,v)));
@@ -2362,12 +2448,12 @@ footer b{font-family:var(--mono);font-weight:700}
         });
         w.appendChild(l); w.appendChild(inp); return w;
       }
-      g.appendChild(f("口径 inch",d.dia,4,30,0.5,function(v){
+      g.appendChild(f("口径 in",d.dia,4,30,0.5,function(v){
         if(d.lugs===lugsFor(d.kind,d.dia)) d.lugs=lugsFor(d.kind,v);
         d.dia=v;
       }));
-      g.appendChild(f("深さ inch",d.dep,2,30,0.5,function(v){d.dep=v;}));
-      g.appendChild(f("ラグ数",d.lugs,4,12,1,function(v){d.lugs=Math.round(v);trimMeas(d);}));
+      g.appendChild(f("深さ in",d.dep,2,30,0.5,function(v){d.dep=v;}));
+      g.appendChild(f("ラグ",d.lugs,4,12,1,function(v){d.lugs=Math.round(v);trimMeas(d);}));
       c.appendChild(g);
       elKit.appendChild(c);
     });
@@ -2853,6 +2939,8 @@ footer b{font-family:var(--mono);font-weight:700}
       var L=mic.on?lockHz[st.tid+"|"+st.thead]:0;
       if(L>0){ lb.hidden=false; lb.textContent="基音を保持中 "+L.toFixed(1)+" Hz　タップで解除"; }
       else lb.hidden=true;
+      // 線はマイクが動いているときだけ意味がある
+      if(elLvw&&!mic.on) elLvw.hidden=true;
     })();
     elIn.hidden=mic.on;
     if(document.activeElement!==elIn) elIn.value=cur>0?String(cur):"";
@@ -2906,6 +2994,52 @@ footer b{font-family:var(--mono);font-weight:700}
     lb.addEventListener("click",function(){ lockClear(); clearHits(); render(); });
   })();
 
+  // 叩きと見なす線は、指でつまんで動かす。言葉で段階を選ぶより、
+  // 部屋の音がどこまで来ているかを見ながら決めたほうが早い
+  (function(){
+    var sb=document.getElementById("sensB"), nt=document.getElementById("lvlN");
+    if(!elLvl||!sb) return;
+    // 動かした結果が何を変えたのかを、そのまま言葉で返す
+    function paint(){
+      var man=st.sensT>0;
+      sb.hidden=!man;
+      nt.textContent=!man?"線より強い音を、叩きとして読みます"
+        :st.sensT<0.0038?"弱い打撃まで拾います"
+        :st.sensT>0.0055?"強い打撃だけを拾います"
+        :"線より強い音を、叩きとして読みます";
+    }
+    function set(ev){
+      var r=elLvl.getBoundingClientRect();
+      if(!(r.width>0)) return;
+      var p=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
+      st.sensT=Math.max(SMIN,Math.min(SMAX,lrms(p)));
+      elLvlT.style.left=(lpos(st.sensT)*100).toFixed(1)+"%";
+      if(elLvlW) elLvlW.textContent=sensWord(sensThr());
+      mic.armed=true; paint();
+    }
+    elLvl.addEventListener("pointerdown",function(ev){
+      ev.preventDefault(); sdrag=true;
+      try{ elLvl.setPointerCapture(ev.pointerId); }catch(e){}
+      set(ev);
+    });
+    elLvl.addEventListener("pointermove",function(ev){ if(sdrag) set(ev); });
+    ["pointerup","pointercancel"].forEach(function(t){
+      elLvl.addEventListener(t,function(){ if(sdrag){ sdrag=false; save(); } });
+    });
+    // キーボードでも動かせるように
+    elLvlT.addEventListener("keydown",function(ev){
+      var k=ev.key, d=(k==="ArrowRight"||k==="ArrowUp")?1:(k==="ArrowLeft"||k==="ArrowDown")?-1:0;
+      if(!d) return;
+      ev.preventDefault();
+      var cur=st.sensT>0?st.sensT:sensThr();
+      st.sensT=Math.max(SMIN,Math.min(SMAX,lrms(lpos(cur)+d*0.035)));
+      elLvlT.style.left=(lpos(st.sensT)*100).toFixed(1)+"%";
+      mic.armed=true; save(); paint();
+    });
+    sb.addEventListener("click",function(){ st.sensT=0; mic.armed=true; save(); paint(); });
+    paint();
+  })();
+
   var elSplash=E("splash"), elStart=E("btnStart"), elSpNote=E("spNote");
   function enterApp(){
     elSplash.classList.add("gone");
@@ -2926,7 +3060,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261022-222256";
+  var BUILD="20261023-091407";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
