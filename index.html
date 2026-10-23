@@ -354,33 +354,43 @@ header{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
 .pitch .step button{width:38px;height:38px;font-size:18px;position:relative}
 .pitch .step button::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
 
-.hh{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-@media (max-width:430px){.hh{grid-template-columns:1fr}}
-.h{border-radius:14px;padding:10px 14px 9px;display:grid;gap:2px;min-width:0;
+/* 輪を進み具合の計器として置き、その横に表裏を1行ずつ。
+   チューナーと同じモチーフなので、どの輪がどのヘッドか迷わない */
+.hh{display:flex;align-items:center;gap:11px;min-width:0}
+.rfig{flex:none;width:62px;height:62px}
+.rfig svg{width:100%;height:100%;display:block;fill:none;stroke-linecap:round;overflow:visible}
+.rfig .trk{stroke:var(--raise);stroke-width:2.1}
+.rfig .prg{stroke-width:2.6;transition:stroke-dasharray .5s var(--ease)}
+.rfig .prg.t{stroke:var(--top)} .rfig .prg.b{stroke:var(--bot)}
+/* 実音は測ったかどうかだけなので、表裏より控えめに描く */
+.rfig .prg.f{stroke:var(--good);stroke-width:2;opacity:.5}
+.hrows{flex:1 1 auto;min-width:0;display:grid;gap:6px}
+.hr{display:grid;grid-template-columns:auto 1fr auto auto;
+  grid-template-areas:"lab val note play" "cnt cnt cen cen";
+  align-items:center;column-gap:8px;row-gap:1px;min-width:0;
+  padding:8px 11px 7px;border-radius:12px;background:var(--sunk);
   cursor:pointer;transition:transform .14s var(--ease),box-shadow .22s var(--ease)}
-/* 大きな Hz の右が空いていたので、音名と中央値をそこへ入れる */
-.hb{display:flex;align-items:flex-end;gap:10px;min-width:0}
-.hb .hm{margin-left:auto;text-align:right;display:grid;gap:1px;min-width:0}
-.h:active{transform:scale(.975)}
-.h.done{box-shadow:inset 0 0 0 2px var(--good)}
-.h .pg{display:flex;align-items:center;gap:4px;margin-top:7px}
-.h .pg i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.2;transition:opacity .25s var(--ease)}
-.h .pg i.on{opacity:1}
-.h .pg s{margin-left:auto;text-decoration:none;font-family:var(--mono);font-size:9.5px;font-weight:700;opacity:.5}
-.h.t{background:var(--top-soft)} .h.b{background:var(--bot-soft)}
-.h .hl{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.09em}
-.h.t .hl{color:var(--top)} .h.b .hl{color:var(--bot)}
-.h .hl button{margin-left:auto;background:none;border:0;padding:2px 0;font-size:15px;line-height:1;opacity:.5;border-radius:7px;transition:opacity .2s,transform .2s var(--spring);position:relative}
+.hr:active{transform:scale(.985)}
+.hr.done{box-shadow:inset 0 0 0 1.5px var(--good)}
+.hrl{grid-area:lab;font-size:10.5px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
+.hrv{grid-area:val;font-family:var(--mono);font-size:21px;font-weight:800;line-height:1.1;
+  letter-spacing:-.025em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hrv.na{opacity:.3;letter-spacing:0}
+.hrv u{text-decoration:none;font-size:10px;font-weight:700;margin-left:3px;opacity:.55;letter-spacing:0}
+.hr.t .hrl,.hr.t .hrv{color:var(--top)} .hr.b .hrl,.hr.b .hrv{color:var(--bot)}
+.hrn{grid-area:note;font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--fg);
+  opacity:.85;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.hrn i{font-style:normal;font-weight:500;opacity:.6;margin-left:3px}
+.hrp{grid-area:play;position:relative;background:none;border:0;padding:2px 0 2px 2px;
+  font-size:15px;line-height:1;opacity:.45;color:inherit;
+  transition:opacity .2s,transform .2s var(--spring)}
 /* 見た目はそのままに、指で押せる広さだけ確保する */
-.h .hl button::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
-.h .hl button:hover,.h .hl button.on{opacity:1;transform:scale(1.18)}
-.h .big{font-family:var(--mono);font-size:30px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
-.h.t .big{color:var(--top)} .h.b .big{color:var(--bot)}
-.h .big.na{opacity:.32;letter-spacing:0}
-.h .big u{text-decoration:none;font-size:11.5px;font-weight:700;margin-left:4px;opacity:.55;letter-spacing:0}
-.h .nn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums;opacity:.85;white-space:nowrap}
-.h .nn i{font-style:normal;font-weight:500;opacity:.6;margin-left:2px}
-.h .cc{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--fg);opacity:.5;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hrp::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
+.hrp:hover,.hrp.on{opacity:1;transform:scale(1.18)}
+.hrc{grid-area:cnt;font-family:var(--mono);font-size:9.5px;font-weight:700;
+  color:var(--faint);white-space:nowrap}
+.hre{grid-area:cen;font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--fg);
+  opacity:.45;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
 
 .cf{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .cf label{font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;letter-spacing:.03em}
@@ -483,34 +493,43 @@ svg.hd .arc{transition:stroke-dashoffset .5s var(--ease),stroke .3s}
 svg .hit{cursor:pointer}
 
 .chips{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;max-width:320px}
-/* 部屋の音と「叩きと見なす線」を同じ物差しに重ねる。
-   どこから拾うかは、言葉で選ぶより線を動かすほうが早い */
-.lvw{width:min(100%,286px);margin:11px auto 0;display:grid;gap:6px}
-.lvh{display:flex;align-items:baseline;gap:8px;font-size:9px;font-weight:700;
-  letter-spacing:.1em;color:var(--faint)}
-.lvh em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:10.5px;
+/* 部屋の音の上に、拾う強さのつまみを重ねる。
+   初見でもつまめると分かるよう、丸いノブと両端の言葉を置く */
+.lvw{width:min(100%,290px);margin:12px auto 0;display:grid;gap:9px;
+  padding:11px 14px 10px;border-radius:16px;background:var(--card);
+  border:1px solid var(--line);box-shadow:var(--sh)}
+.lvh{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;
+  letter-spacing:.09em;color:var(--faint);min-height:22px}
+.lvh em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:11px;
   font-weight:700;color:var(--dim);letter-spacing:0}
-.lvl{position:relative;width:100%;height:9px;border-radius:999px;background:var(--sunk);
-  overflow:visible;touch-action:none;cursor:ew-resize}
+.lvh button{position:relative;border:0;background:none;color:var(--acc);
+  font-size:10px;font-weight:700;letter-spacing:.04em;padding:0;white-space:nowrap}
+.lvh button::after{content:"";position:absolute;left:50%;top:50%;width:88px;height:44px;
+  transform:translate(-50%,-50%)}
+.lvh button:active{opacity:.6}
+.lvl{position:relative;width:100%;height:10px;border-radius:999px;background:var(--sunk);
+  border:1px solid var(--line);overflow:visible;touch-action:none;cursor:ew-resize}
 .lvl i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--acc);
-  opacity:.45;transition:width .06s linear}
-.lvl i.hot{opacity:1}
-.lvn{display:flex;align-items:center;gap:8px;font-size:9.5px;line-height:1.55;color:var(--faint)}
-.lvn button{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--card);
-  color:var(--acc);font-size:9.5px;font-weight:700;letter-spacing:.04em;
-  padding:9px 12px;min-height:40px;border-radius:999px;white-space:nowrap}
-.lvn button:active{transform:scale(.95)}
+  opacity:.3;transition:width .06s linear}
+.lvl i.hot{opacity:.65}
+.lvn{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;
+  line-height:1.4;color:var(--faint)}
 .lockb{margin:7px auto 0;display:block;border:1px solid var(--line);background:var(--card);
   color:var(--dim);font-family:var(--mono);font-size:10.5px;font-weight:700;
   padding:8px 13px;min-height:40px;border-radius:999px}
 .lockb:active{transform:scale(.96)}
-/* つまみ。入り具合の塗りに飲まれないよう、濃い色と地色の縁で浮かせる。
-   見た目は細いが、指のために 44px ぶんの当たり判定を持たせる */
-.lvl b{position:absolute;top:-7px;bottom:-7px;width:5px;border-radius:3px;background:var(--fg);
-  transform:translateX(-50%);z-index:2;
-  box-shadow:0 0 0 2.5px var(--bg),0 1px 3px rgba(0,0,0,.3)}
-.lvl b::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;
+/* ノブ。丸い・浮いている・溝がある、の3つが揃うとつまめると分かる。
+   指のために 44px ぶんの当たり判定も持たせる */
+.lvl b{position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;
+  background:var(--card);border:1px solid var(--line);transform:translateX(-50%);z-index:2;
+  box-shadow:0 2px 7px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.03);
+  transition:transform .14s var(--ease),box-shadow .2s}
+.lvl b::before{content:"";position:absolute;left:50%;top:50%;width:9.5px;height:11px;
+  transform:translate(-50%,-50%);opacity:.8;
+  background:repeating-linear-gradient(90deg,var(--acc) 0 1.5px,transparent 1.5px 4px)}
+.lvl b::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:46px;
   transform:translate(-50%,-50%)}
+.lvl b:active{transform:translateX(-50%) scale(1.12);box-shadow:0 3px 11px rgba(0,0,0,.26)}
 .lvl b:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:11px 13px;min-height:42px;border-radius:999px;background:var(--card);color:var(--dim);border:1px solid var(--line);transition:transform .13s var(--ease),border-color .2s,color .2s}
 .chip:active{transform:scale(.9)}
@@ -654,11 +673,11 @@ footer b{font-family:var(--mono);font-weight:700}
         </div>
       </div>
       <div class="lvw" id="lvw" hidden>
-        <div class="lvh"><span>部屋の音</span><em id="lvlW">標準</em></div>
-        <div class="lvl" id="lvl"><i id="lvlI"></i>
-          <b id="lvlT" role="slider" tabindex="0" aria-label="叩きと見なす強さ"></b></div>
-        <div class="lvn"><span id="lvlN">線より強い音を、叩きとして読みます</span>
+        <div class="lvh"><span>拾う強さ</span><em id="lvlW">標準</em>
           <button id="sensB" type="button" hidden>自動に戻す</button></div>
+        <div class="lvl" id="lvl"><i id="lvlI"></i>
+          <b id="lvlT" role="slider" tabindex="0" aria-label="どれくらいの打撃から拾うか"></b></div>
+        <div class="lvn"><span>弱い打撃も拾う</span><span>強い打撃だけ</span></div>
       </div>
       <button class="lockb" id="lockB" type="button" hidden>基音を保持中　—　タップで解除</button>
       <div class="chips" id="chips">
@@ -1764,6 +1783,26 @@ footer b{font-family:var(--mono);font-weight:700}
       +arc("M10.8 13.4A3.1 3.1 0 1 1 13.2 13.4",  which==="top" ?"on":"off")
       +"</svg>";
   }
+  // レシピの輪。同じモチーフを進み具合の計器として使う。
+  // 外＝実音、中間＝裏面、中心＝打面。揃ったラグのぶんだけ円弧が伸びる
+  var RING=["M8.9 21.3A10.6 10.6 0 1 1 15.1 21.3",
+            "M9.9 17.3A6.8 6.8 0 1 1 14.1 17.3",
+            "M10.8 13.4A3.1 3.1 0 1 1 13.2 13.4"];
+  function ringFig(HD,d,fundOk){
+    function pair(i,cls,pct){
+      // 0 のときに描くと、丸い端だけが点として残ってしまう
+      return '<path d="'+RING[i]+'" class="trk"/>'
+        +(pct>0.5?'<path d="'+RING[i]+'" class="prg '+cls+'" pathLength="100" stroke-dasharray="'
+          +pct.toFixed(1)+' 100"/>':"");
+    }
+    var n=d.lugs||1;
+    var w=document.createElement("div"); w.className="rfig";
+    w.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'
+      +pair(0,"f",fundOk?100:0)
+      +pair(1,"b",HD[1].done/n*100)
+      +pair(2,"t",HD[0].done/n*100)+"</svg>";
+    return w;
+  }
   [["top","打面"],["bot","裏面"],["fund","実音"]].forEach(function(p){
     var b=document.createElement("button");
     b.type="button"; b.dataset.head=p[0];
@@ -2279,65 +2318,61 @@ footer b{font-family:var(--mono);font-weight:700}
       pw.appendChild(pv); pw.appendChild(stp);
       ch.appendChild(pw); card.appendChild(ch);
 
+      // 表裏の読みを先に作る。同じ値を輪と行の両方で使う
+      var HD=[["t","打面",p.top,"top"],["b","裏面",p.bot,"bot"]].map(function(c){
+        var ms=measN(d,c[3]), av=avgOf(ms);
+        var shown=st.free?av:c[2], done=0, q;       // 指定なしのときは測った平均そのもの
+        for(q=0;q<d.lugs;q++)
+          if(ms[q]>0&&shown>0&&Math.abs(1200*Math.log2(ms[q]/shown))<=GOOD_C) done++;
+        return {k:c[0],lab:c[1],head:c[3],tg:c[2],ms:ms,av:av,shown:shown,done:done};
+      });
+
       var hh=document.createElement("div"); hh.className="hh";
-      [["t","打面",p.top,"top"],["b","裏面",p.bot,"bot"]].forEach(function(c){
-        var box=document.createElement("div"); box.className="h "+c[0];
-        box.setAttribute("role","button"); box.tabIndex=0;
-        box.setAttribute("aria-label",d.name+"の"+c[1]+"を合わせる");
-        box.addEventListener("keydown",function(ev){
-          if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); box.click(); }
+      // 中心＝打面、中間＝裏面、外＝実音。揃ったラグのぶんだけ輪が濃くなる
+      hh.appendChild(ringFig(HD,d,mf>0));
+      var rows=document.createElement("div"); rows.className="hrows";
+      HD.forEach(function(h){
+        var row=document.createElement("div"); row.className="hr "+h.k;
+        row.setAttribute("role","button"); row.tabIndex=0;
+        row.setAttribute("aria-label",d.name+"の"+h.lab+"を合わせる");
+        row.addEventListener("keydown",function(ev){
+          if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); row.click(); }
         });
-        box.addEventListener("click",function(ev){
+        row.addEventListener("click",function(ev){
           if(ev.target.closest("button")) return;          // ♪ は別の役目
-          st.tid=d.id; st.thead=c[3]; st.view="tune"; lug=0; edit=null;
+          st.tid=d.id; st.thead=h.head; st.view="tune"; lug=0; edit=null;
           zoom=true; save(); render();
           anim(elVT,"enter-right",340);
         });
-        var hl=document.createElement("div"); hl.className="hl";
-        var lt=document.createElement("span"); lt.textContent=c[1]; hl.appendChild(lt);
+        function cell(cls,txt){
+          var e=document.createElement("span"); e.className=cls;
+          if(txt!=null) e.textContent=txt; row.appendChild(e); return e;
+        }
+        cell("hrl",h.lab);
+        var v=cell("hrv");
+        if(h.shown>0){
+          v.textContent=st.free?h.shown.toFixed(1):String(h.shown);
+          var u=document.createElement("u"); u.textContent="Hz"; v.appendChild(u);
+        } else { v.textContent="—"; v.className="hrv na"; }
+        var n1=h.shown>0?noteOf(h.shown,flat):null;
+        var nn=cell("hrn",n1?n1.name:"");
+        if(n1){ var ic=document.createElement("i"); ic.textContent=cts(n1.cents); nn.appendChild(ic); }
         var pl=document.createElement("button");
-        pl.type="button"; pl.textContent="♪";
-        pl.setAttribute("aria-label",d.name+" "+c[1]+"の音を鳴らす");
+        pl.type="button"; pl.className="hrp"; pl.textContent="♪";
+        pl.setAttribute("aria-label",d.name+" "+h.lab+"の音を鳴らす");
         pl.addEventListener("click",function(ev){
-          ev.stopPropagation();
-          ping(st.free?avgOf(measN(d,c[3])):c[2],pl);
+          ev.stopPropagation(); ping(st.free?h.av:h.tg,pl);
         });
-        hl.appendChild(pl);
-        var ms=measN(d,c[3]), av=avgOf(ms);
-        var shown=st.free?av:c[2];                      // 指定なしのときは測った平均そのもの
-        var bn=document.createElement("div"); bn.className="big";
-        if(shown>0) bn.textContent=st.free?shown.toFixed(1):String(shown);
-        else { bn.textContent="—"; bn.classList.add("na"); }
-        var u=document.createElement("u"); u.textContent="Hz"; bn.appendChild(u);
-        var nn=document.createElement("div"); nn.className="nn";
-        var n1=shown>0?noteOf(shown,flat):null;
-        nn.textContent=n1?n1.name+" ":"";
-        var ic=document.createElement("i"); ic.textContent=n1?cts(n1.cents):""; nn.appendChild(ic);
-        var cc=document.createElement("div"); cc.className="cc";
-        if(shown>0){
-          var cen=shown/R, n2=noteOf(cen,flat);
-          cc.textContent="中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:"");
-        }
-        // ラグが何本そろったかを点で見せる
-        var pg=document.createElement("div"); pg.className="pg";
-        var done=0;
-        var ref=st.free?av:c[2];
-        for(var q=0;q<d.lugs;q++){
-          var dot=document.createElement("i");
-          var okq=ms[q]>0&&ref>0&&Math.abs(1200*Math.log2(ms[q]/ref))<=GOOD_C;
-          if(okq){ dot.className="on"; done++; }
-          pg.appendChild(dot);
-        }
-        var fr=document.createElement("s"); fr.textContent=done+"/"+d.lugs; pg.appendChild(fr);
-        if(done===d.lugs) box.classList.add("done");
-        // Hz の横が空いていたので、音名と中央値をそこに寄せる。縦も詰まる
-        var hb=document.createElement("div"); hb.className="hb";
-        var hm=document.createElement("div"); hm.className="hm";
-        hm.appendChild(nn); hm.appendChild(cc);
-        hb.appendChild(bn); hb.appendChild(hm);
-        box.appendChild(hl); box.appendChild(hb); box.appendChild(pg);
-        hh.appendChild(box);
+        row.appendChild(pl);
+        cell("hrc",h.done+" / "+d.lugs+" ラグ");
+        if(h.shown>0){
+          var cen=h.shown/R, n2=noteOf(cen,flat);
+          cell("hre","中央 "+cen.toFixed(1)+" Hz "+(n2?n2.name:""));
+        } else cell("hre","");
+        if(h.done===d.lugs&&d.lugs>0) row.classList.add("done");
+        rows.appendChild(row);
       });
+      hh.appendChild(rows);
       card.appendChild(hh);
 
       var cf=document.createElement("div"); cf.className="cf";
@@ -2997,16 +3032,12 @@ footer b{font-family:var(--mono);font-weight:700}
   // 叩きと見なす線は、指でつまんで動かす。言葉で段階を選ぶより、
   // 部屋の音がどこまで来ているかを見ながら決めたほうが早い
   (function(){
-    var sb=document.getElementById("sensB"), nt=document.getElementById("lvlN");
+    var sb=document.getElementById("sensB");
     if(!elLvl||!sb) return;
-    // 動かした結果が何を変えたのかを、そのまま言葉で返す
+    // 手で動かしたときだけ「自動に戻す」を出し、ふだんは何も増やさない
     function paint(){
       var man=st.sensT>0;
       sb.hidden=!man;
-      nt.textContent=!man?"線より強い音を、叩きとして読みます"
-        :st.sensT<0.0038?"弱い打撃まで拾います"
-        :st.sensT>0.0055?"強い打撃だけを拾います"
-        :"線より強い音を、叩きとして読みます";
     }
     function set(ev){
       var r=elLvl.getBoundingClientRect();
@@ -3060,7 +3091,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261023-091407";
+  var BUILD="20261023-093621";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
