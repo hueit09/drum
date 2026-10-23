@@ -1119,7 +1119,7 @@ footer b{font-family:var(--mono);font-weight:700}
 
   var st={keys:[6],live:6,ltr:4,acc:-1,mode:"major",free:false,ser:2,nudge:0,view:"tune",theme:"auto",
           adv:"manual",ord:"x",keyOpen:false,
-          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serAuto:true,preOrd:[],sensT:0};
+          drums:buildKit("std1"),preset:"std1",tid:"t0",thead:"top",meas:{},setlist:[],saved:[],myKits:[],serMode:"auto",serOff:0,preOrd:[],sensT:0};
   try{
     var sv=JSON.parse(localStorage.getItem("tuning4")||"null");
     if(sv&&Object.prototype.toString.call(sv.keys)==="[object Array]"&&sv.keys.length){
@@ -1132,7 +1132,10 @@ footer b{font-family:var(--mono);font-weight:700}
       st.ltr=(typeof sv.ltr==="number"&&sv.ltr>=0&&sv.ltr<7&&pcOf(sv.ltr,
               (sv.acc===-1||sv.acc===0||sv.acc===1)?sv.acc:0)===st.live)?sv.ltr:la.l;
       st.acc=(sv.acc===-1||sv.acc===0||sv.acc===1)&&pcOf(st.ltr,sv.acc)===st.live?sv.acc:la.a;
-      st.serAuto=(sv.serAuto===false)?false:true;
+      // 旧版は serAuto の2値だった。false は曲から読んだ絶対値として引き継ぐ
+      if(sv.serMode==="auto"||sv.serMode==="off"||sv.serMode==="abs") st.serMode=sv.serMode;
+      else st.serMode=(sv.serAuto===false)?"abs":"auto";
+      if(typeof sv.serOff==="number"&&sv.serOff>=-3&&sv.serOff<=3) st.serOff=sv.serOff|0;
       if(typeof sv.sensT==="number"&&sv.sensT>0) st.sensT=Math.max(0.0018,Math.min(0.05,sv.sensT));
       if(typeof sv.ser==="number"&&sv.ser>=0&&sv.ser<SER.length) st.ser=sv.ser;
       else if(sv.voic==="high") st.ser=1;          // 旧「高め／低め」からの移行
@@ -1212,35 +1215,43 @@ footer b{font-family:var(--mono);font-weight:700}
       return {d:d,top:c.top,bot:c.bot,fund:c.fund,warn:w};
     });
   }
-  function recommend(ki){
-    // 実用レンジから外れた台数をまず見て、同点なら「帯の真ん中からの遠さ」で決める。
-    // 昔は同点のとき列2に寄せていたが、それだと上タムが12"のキットで
-    // 10"向けの列が選ばれ、タムが全部一段高く出ていた
-    function score(v){
+  // ある列にしたとき、実用レンジから外れる台数と、帯の中心からの離れ具合
+  function serScore(ki,v){
       var n=0, dev=0;
       st.drums.forEach(function(d){
         if(d.kind!=="tom") return;
         var r=rangeFor(d.dia); if(!r) return;
         // 表裏の開きは既定値で見る。1台の開きを変えただけでキット全体の高さが
         // 選び直されると、その太鼓の実音が飛んでしまう
+        // 列はキットの口径だけで決める。実音の上下（deg）はその上に乗せる
+        // 意図的なずらしなので、ここに入れると列が逆に動いて打ち消してしまう
         var b=baseFund(v,d);
-        var f=b*Math.pow(2,(offs(ki,st.mode)+scaleShift(b,GB,d.deg||0))/12);
+        var f=b*Math.pow(2,offs(ki,st.mode)/12);
         var t=Math.round(f*rOf(d)/Math.pow(2,dfltIv(d)/24));
         if(t<r[0]*0.97||t>r[1]*1.03) n++;
         var c=1200*Math.log2(t/Math.sqrt(r[0]*r[1]));   // 帯の中心から何セント
         dev+=c*c;
       });
       return [n,dev];
-    }
+  }
+  // 実用レンジから外れた台数をまず見て、同点なら「帯の真ん中からの遠さ」で決める。
+  // 昔は同点のとき列2に寄せていたが、それだと上タムが12"のキットで
+  // 10"向けの列が選ばれ、タムが全部一段高く出ていた
+  function recommend(ki){
     var best=0, bn=1e9, bd=1e18, i, s;
     for(i=0;i<serMax();i++){
-      s=score(i);
+      s=serScore(ki,i);
       if(s[0]<bn-0.001||(s[0]===bn&&s[1]<bd-1e-6)){ bn=s[0]; bd=s[1]; best=i; }
     }
     return best;
   }
   // いちばん下のタムまで列に収まる範囲。タムが多いほど選べる段は減る
   function serMax(){ return Math.max(1,SER.length-Math.max(1,toms().length)+1); }
+  // 列の決め方。基準＝推奨どおり、ジャンル＝推奨から何段か、曲から読んだときは絶対値
+  function serPick(){
+    if(st.serMode==="abs") return Math.max(0,Math.min(st.ser,serMax()-1));
+    return Math.max(0,Math.min(recommend(st.live),serMax()-1));
+  }
   function keyName(i){return st.mode==="minor"?MKEY[i]:KEYS[i];}
 
   /* ---------- audio ---------- */
@@ -1941,35 +1952,37 @@ footer b{font-family:var(--mono);font-weight:700}
   // ジャンル名は目安で、値はこのアプリの用語に置き換えた一般的な作り方。
   // 実測ではないので、合わなければキットタブの各ドラムで直してください。
   var VOICE=[
-    ["base","基準","早見表どおり・高さは自動",2,0,IV_T],
+    // 4番目は「タムを音階で何段ずらすか」。＋が高く、－が低い。
+    // 列（SER）を動かすと一気に3〜4半音動いて実用レンジを外れるので、
+    // 高め／低めは音階1段（1〜2半音）で表す
+    ["base","基準","早見表どおり・高さは自動",0,0,IV_T],
     ["jazz","ジャズ","高め・よく伸びる",1,0,0],
-    ["rock","ロック","中くらい・ほどよく締まる",2,0,-3],
+    ["rock","ロック","中くらい・ほどよく締まる",0,0,-3],
     ["funk","ファンク","高め・締まる（R&B系）",1,0,-4],
-    ["metal","メタル","低め・短く締まる（ラウド系）",3,0,-5],
-    ["ballad","バラード","低め・よく伸ばす",3,0,0]
+    ["metal","メタル","低め・短く締まる（ラウド系）",-1,0,-5],
+    ["ballad","バラード","低め・よく伸ばす",-1,0,0]
   ];
   function voiceOf(){
     for(var i=0;i<VOICE.length;i++){
       var v=VOICE[i];
-      var auto=(v[0]==="base");
-      if(auto!==(st.serAuto!==false)) continue;
-      if(!auto&&st.ser!==Math.max(0,Math.min(v[3],serMax()-1))) continue;
+      if(st.serMode!=="auto") continue;
       var ok=true;
       st.drums.forEach(function(d){
         if(d.kind==="kick"&&d.iv!==v[4]) ok=false;
-        if(d.kind==="tom"&&d.iv!==v[5]) ok=false;
+        if(d.kind==="tom"&&(d.iv!==v[5]||(d.deg|0)!==v[3])) ok=false;
+        if(d.kind!=="tom"&&(d.deg|0)!==0) ok=false;
       });
       if(ok) return v[0];
     }
     return null;
   }
   function applyVoice(v){
-    st.serAuto=(v[0]==="base");
-    if(!st.serAuto) st.ser=Math.max(0,Math.min(v[3],serMax()-1));
-    else st.ser=recommend(st.live);
+    st.serMode="auto"; st.serOff=0;
+    st.ser=serPick();
     st.drums.forEach(function(d){
-      if(d.kind==="kick") d.iv=v[4];
-      else if(d.kind==="tom") d.iv=v[5];
+      if(d.kind==="kick"){ d.iv=v[4]; d.deg=0; }
+      else if(d.kind==="tom"){ d.iv=v[5]; d.deg=v[3]; }
+      else d.deg=0;
     });
     st.nudge=0; save(); render();
   }
@@ -2011,7 +2024,7 @@ footer b{font-family:var(--mono);font-weight:700}
         });
         renameToms(st.drums);
         st.drums.forEach(trimMeas);
-        st.preset=""; st.serAuto=false; clearHits(); lockClear();
+        st.preset=""; clearHits(); lockClear();
         if(!byId(st.tid)) st.tid=st.drums[2]?st.drums[2].id:"kick";
         st.ser=Math.max(0,Math.min(st.ser,serMax()-1));
         lug=0; save(); render();
@@ -2057,7 +2070,7 @@ footer b{font-family:var(--mono);font-weight:700}
     b.setAttribute("aria-label",PRE[id].label);
     b.addEventListener("click",function(){
       st.drums=buildKit(id); st.preset=id; st.meas={}; clearHits(); lockClear();
-      st.tid=st.drums[2].id; lug=0; st.serAuto=true; st.ser=recommend(st.live); save(); render();
+      st.tid=st.drums[2].id; lug=0; st.serMode="auto"; st.serOff=0; st.ser=serPick(); save(); render();
     });
     elPresets.appendChild(b);
   });
@@ -2192,7 +2205,7 @@ footer b{font-family:var(--mono);font-weight:700}
     moveTab();
     // タムが乗る高さは、口径ごとの張力の目安に収まるものを自動で選ぶ。
     // ただし「音作り」や曲の照合で高さを指定したときは、その指定を残す
-    if(st.serAuto!==false) st.ser=recommend(st.live);
+    st.ser=serPick();
     st.ser=Math.max(0,Math.min(st.ser,serMax()-1));
     elVR.hidden=st.view!=="recipe"; elVT.hidden=st.view!=="tune";
     elVK.hidden=st.view!=="kit"; elVD.hidden=st.view!=="doc"; elVS.hidden=st.view!=="song";
@@ -3109,7 +3122,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261023-161443";
+  var BUILD="20261023-190003";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
@@ -3906,7 +3919,7 @@ footer b{font-family:var(--mono);font-weight:700}
       fb.textContent=KEYS[fit.ki]+" でこのレシピにする";
       fb.addEventListener("click",function(){
         st.free=false; st.mode="major"; st.live=fit.ki; st.nudge=0;
-        st.serAuto=false;
+        st.serMode="abs";
         st.ser=Math.max(0,Math.min(fit.ser,serMax()-1));
         if(st.keys.indexOf(fit.ki)<0){ st.keys.push(fit.ki); st.keys.sort(function(x,y){return x-y;}); }
         var la2=deriveLA(fit.ki); st.ltr=la2.l; st.acc=la2.a;
