@@ -1361,20 +1361,33 @@ footer b{font-family:var(--mono);font-weight:700}
     }
   }
   // 膜は倍音が整数比にならないので、基本周波数ではなくスペクトルの最強ピークを採る
-  function detect(buf,sr,fmin,fmax){
+  // 窓をかけた振幅スペクトル。叩く直前の分を覚えておいて、あとで引く
+  function magOf(buf){
+    var n=buf.length,i,m=0;
+    for(i=0;i<n;i++) m+=buf[i];
+    m/=n;
+    var N=1; while(N<n) N<<=1; N<<=2;   // ゼロ詰め4倍で補間誤差を下げる
+    var re=new Float64Array(N),im=new Float64Array(N);
+    for(i=0;i<n;i++) re[i]=(buf[i]-m)*(0.5-0.5*Math.cos(2*Math.PI*i/(n-1)));
+    fft(re,im);
+    var g=new Float64Array((N>>1)+2);
+    for(i=0;i<g.length;i++) g[i]=Math.sqrt(re[i]*re[i]+im[i]*im[i]);
+    return g;
+  }
+  // 空調や部屋鳴りのような「ずっと鳴っている音」は、叩く直前の分を引くと消える。
+  // 割り算にすると暗騒音の谷が増幅されて逆効果だった（合成信号で確認）
+  var BGA=2.2;
+  function detect(buf,sr,fmin,fmax,bg){
     var n=buf.length,i,m=0,v;
     for(i=0;i<n;i++) m+=buf[i];
     m/=n;
     var e=0; for(i=0;i<n;i++){v=buf[i]-m;e+=v*v;}
     if(Math.sqrt(e/n)<0.0012) return null;
-    var N=1; while(N<n) N<<=1; N<<=2;   // ゼロ詰め4倍で補間誤差を下げる
-    var re=new Float64Array(N),im=new Float64Array(N);
-    for(i=0;i<n;i++) re[i]=(buf[i]-m)*(0.5-0.5*Math.cos(2*Math.PI*i/(n-1)));
-    fft(re,im);
+    var mag=magOf(buf), N=(mag.length-2)<<1;
+    if(bg&&bg.length===mag.length){ for(i=0;i<mag.length;i++) mag[i]=Math.max(0,mag[i]-BGA*bg[i]); }
     var df=sr/N, lo=Math.max(1,Math.round(fmin/df)), hi=Math.min((N>>1)-2,Math.round(fmax/df));
     if(hi<=lo) return null;
-    var mag=new Float64Array(hi+3),bi=-1,bv=0,sum=0;
-    for(i=lo-1;i<=hi+1;i++) mag[i]=Math.sqrt(re[i]*re[i]+im[i]*im[i]);
+    var bi=-1,bv=0,sum=0;
     for(i=lo;i<=hi;i++){ sum+=mag[i]; if(mag[i]>bv){bv=mag[i];bi=i;} }
     if(bi<1||bv<=0) return null;
     if(!(mag[bi]>=mag[bi-1]&&mag[bi]>=mag[bi+1])) return null;   // 局所最大であること
@@ -1409,7 +1422,7 @@ footer b{font-family:var(--mono);font-weight:700}
   }
   function micResume(){
     if(!mic.on||mic.reading) return;
-    mic.reading=true; mic.armed=true; mic.floor=0.002; micLoop();
+    mic.reading=true; mic.floor=0.002; mic.t0=0; mic.hist=[]; micLoop();
   }
   function micStop(){
     mic.on=false; mic.starting=false; mic.reading=false; DEC=null;
@@ -1418,7 +1431,7 @@ footer b{font-family:var(--mono);font-weight:700}
     mic.raf=0;
     try{if(mic.src) mic.src.disconnect();}catch(e){}
     try{if(mic.stream) mic.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
-    mic.stream=null;mic.src=null;mic.an=null;
+    mic.stream=null;mic.src=null;mic.an=null;mic.lv=null;
   }
   // 起動画面のSTARTから一度だけ呼ぶ。掴んだストリームは離さない（画面切替で音が鳴るのを防ぐ）
   function micStart(cb){
@@ -1433,9 +1446,13 @@ footer b{font-family:var(--mono);font-weight:700}
       .then(function(s){
         mic.starting=false;
         mic.stream=s; mic.src=a.createMediaStreamSource(s);
-        mic.an=a.createAnalyser(); mic.an.fftSize=16384; mic.an.smoothingTimeConstant=0;
-        mic.src.connect(mic.an); mic.buf=new Float32Array(mic.an.fftSize);
-        mic.on=true; mic.reading=true; mic.armed=true; mic.last=0; mic.floor=0.002;
+        // 読み取り用は長めに持つ（低い太鼓は長い窓がないと空調と分離できない）。
+        // 画面のレベルは軽い別系統で取る
+        mic.an=a.createAnalyser(); mic.an.fftSize=32768; mic.an.smoothingTimeConstant=0;
+        mic.lv=a.createAnalyser(); mic.lv.fftSize=2048; mic.lv.smoothingTimeConstant=0;
+        mic.src.connect(mic.an); mic.src.connect(mic.lv);
+        mic.buf=new Float32Array(mic.an.fftSize); mic.lbuf=new Float32Array(mic.lv.fftSize);
+        mic.on=true; mic.reading=true; mic.last=0; mic.floor=0.002; mic.t0=0; mic.hist=[];
         audioSess("play-and-record");
         stopTone();
         elMn.hidden=true;
@@ -1450,30 +1467,30 @@ footer b{font-family:var(--mono);font-weight:700}
   // 叩きと見なす線。音の大きさは比で効くので、目盛りは dB で取る。
   // −62dB〜−24dB をバーの左右に割り当てる。暗騒音 21%、既定の線 40%、
   // デコピン 74% あたりに並び、動かせる範囲がバーのほぼ全幅になる
-  var LDB0=-62, LDB1=-24, SMIN=0.0018, SMAX=0.05;
+  var LDB0=-62, LDB1=-18, SMIN=0.0018, SMAX=0.12;
   function lpos(x){
     if(!(x>0)) return 0;
     return Math.max(0,Math.min(1,(20*Math.log(x)/Math.LN10-LDB0)/(LDB1-LDB0)));
   }
   function lrms(p){ return Math.pow(10,(LDB0+p*(LDB1-LDB0))/20); }
-  // 自動のときは今までどおり。手で動かしたときも、暗騒音の4倍は下回らせない
-  // （部屋の共鳴は定常音なので、入口でしか落とせない）
+  // 立ち上がりの判定が定常音を落とすので、暗騒音の倍率は控えめでよい
   function sensThr(){
     var man=st.sensT>0;
     var base=man?Math.max(SMIN,Math.min(SMAX,st.sensT)):0.0045;
-    return Math.max(base,mic.floor*(man?4:6));
+    return Math.max(base,mic.floor*3);
   }
   function sensWord(t){
-    return t<0.004?"静かな部屋":t<0.0075?"標準":t<0.013?"にぎやか":"ライブ";
+    return t<0.004?"静かな部屋":t<0.0085?"標準":t<0.02?"にぎやか":"ライブ";
   }
   function micLoop(){
     if(!mic.on||!mic.reading) return;
     mic.raf=requestAnimationFrame(micLoop);
-    var an=mic.an,b=mic.buf; if(!an) return;
+    var an=mic.lv||mic.an,b=mic.lbuf||mic.buf; if(!an) return;
     an.getFloatTimeDomainData(b);
     var n=b.length,i,s=0;
     for(i=n-1024;i<n;i++) s+=b[i]*b[i];
     var rms=Math.sqrt(s/1024), now=(window.performance&&performance.now)?performance.now():Date.now();
+    if(!mic.t0) mic.t0=now;
     // まったくの無音が続くのは、端末が音声処理を止めている合図。黙っていると
     // 「叩いても反応しない」になるので、気づけるように出す
     if(rms>0){ silSince=0; if(!elMn.hidden&&mic.on&&!mic.failed) elMn.hidden=true; }
@@ -1490,7 +1507,10 @@ footer b{font-family:var(--mono);font-weight:700}
     // 一致の検査では落とせない。入口で切るしかない。
     // そこで「どこまで下げるか」は部屋に合わせて選んでもらう。暗騒音に対する
     // 倍率は下げすぎない（最小4倍）ので、共鳴の強い部屋では自動で守られる
-    var thr=sensThr(), rel=thr*0.49;
+    var thr=sensThr();
+    // 立ち上がりを見るために、少し前の静かさを覚えておく
+    var H=mic.hist||(mic.hist=[]);
+    H.push(rms); if(H.length>40) H.shift();
     // 部屋の音と線を同じ物差しで重ねる。届いているかどうかがそのまま見える
     if(elLvw){
       if(elLvw.hidden) elLvw.hidden=false;
@@ -1505,24 +1525,33 @@ footer b{font-family:var(--mono);font-weight:700}
     // 余韻の測定は実音モードでチューナーを見ているときだけ。裏で重い計算を回さない
     if(DEC&&(st.view!=="tune"||st.thead!=="fund")) DEC=null;
     if(DEC&&now-DEC.tick>=14){ DEC.tick=now; decTick(now); }   // 30ms毎だと短い余韻を取りこぼす
-    if(mic.armed&&rms>thr&&now-mic.last>650){
-      mic.armed=false; mic.last=now;
+    // 叩きと見なす条件は3つ。
+    // ① 線を超える ② 少し前の静かさから2倍以上立ち上がる ③ 前の打点から320ms空く
+    // 以前は「いったん静かになるまで次を受けない」作りだったが、その基準が
+    // 部屋の暗騒音より下にあったため、実際には2.4秒のタイムアウトでしか戻らず、
+    // 1秒間隔で叩くと2〜3回に1回しか拾えていなかった（合成信号で確認）
+    var k=H.length-1, qa=Math.max(0,k-15), qb=Math.max(0,k-6), q=[];
+    for(i=qa;i<qb;i++) q.push(H[i]);
+    var rise=true;
+    if(q.length){
+      q.sort(function(x,y){return x-y;});
+      rise = rms > Math.max(q[q.length>>1]*2.0, thr);
+    }
+    var warm=(now-mic.t0)<500;            // 立ち上げ直後は暗騒音がまだ掴めていない
+    if(!warm&&rms>thr&&rise&&now-mic.last>320){
+      mic.last=now;
       // 中央を叩いたときだけ、余韻の長さも測る
       decFinish();
-      if(st.thead==="fund"){
-        var d0=byId(st.tid);
-        if(d0) decStart(calc(st.live,st.mode,st.ser,st.nudge,d0).fund,d0.id,now);
-      }
-      // 部屋鳴りは時間とともに育つので、早い窓のほうが膜の音と分離できる。
-      // 合成信号で検証：200/340ms は 78/120 しか読めず、150/260ms では 108/120 まで上がる
-      setTimeout(function(){micGrab(1);},150);
-      setTimeout(function(){micGrab(2);},260);
-    } else if(!mic.armed&&(rms<rel||now-mic.last>2400)) mic.armed=true;
-    if(mic.armed&&rms<thr) mic.floor=mic.floor*0.985+rms*0.015;
+      var d0=byId(st.tid);
+      var tg0=d0?calc(st.live,st.mode,st.ser,st.nudge,d0):null;
+      if(st.thead==="fund"&&d0) decStart(tg0.fund,d0.id,now);
+      grabStart(d0,tg0);
+    }
+    if(rms<thr) mic.floor=mic.floor*(warm?0.85:0.985)+rms*(warm?0.15:0.015);
   }
   // 打点から200msと340msの2回読み、食い違えば捨てる。
   // 部屋の共鳴を掴んだ読みはここでほぼ全部落ちる（合成波での検証で誤検出0件）
-  var PROM=3.0, TOL=30, pend=null, hits={}, rejAt=0;
+  var PROM=3.0, TOL=30, hits={}, rejAt=0;
   // 膜はいくつものモードで鳴るので、叩き方や他の太鼓の残響しだいで
   // 毎回ちがうモードが最強になり、読みが飛ぶ。
   // いちど捉えた基音を覚えておき、次からはその周りだけを探す。
@@ -1531,34 +1560,58 @@ footer b{font-family:var(--mono);font-weight:700}
   function lockKey(){ return st.tid+"|"+st.thead; }
   function lockClear(){ lockHz={}; lockMiss={}; lockCand={}; }
   function hitKey(){ return st.tid+"|"+st.thead+"|"+(st.thead==="fund"?"f":lug); }
-  function clearHits(){ hits={}; pend=null; }
-  function micGrab(stage){
-    if(!mic.on||!mic.an) return;
-    var d=byId(st.tid); if(!d) return;
-    var c=calc(st.live,st.mode,st.ser,st.nudge,d);
+  function clearHits(){ hits={}; GC=null; }
+  // 1打につき3回読み、2回そろえば採用する。
+  // 窓の長さは目標の高さで変える。低い太鼓は長い窓がないと空調と分離できず、
+  // 高い太鼓は短い窓のほうが打点に揃って部屋鳴りを拾わない（合成信号で確認）
+  var GC=null;
+  function grabStart(d,c){
+    if(!mic.on||!mic.an||!d||!c) return;
     var tg=st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot);
+    if(!(tg>0)) return;
+    var low=tg<90, ntail=low?32768:8192, at=low?[250,400,550]:[120,200,300];
     mic.an.getFloatTimeDomainData(mic.buf);
-    var ds=dsample(mic.buf,ac.sampleRate,4000);
+    var tail=mic.buf.subarray(Math.max(0,mic.buf.length-ntail));
+    var bg=magOf(dsample(tail,ac.sampleRate,4000).d);     // 叩く直前のスペクトル
+    var g=GC={tg:tg,ntail:ntail,bg:bg,key:hitKey(),lk:lockKey(),r:[],n:at.length};
+    at.forEach(function(ms){ setTimeout(function(){ micGrab(g); },ms); });
+  }
+  function micGrab(g){
+    if(!mic.on||!mic.an||GC!==g) return;
+    var d=byId(st.tid); if(!d) return;
+    var tg=g.tg;
+    mic.an.getFloatTimeDomainData(mic.buf);
+    var ds=dsample(mic.buf.subarray(Math.max(0,mic.buf.length-g.ntail)),ac.sampleRate,4000);
     // 緩い状態から締め上げる途中は目標を大きく下回るので、下側を1オクターブ取る
-    var lo=Math.max(28,tg*0.5), hi=Math.min(600,tg*1.6), lk=lockKey(), L=lockHz[lk];
+    var lo=Math.max(28,tg*0.5), hi=Math.min(600,tg*1.6), lk=g.lk, L=lockHz[lk];
     if(L>0){
       if(L>=lo&&L<=hi){ lo=Math.max(lo,L/LOCK_R); hi=Math.min(hi,L*LOCK_R); }
       else { delete lockHz[lk]; delete lockMiss[lk]; L=0; }   // 目標が遠くに動いたら外す
     }
-    var r=detect(ds.d,ds.sr,lo,hi);
+    var r=detect(ds.d,ds.sr,lo,hi,g.bg);
     var ok=r&&r.hz>0&&isFinite(r.hz)&&r.prom>=PROM;
     // 覚えた範囲で読めないときは、締め上げて音程が動いた可能性がある。
     // その場で広く探し直し、しっかりした山が外に見つかったら覚え直す
     if(!ok&&lockHz[lk]>0){
-      var w=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6));
+      var w=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6),g.bg);
       if(w&&w.hz>0&&isFinite(w.hz)&&w.prom>=PROM){
         delete lockHz[lk]; delete lockMiss[lk]; delete lockCand[lk];
         r=w; ok=true;
       }
     }
-    if(stage===1){ pend=ok?r:null; return; }
-    if(!ok||!pend||Math.abs(1200*Math.log2(r.hz/pend.hz))>TOL){
-      pend=null; rejAt=Date.now();
+    g.r.push(ok?r.hz:0);
+    if(g.r.length<g.n) return;
+    GC=null;
+    // そろった読みのうち、30セント以内で2本そろった組を採る
+    var v=g.r.filter(function(x){return x>0;}), best=null, ii, jj;
+    for(ii=0;ii<v.length;ii++){
+      var grp=[v[ii]];
+      for(jj=0;jj<v.length;jj++)
+        if(jj!==ii&&Math.abs(1200*Math.log2(v[jj]/v[ii]))<=TOL) grp.push(v[jj]);
+      if(grp.length>=2&&(!best||grp.length>best.length)) best=grp;
+    }
+    if(!best){
+      rejAt=Date.now();
       // 覚えた基音のあたりで何度も読めないなら、それは外れている。覚え直す
       if(lockHz[lk]>0){
         lockMiss[lk]=(lockMiss[lk]||0)+1;
@@ -1566,7 +1619,7 @@ footer b{font-family:var(--mono);font-weight:700}
       }
       render(); return;
     }
-    var hz=(pend.hz+r.hz)/2; pend=null;
+    var hz=best.reduce(function(x,y){return x+y;},0)/best.length;
     // 覚えるのは2打そろってから。1打だけで覚えると、たまたま別のモードが
     // 最強だったときに、その値に居座ってしまう
     if(lockHz[lk]>0){
@@ -1577,7 +1630,7 @@ footer b{font-family:var(--mono);font-weight:700}
       lockCand[lk]=hz;
     }
     lockMiss[lk]=0;
-    var k=hitKey(), a=hits[k]||(hits[k]=[]);
+    var k=g.key, a=hits[k]||(hits[k]=[]);
     a.push(hz); if(a.length>5) a.shift();
     var b=a.slice().sort(function(x,y){return x-y;});
     var med=b.length%2?b[(b.length-1)>>1]:(b[(b.length>>1)-1]+b[b.length>>1])/2;
@@ -3122,7 +3175,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261023-190003";
+  var BUILD="20261025-100848";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
