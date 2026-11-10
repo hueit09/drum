@@ -1,4 +1,4 @@
-var C="taut-20261025-100848";
+var C="taut-20261110-173258";
 var SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png"];
 self.addEventListener("install",function(e){
   self.skipWaiting();
@@ -31,8 +31,11 @@ self.addEventListener("fetch",function(e){
   }
   e.respondWith(
     fetch(r).then(function(res){
-      var cp=res.clone();
-      caches.open(C).then(function(c){c.put(r,cp);}).catch(function(){});
+      // 失敗の応答（404など）で、手元の正常な控えを上書きしない
+      if(res&&res.ok){
+        var cp=res.clone();
+        caches.open(C).then(function(c){c.put(r,cp);}).catch(function(){});
+      }
       return res;
     }).catch(function(){
       return caches.match(r).then(function(m){return m||caches.match("index.html");});
