@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="ラグ値から追い込むドラムチューニング">
-<meta name="theme-color" content="#EDF0F6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#080A10" media="(prefers-color-scheme: dark)">
+<meta name="description" content="ラグを1本ずつ合わせる、ドラムチューナー">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<meta name="theme-color" content="#F2F3F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C0D" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
@@ -18,22 +19,22 @@
 
 /* Light tokens on :root; dark under the media query (unless forced light) and under [data-theme=dark]. */
 :root{
-  --bg:#EDF0F6; --card:#FFFFFF; --sunk:#F2F5F9; --raise:#E2E7F0;
-  --line:#DBE1EA; --line-hi:#B3BDCB;
-  --fg:#0D131B; --dim:#58636F; --faint:#8B95A2;
-  --acc:#4B3BD6; --acc-soft:#E8E5FD; --acc-fg:#FFFFFF;
-  --top:#A9530A; --top-soft:#FCEDDB; --bot:#07607A; --bot-soft:#DBF0F7;
+  --bg:#F2F3F1; --card:#FFFFFF; --sunk:#ECEDEA; --raise:#E1E3DF;
+  --line:#DCDED9; --line-hi:#A9ADA6;
+  --fg:#0E0F11; --dim:#555A5F; --faint:#888D91;
+  --acc:#0E0F11; --acc-soft:#E6E8E3; --acc-fg:#FFFFFF;
+  --top:#B4530A; --top-soft:#FBEBDA; --bot:#0A6C86; --bot-soft:#DCEFF5;
   --good:#107A46; --good-soft:#DCF1E5; --close:#8A5D02; --close-soft:#FAEFD4;
   --off:#BC2F2A; --off-soft:#FBE2E1;
-  --kick:#5F27D1; --kick-soft:#EBE4FC;
-  --snare:#B82450; --snare-soft:#FCE2E9;
-  --tom:#06704F; --tom-soft:#D9F1E8;
-  --head-a:#FDFDFE; --head-b:#DFE5EC; --head-ink:#0D131B; --rim:#9EA8B5; --rim-hi:#D6DCE4;
-  --sh:0 1px 2px rgba(13,19,27,.05),0 4px 14px rgba(13,19,27,.06);
-  --sh-lift:0 2px 6px rgba(13,19,27,.09),0 12px 28px rgba(13,19,27,.10);
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Yu Gothic UI","Noto Sans JP",system-ui,sans-serif;
+  --kick:#0E0F11; --kick-soft:#E1E3DF;
+  --snare:#0E0F11; --snare-soft:#E1E3DF;
+  --tom:#0E0F11; --tom-soft:#E1E3DF;
+  --head-a:#FFFFFF; --head-b:#E3E5E0; --head-ink:#0E0F11; --rim:#9A9F9C; --rim-hi:#D5D8D3;
+  --sh:none;
+  --sh-lift:0 8px 24px rgba(14,15,17,.16);
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Yu Gothic UI","Noto Sans JP",system-ui,sans-serif;
   /* ロゴと同じ書体。iPhone では SF Pro になる */
-  --mono:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
+  --mono:"Archivo",-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
   --tnum:tabular-nums;
   --h-good:#0E7A46; --h-close:#8A5D02; --h-off:#BC2F2A; --h-dim:#5A6572;
   --ease:cubic-bezier(.2,.8,.25,1);
@@ -41,31 +42,31 @@
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#080A10; --card:#141923; --sunk:#0F131C; --raise:#1E2534;
-  --line:#242C3A; --line-hi:#3C4659;
-  --fg:#E9EEF7; --dim:#949FB1; --faint:#656F80;
-  --acc:#8678FF; --acc-soft:#201C3D; --acc-fg:#080A10;
+  --bg:#0B0C0D; --card:#141517; --sunk:#1B1D20; --raise:#25282C;
+  --line:#272A2E; --line-hi:#474C52;
+  --fg:#F1F2EE; --dim:#9A9FA3; --faint:#686D72;
+  --acc:#F1F2EE; --acc-soft:#25282C; --acc-fg:#0B0C0D;
   --top:#FFA94D; --top-soft:#2C1F0E; --bot:#4FD0EC; --bot-soft:#0D2730;
   --good:#2FD782; --good-soft:#0B2A1C; --close:#FFC53D; --close-soft:#2B230F;
   --off:#FF736F; --off-soft:#2F1718;
-  --kick:#A78BFA; --kick-soft:#201A38; --snare:#FB7FA0; --snare-soft:#301820;
-  --tom:#35D79E; --tom-soft:#0B2922;
-  --head-a:#D9E0E9; --head-b:#AEB8C6; --head-ink:#0B0F16; --rim:#6C7684; --rim-hi:#9AA4B2;
-  --sh:0 1px 2px rgba(0,0,0,.5); --sh-lift:0 4px 18px rgba(0,0,0,.6);
+  --kick:#F1F2EE; --kick-soft:#25282C; --snare:#F1F2EE; --snare-soft:#25282C;
+  --tom:#F1F2EE; --tom-soft:#25282C;
+  --head-a:#F3F4F0; --head-b:#C6CAC3; --head-ink:#0B0C0D; --rim:#6F7479; --rim-hi:#A0A5A9;
+  --sh:none; --sh-lift:0 8px 26px rgba(0,0,0,.6);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#080A10; --card:#141923; --sunk:#0F131C; --raise:#1E2534;
-  --line:#242C3A; --line-hi:#3C4659;
-  --fg:#E9EEF7; --dim:#949FB1; --faint:#656F80;
-  --acc:#8678FF; --acc-soft:#201C3D; --acc-fg:#080A10;
+  --bg:#0B0C0D; --card:#141517; --sunk:#1B1D20; --raise:#25282C;
+  --line:#272A2E; --line-hi:#474C52;
+  --fg:#F1F2EE; --dim:#9A9FA3; --faint:#686D72;
+  --acc:#F1F2EE; --acc-soft:#25282C; --acc-fg:#0B0C0D;
   --top:#FFA94D; --top-soft:#2C1F0E; --bot:#4FD0EC; --bot-soft:#0D2730;
   --good:#2FD782; --good-soft:#0B2A1C; --close:#FFC53D; --close-soft:#2B230F;
   --off:#FF736F; --off-soft:#2F1718;
-  --kick:#A78BFA; --kick-soft:#201A38; --snare:#FB7FA0; --snare-soft:#301820;
-  --tom:#35D79E; --tom-soft:#0B2922;
-  --head-a:#D9E0E9; --head-b:#AEB8C6; --head-ink:#0B0F16; --rim:#6C7684; --rim-hi:#9AA4B2;
-  --sh:0 1px 2px rgba(0,0,0,.5); --sh-lift:0 4px 18px rgba(0,0,0,.6);
+  --kick:#F1F2EE; --kick-soft:#25282C; --snare:#F1F2EE; --snare-soft:#25282C;
+  --tom:#F1F2EE; --tom-soft:#25282C;
+  --head-a:#F3F4F0; --head-b:#C6CAC3; --head-ink:#0B0C0D; --rim:#6F7479; --rim-hi:#A0A5A9;
+  --sh:none; --sh-lift:0 8px 26px rgba(0,0,0,.6);
   color-scheme:dark;
 }
 
@@ -630,16 +631,190 @@ footer b{font-family:var(--mono);font-weight:700}
   .dr button,.tune .segs .sg{animation:fadeup .34s var(--ease) backwards}
   @keyframes fadeup{0%{opacity:0;transform:translateY(7px)}100%{opacity:1;transform:none}}
 }
+/*<SKIN>*/
+/* ═══════════════════════════════════════════════════════════════
+   紙とインク。
+   色が付いているものには必ず意味がある：橙＝打面、青緑＝裏面、
+   緑・黄・赤＝合っている・近い・外れている。それ以外は白と黒だけ。
+   文字は Archivo。ロゴは横にいっぱいまで引き伸ばした字幅で組む（TAUT＝張りつめた）。
+   ═══════════════════════════════════════════════════════════════ */
+@font-face{font-family:"Archivo";src:url("fonts/archivo.woff2") format("woff2");
+  font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:swap}
+body{font-weight:500;line-height:1.65}
+.wrap{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+
+/* 見出しは小さな灰色の添え物ではなく、読むための文字にする */
+.cap{font-size:12.5px;font-weight:800;letter-spacing:.01em;color:var(--fg)}
+.note{font-size:11px;font-weight:500;color:var(--dim)}
+.snote{font-size:11.5px;color:var(--dim)}
+
+/* 面：影をやめて線だけ。浮かせるのは下のタブと「次へ」だけ */
+.pane,.card,details,.band,.lvw{box-shadow:none;border-radius:16px}
+.pane{padding:17px 16px;gap:18px;margin-bottom:10px}
+.card{padding:16px}
+
+/* ロゴ */
+header{padding-block:14px 12px;gap:10px}
+.mark{display:none}
+.brand h1{font-family:"Archivo",var(--sans);font-stretch:125%;font-weight:800;font-size:25px;letter-spacing:.045em}
+.b1{align-items:baseline;gap:8px}
+.ver{background:none;padding:0;color:var(--faint);font-size:10px;font-weight:600;letter-spacing:.02em}
+.appurl{font-size:10.5px;font-weight:500;color:var(--faint)}
+.thm{background:none;border:1px solid var(--line);padding:2px}
+.thm button[aria-pressed="true"]{background:var(--fg);color:var(--bg);box-shadow:none}
+
+/* タブ：黒い錠剤がすべる */
+.tabs{box-shadow:none;border-top:1px solid var(--line);padding-top:7px;
+  padding-bottom:calc(7px + env(safe-area-inset-bottom,0px))}
+.tabs i.ind{top:7px;border-radius:999px;box-shadow:none}
+.tab{font-size:12.5px;font-weight:700;letter-spacing:.01em}
+:root .tabs{box-shadow:none}
+
+/* 選ぶもの：選ばれているのは黒、いないのは薄い灰色 */
+.sg{border-radius:12px;font-weight:700;border-width:1.5px}
+.sg[aria-pressed="true"]{box-shadow:none}
+.k{border-radius:12px;font-size:14px;border-width:1.5px}
+.k[data-on="1"]{background:var(--card);color:var(--fg);border-color:var(--fg)}
+.k[data-live="1"]{box-shadow:none}
+.pk[data-live="1"]{background:var(--card);border-color:var(--fg)}
+.step button{border-radius:12px;color:var(--fg)}
+.chip{font-size:12px;border-color:var(--line-hi);color:var(--fg)}
+.keyp>summary{font-size:15px;font-weight:800;padding:13px 16px;letter-spacing:.01em}
+.keyp>summary::before{display:none}
+.pinb{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+
+/* 主ボタン */
+.pick,.nextb,.sp button,.upd{box-shadow:none;border-radius:999px}
+.pick{padding:16px;font-size:14.5px;letter-spacing:.02em}
+.nextb{box-shadow:var(--sh-lift);font-size:14px;min-height:50px}
+.sres .go2,.slres .go2{border-radius:999px;background:var(--fg);color:var(--bg)}
+.sres .go2.sub,.slres .go2.sub{background:none;color:var(--fg);border:1.5px solid var(--line-hi)}
+.cf .go{background:var(--fg);color:var(--bg)}
+
+/* 数字：字幅を詰めた太字。計器の目盛りのように */
+.hrv,.ro .dev,.whv b,.editor .ev,.hzin,.fi input{font-family:"Archivo",var(--mono);font-stretch:88%}
+.ro .dev{font-stretch:80%;font-weight:800;letter-spacing:-.02em;font-size:clamp(44px,15vw,62px)}
+.hrv{font-size:23px;letter-spacing:-.01em}
+.sres .big2,.slres .shead2 b{font-family:"Archivo",var(--mono);font-stretch:112%;color:var(--fg);letter-spacing:-.01em}
+.sres .big2{font-size:44px}
+.sres .big2 u{opacity:1;color:var(--dim);font-stretch:100%;font-size:13px}
+
+/* レシピ：太鼓の名前は札ではなく見出し */
+.badge,#cards .badge{background:none;padding:0;font-size:17px;font-weight:800;color:var(--fg);letter-spacing:0}
+.badge i{display:none}
+.ch .sz{font-size:11px;color:var(--dim)}
+.band{border-radius:16px;font-size:12.5px;line-height:1.6}
+.hr{border-radius:12px;padding:9px 12px 8px}
+.hrl{font-size:11px;letter-spacing:.02em}
+.rbtn{border-radius:14px;background:var(--sunk);color:var(--fg)}
+.rbtn span{font-size:10px}
+.tag{font-size:10.5px;letter-spacing:.01em}
+
+/* チューナー */
+.dial{max-width:min(100%,312px)}
+.ro .lab{letter-spacing:.06em;font-size:10.5px}
+.ro .act{font-size:14px;font-weight:800;letter-spacing:.02em}
+.hsl,.dsl{background:none;border-color:var(--line)}
+.hsl i.hin{box-shadow:none}
+.tgt{font-size:12px}
+/* いま何をすればいいかを、ヘッドのすぐ下に1行で言う */
+.guide{margin:4px 0 2px;width:100%;max-width:330px;min-height:44px;display:grid;place-items:center;
+  text-align:center;font-size:15.5px;font-weight:800;line-height:1.4;letter-spacing:.005em;color:var(--fg);
+  transition:color .3s var(--ease)}
+.guide.good{color:var(--good)} .guide.close{color:var(--close)} .guide.off{color:var(--off)}
+.guide small{display:block;font-size:11.5px;font-weight:500;color:var(--dim);margin-top:1px}
+.dg,.mn{background:var(--sunk);color:var(--dim);font-weight:500;border-radius:12px;text-align:left;line-height:1.65}
+.mn{text-align:center}
+.lockb{font-family:var(--sans);font-weight:600;border-color:var(--line-hi)}
+.lvw{border-radius:16px}
+.lvh{font-size:11.5px;letter-spacing:.01em;color:var(--fg);font-weight:800}
+.lvn{font-size:10.5px;color:var(--dim)}
+.hzin{border-width:1.5px;border-radius:14px}
+.editor{background:var(--sunk)}
+
+/* 曲から */
+.sres .drow b{font-family:"Archivo",var(--mono);font-size:17px;font-stretch:92%}
+.sres .drow u{color:var(--fg);font-weight:700}
+.slchip,.kitchip{border-color:var(--line-hi)}
+
+/* 説明 */
+summary{font-size:14px;font-weight:800;padding:15px 16px}
+summary::before{background:var(--sunk)}
+.bd{font-size:13.5px;line-height:1.9}
+.bd a{text-decoration:underline;text-underline-offset:3px}
+
+/* ─── 起動画面：いつも舞台の黒。ゆるんだ文字が、引かれて張りつめる ─── */
+.splash{background:#0B0C0D;color:#F1F2EE;padding:28px 24px;place-items:center stretch}
+.sp{justify-items:stretch;text-align:left;width:100%;max-width:440px;margin:0 auto}
+.sp h2{margin:0;font-family:"Archivo",var(--sans);font-weight:800;font-stretch:125%;line-height:.86;
+  font-size:min(25.5vw,118px);letter-spacing:.02em;text-indent:0;white-space:nowrap;margin-left:-.05em}
+.sp .rod{display:block;height:2px;background:#F1F2EE;margin:20px 0 0;transform-origin:left center}
+.sp p{margin:16px 0 0;font-size:15px;font-weight:700;color:#F1F2EE;letter-spacing:.01em}
+.sp .how{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:13px;counter-reset:how}
+.sp .how li{counter-increment:how;display:grid;grid-template-columns:26px 1fr;column-gap:10px;
+  font-size:12px;line-height:1.55;color:#9A9FA3}
+.sp .how li::before{content:counter(how);grid-row:1/3;font-family:"Archivo",var(--sans);font-size:15px;font-weight:800;
+  color:#0B0C0D;background:#F1F2EE;width:26px;height:26px;border-radius:50%;display:grid;place-items:center}
+.sp .how b{display:block;font-size:14px;font-weight:800;color:#F1F2EE}
+.sp button{margin-top:30px;width:100%;min-width:0;background:#F1F2EE;color:#0B0C0D;font-size:16px;
+  letter-spacing:.04em;padding:18px 28px}
+.sp small{color:#9A9FA3;text-align:center}
+@media (max-height:640px){.sp .how{gap:9px;margin-top:16px}.sp button{margin-top:20px}}
+@media (prefers-reduced-motion:no-preference){
+  .sp>*{animation:none}
+  .sp h2{animation:tighten 1.15s cubic-bezier(.16,.84,.24,1) both}
+  @keyframes tighten{0%{font-stretch:62%;letter-spacing:.42em;opacity:0}
+    18%{opacity:1}100%{font-stretch:125%;letter-spacing:.02em;opacity:1}}
+  .sp .rod{animation:rodpull 1.15s cubic-bezier(.16,.84,.24,1) both}
+  @keyframes rodpull{0%{transform:scaleX(.3);opacity:0}18%{opacity:1}100%{transform:scaleX(1)}}
+  .sp p,.sp .how,.sp button{animation:spin_ .5s var(--ease) .75s backwards}
+  .sp button{animation-delay:.95s}
+}
+
+/* キーの帯は詰める（中身の余白は .kb が持つ） */
+.keyp{padding:0;gap:0}
+
+/* チューナーの上段：太鼓は横に並べて指で送る。面の切り替えは横一列。
+   縦に積むとヘッドが画面の下へ押し出されて、肝心の読みが見えなくなる */
+.stage{flex-wrap:wrap;gap:9px 10px;margin:0 0 2px;align-items:center}
+.dsl{flex:1 1 100%;flex-direction:row;gap:6px;padding:0 18px 0 0;border:0;border-radius:0;overflow-x:auto;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent)}
+.dsl::-webkit-scrollbar{display:none}
+.dsl button{flex:0 0 auto;font-size:13px;padding:9px 15px;min-height:42px;border-radius:999px;
+  border:1.5px solid var(--line);color:var(--dim)}
+.dsl button[aria-pressed="true"]{border-color:var(--fg)}
+.car{flex:0 0 78px;height:64px}
+.slide svg{max-width:78px}
+.hsl{flex:1 1 0;min-width:0;flex-direction:row;padding:3px}
+.hsl button{flex:1 1 0;min-width:0;flex-direction:row;justify-content:center;gap:6px;font-size:13px;
+  min-height:44px;padding:6px 4px}
+.hsl i.hin{top:3px;right:auto;transition:left .3s var(--ease),width .3s var(--ease)}
+.guide{margin:6px 0 0}
+.dial{margin-top:-2px}
+.tune{grid-template-columns:minmax(0,1fr)}
+.stage{min-width:0;max-width:100%}
+.dsl{min-width:0}
+#songModes .sg{white-space:normal;line-height:1.25;font-size:12.5px;padding:8px 6px}
+.dsl{padding-left:2px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 26px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 26px),transparent)}
+/*</SKIN>*/
 </style>
 
 </head>
 <body>
 <div class="splash" id="splash">
   <div class="sp">
-    <svg class="bigmark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-linecap="round"><path d="M9.62 20.89A9.2 9.2 0 1 1 14.38 20.89" stroke="currentColor" stroke-width="2.1"/><path d="M7.6 10.8v2.4" stroke="currentColor" stroke-width="1.9" opacity=".45"/><path d="M16.4 10.8v2.4" stroke="currentColor" stroke-width="1.9" opacity=".45"/><path d="M12 8.5v7" stroke="var(--acc)" stroke-width="2.3"/></svg>
     <h2>TAUT</h2>
-    <p>ラグ値から追い込むドラムチューニング</p>
-    <button id="btnStart" type="button">START</button>
+    <i class="rod" aria-hidden="true"></i>
+    <p>ラグを1本ずつ合わせる、ドラムチューナー</p>
+    <ol class="how">
+      <li><b>キーを選ぶ</b>曲のキーに合わせて、張る高さが決まります</li>
+      <li><b>レシピを見る</b>太鼓ごとに、打面と裏面の目標が出ます</li>
+      <li><b>ラグのそばを叩く</b>マイクが読んで、締めるか緩めるかを言います</li>
+    </ol>
+    <button id="btnStart" type="button">はじめる</button>
     <small id="spNote" hidden>マイクが使えない場合は手入力で測れます</small>
   </div>
 </div>
@@ -702,6 +877,7 @@ footer b{font-family:var(--mono);font-weight:700}
         <div class="car" id="car" aria-label="ドラムをスワイプで切り替え"></div>
         <div class="hsl" id="heads" role="group" aria-label="ヘッド"><i class="hin" id="hInd"></i></div>
       </div>
+      <p class="guide" id="guide" aria-live="polite"></p>
       <div class="dial">
         <svg class="hd" id="svg" viewBox="0 0 200 200" role="img" aria-label="ヘッド図"></svg>
         <i class="burst" id="burst" aria-hidden="true"></i>
@@ -1024,7 +1200,7 @@ footer b{font-family:var(--mono);font-weight:700}
           <li>ヘッドが揃うと下に<strong>「裏面へ進む」「実音を測る」「次のドラムへ」</strong>が出ます。打面 → 裏面 → 実音 → 次のドラム の順に、押すだけで進めます。</li>
           <li>測定値はこの端末にだけ残ります。</li>
         </ul>
-        <p><strong>マイクはSTARTを押した時点で動き始めます</strong>。最初の一度だけブラウザが使用許可を聞くので「許可」してください。以降はボタン操作なしで、弾くたびに選んでいるラグの値が更新されます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。弾いた瞬間、そのラグから輪が広がります。</p>
+        <p><strong>マイクは「はじめる」を押した時点で動き始めます</strong>。最初の一度だけブラウザが使用許可を聞くので「許可」してください。以降はボタン操作なしで、弾くたびに選んでいるラグの値が更新されます。デコピンは音が小さいので、マイクを 20〜30cm まで近づけてください。弾いた瞬間、そのラグから輪が広がります。</p>
         <p>読み取りは FFT でスペクトルの最強ピークを拾い、放物線補間で山の頂点を求める方式です。探す範囲は<strong>目標の1オクターブ下から短6度上まで</strong>。緩んだ状態から締め上げる途中は目標を大きく下回るので、下側を広く取ってあります。</p>
         <p>誤読の原因はほぼすべて<strong>部屋の共鳴と暗騒音</strong>です。そこで次の方法で落としています。</p>
         <ul>
@@ -3317,7 +3493,14 @@ footer b{font-family:var(--mono);font-weight:700}
       b.setAttribute("aria-pressed",on?"true":"false");
       if(on) hi=b;
     });
-    if(hi&&elHInd){ elHInd.style.top=hi.offsetTop+"px"; elHInd.style.height=hi.offsetHeight+"px"; }
+    if(hi&&elHInd){
+      elHInd.style.top=hi.offsetTop+"px"; elHInd.style.height=hi.offsetHeight+"px";
+      elHInd.style.left=hi.offsetLeft+"px"; elHInd.style.width=hi.offsetWidth+"px";
+      // 選んでいる太鼓が横送りの外に隠れないように
+      var pd=elDrums.querySelector('[aria-pressed="true"]');
+      if(pd&&elDrums.scrollWidth>elDrums.clientWidth)
+        elDrums.scrollLeft=Math.max(0,pd.offsetLeft-(elDrums.clientWidth-pd.offsetWidth)/2);
+    }
 
     if(!(lug>=0&&lug<d.lugs)) lug=0;      // ラグ数を減らした直後の取り残し防止
     var isF=st.thead==="fund", free=!!st.free;
@@ -3432,6 +3615,27 @@ footer b{font-family:var(--mono);font-weight:700}
     }
     elNext.hidden=!nextAct;
     if(nextAct) elNext.textContent=nlab;
+    // いま何をすればいいかを、言葉で1行。数字と色が読めなくても進められるように
+    var gEl=E("guide"), gt="", gs="", gk="", gkk=cur>0?cl(cur):"", hn=st.thead==="top"?"打面":"裏面";
+    if(edit){ gt=""; }
+    else if(isF){
+      if(cur>0){ gt="実音を測りました"; gk="good"; }
+      else { gt=mic.on?"ヘッドの真ん中を軽く叩く":"実音の Hz を下の欄に入れる"; gs="表と裏を合わせた、この太鼓そのものの高さを測ります"; }
+    } else if(n>0&&gd===n){ gt=hn+"は全部そろいました"; gk="good"; }
+    else if(!(cur>0)){
+      gt=mic.on?"ラグ "+(lug+1)+" のすぐ内側を、指で軽くはじく":"ラグ "+(lug+1)+" を測って、Hz を下の欄に入れる";
+      gs=free?"全部のラグを同じ高さにそろえます":"目標は "+tgt+" Hz。数字が 0 に近づくように回します";
+    } else if(gkk==="good"){
+      gt="ラグ "+(lug+1)+" は合いました"; gs=n>1?"点線の輪が付いたラグへ進みます":""; gk="good";
+    } else {
+      var gdv=cur-tgt;
+      gt="ラグ "+(lug+1)+" を"+(Math.abs(gdv)<tgt*0.035?"少し":"")+(gdv>0?"ゆるめる":"しめる");
+      gs=(free?"まわりの平均まで ":"目標まで ")+"あと "+Math.abs(gdv).toFixed(1)+" Hz"; gk=gkk;
+    }
+    gEl.className="guide"+(gk?" "+gk:"");
+    gEl.textContent=gt;
+    if(gs){ var gsm=document.createElement("small"); gsm.textContent=gs; gEl.appendChild(gsm); }
+    gEl.hidden=!gt;
     elCal.hidden=!(isF&&d.rcal>0);
 
     if(zoom){ zoom=false; anim(elSVG,"zoom",470); }
@@ -3541,7 +3745,7 @@ footer b{font-family:var(--mono);font-weight:700}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261110-204544";
+  var BUILD="20261111-043631";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。

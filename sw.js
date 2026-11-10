@@ -1,5 +1,5 @@
-var C="taut-20261110-204544";
-var SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png"];
+var C="taut-20261111-043631";
+var SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png","fonts/archivo.woff2"];
 self.addEventListener("install",function(e){
   self.skipWaiting();
   e.waitUntil(caches.open(C).then(function(c){return c.addAll(SHELL);}).catch(function(){}));

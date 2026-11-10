@@ -8,3 +8,7 @@ drums.onnx
 ort.wasm.min.js / ort-wasm-simd-threaded.mjs / ort-wasm-simd-threaded.wasm
   ONNX Runtime Web 1.22.0
   https://github.com/microsoft/onnxruntime （MIT License）
+
+../fonts/archivo.woff2
+  Archivo（Omnibus-Type）。SIL Open Font License 1.1
+  https://github.com/Omnibus-Type/Archivo
