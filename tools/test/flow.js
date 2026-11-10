@@ -57,13 +57,20 @@ const T = (p, s) => p.textContent(s);
 
   // ───── マイクなし（手入力） ─────
   o = await L.open({}); p = o.page; await L.start(p);
-  say(!(await p.isHidden('#tIn')) && !(await p.isHidden('#mn')), 'マイクが無いと手入力欄と案内が出る');
+  say(await p.isHidden('#tIn') && !(await p.isHidden('#mn')) && /手で入力/.test(await T(p, '#guide')), 'マイクが無いと案内が出る。手入力はオプションの中');
+  await p.click('.opt summary'); await p.waitForTimeout(400);
+  say(!(await p.isHidden('#tIn')), 'オプションを開くと手入力欄がある');
   await p.fill('#tIn', '175'); await p.waitForTimeout(800);
   say(await T(p, '#roAct') === '合致', '手入力 175 → ' + await T(p, '#roAct'));
   await p.click('#svg .lug[data-l="3"]'); await p.waitForTimeout(100);
   say(await p.inputValue('#tIn') === '', 'ラグを替えると入力欄が空になる');
   await p.fill('#tIn', '180'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(100);
   say(await T(p, '#roAct') === 'ゆるめる', '180 → ' + await T(p, '#roAct'));
+  say(/ゆるめる/.test(await T(p, '#guide')) && /反時計回り/.test(await T(p, '#guide')) && await p.getAttribute('#turn', 'opacity') === '1' && /scale\(-1,1\)/.test(await p.getAttribute('#turn', 'transform')), '案内と矢印が「反時計回りにゆるめる」を示す：' + (await T(p, '#guide')).replace(/\s+/g, ' '));
+  await p.fill('#tIn', '168'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(100);
+  say(/しめる/.test(await T(p, '#guide')) && /時計回り/.test(await T(p, '#guide')) && !/scale/.test(await p.getAttribute('#turn', 'transform')), '低いときは「時計回りにしめる」：' + (await T(p, '#guide')).replace(/\s+/g, ' '));
+  await p.fill('#tIn', '175'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(100);
+  say(/合いました/.test(await T(p, '#guide')) && await p.getAttribute('#turn', 'opacity') === '0', '合うと矢印が消える：' + (await T(p, '#guide')).replace(/\s+/g, ' '));
   // ラグ数をその場で変える
   await p.click('#tLug'); await p.click('#tEdUp'); await p.click('#tEdOk');
   say(await p.locator('#svg .lug').count() === 7 && await T(p, '#tLug') === '7 ラグ', 'ラグ数チップで 6→7');
@@ -74,7 +81,7 @@ const T = (p, s) => p.textContent(s);
   // 実音 → 次のドラムへ
   await p.click('#heads [data-head="fund"]'); await p.fill('#tIn', '138'); await p.press('#tIn', 'Enter');
   say(/次のドラムへ/.test(await T(p, '#nextB')), '実音を入れると「' + await T(p, '#nextB') + '」');
-  await p.click('.opt summary'); await p.waitForTimeout(400); await p.click('#tClr');
+  await p.click('#tClr');
   say(await p.isHidden('#nextB') && await p.inputValue('#tIn') === '', 'クリアで消える');
   // キー
   await L.tab(p, 'recipe'); await p.click('#keySum'); await p.waitForTimeout(400);

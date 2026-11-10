@@ -799,6 +799,38 @@ summary::before{background:var(--sunk)}
 #songModes .sg{white-space:normal;line-height:1.25;font-size:12.5px;padding:8px 6px}
 .dsl{padding-left:2px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 26px),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 26px),transparent)}
+
+/* ヘッドの中の文字と数字は、丸みのある書体で。丸い太鼓の中に角ばった太字は合わなかった */
+.ro .lab,.ro .dev,.ro .nn2,.ro .act{font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,
+  "Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;font-stretch:normal}
+.ro .dev{font-weight:700;letter-spacing:-.025em;font-size:clamp(40px,13.6vw,56px);line-height:1.08}
+.ro .dev em{font-weight:600}
+.ro .nn2{font-weight:600;letter-spacing:.01em;font-size:12px}
+.ro .act{font-weight:700;font-size:13.5px;letter-spacing:.03em}
+.ro .lab{font-weight:600;letter-spacing:.08em}
+
+/* 回す向きの矢印：いまのラグのまわりを、回す方向に回り続ける。外れているほど速い */
+svg.hd .turn{pointer-events:none;transition:opacity .25s var(--ease)}
+svg.hd .turn .spin{transform-box:fill-box;transform-origin:center}
+svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
+.guide .gi{display:inline-block;width:17px;height:17px;vertical-align:-2.5px;margin-right:6px}
+.guide .gi svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+@media (prefers-reduced-motion:no-preference){
+  svg.hd .turn.cw .spin{animation:turncw var(--tdur,1.6s) linear infinite}
+  svg.hd .turn.ccw .spin{animation:turnccw var(--tdur,1.6s) linear infinite}
+  .guide .gi.cw svg{animation:turncw 1.8s linear infinite}
+  .guide .gi.ccw svg{animation:turnccw 1.8s linear infinite}
+  @keyframes turncw{to{transform:rotate(360deg)}}
+  @keyframes turnccw{to{transform:rotate(-360deg)}}
+  /* 聴いている合図：まだ読めていないラグが、ゆっくり息をする */
+  svg.hd .lis.on{animation:listen 1.7s ease-in-out infinite}
+  @keyframes listen{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:0;transform:scale(1.55)}}
+  .guide.chg{animation:gchg .34s var(--ease)}
+  @keyframes gchg{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
+}
+#tInRow .hzin{max-width:none}
+.guide{display:block;min-height:46px}
 /*</SKIN>*/
 </style>
 
@@ -910,12 +942,13 @@ summary::before{background:var(--sunk)}
       </div>
       <div class="dg" id="tDg" hidden></div>
       <button class="nextb" id="nextB" type="button" hidden>次へ</button>
-      <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="測った Hz" aria-label="測ったHz" hidden>
       <div class="mn" id="mn" hidden></div>
     </div>
     <details class="opt">
       <summary>オプション</summary>
       <div class="bd">
+        <div class="row" id="tInRow" hidden><div class="cap">手で入力<span class="note">マイクを使わないとき、測った値を打ち込みます</span></div>
+          <input id="tIn" class="hzin" type="text" inputmode="decimal" autocomplete="off" placeholder="Hz" aria-label="測ったHz"></div>
         <div class="row"><div class="cap">記録したあと</div>
           <div class="segs" id="advs" role="group" aria-label="記録したあとの動作"></div></div>
         <div class="row"><div class="cap">ラグを回る順</div>
@@ -2109,7 +2142,7 @@ summary::before{background:var(--sunk)}
       elDia=E("tDia"),elAdvs=E("advs"),elOrds=E("ords"),
       elEd=E("tEdit"),elEdL=E("tEdL"),elEdV=E("tEdV"),elDg=E("tDg"),elCal=E("tCal"),
       elLug=E("tLug"),elNext=E("nextB");
-  var lug=0, edit=null, inT=0, pop=false, zoom=false, doneKey=null, inKey="", nextAct=null;
+  var lug=0, edit=null, inT=0, pop=false, zoom=false, doneKey=null, inKey="", nextAct=null, guideSig="";
   // 合致 15 セント、近い 35 セント。検出の実測誤差（中央値で約3¢、悪条件でも20¢台）に見合う幅
   var GOOD_C=15, CLOSE_C=35, EVEN_C=25, OUT_C=40;
 
@@ -3189,6 +3222,8 @@ summary::before{background:var(--sunk)}
         +'" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 100 100)"/>');
       p.push('<circle class="nxt" id="nxt" cx="100" cy="100" r="16.5" fill="none" stroke="'+cssv("--acc")
         +'" stroke-width="1.9" stroke-dasharray="3.2 4.2" stroke-linecap="round" opacity="0"/>');
+      p.push('<circle class="lis" id="lis" cx="100" cy="100" r="15" fill="none" stroke="'+cssv("--acc")
+        +'" stroke-width="2" opacity="0"/>');
       for(i=0;i<n;i++){
         q=lugXY(i,n);
         p.push('<g class="lug" data-l="'+i+'" role="button" tabindex="0" aria-label="ラグ'+(i+1)+'">');
@@ -3206,6 +3241,8 @@ summary::before{background:var(--sunk)}
         p.push('</g>');
       }
     }
+    // 回す向きの矢印。ラグの上に重ねるので最後に描く
+    if(!isF) p.push('<g class="turn" id="turn" opacity="0"><g class="spin">'+TURN_SVG+'</g></g>');
     elSVG.innerHTML=p.join("");
     Array.prototype.forEach.call(elSVG.querySelectorAll(".lug"),function(g){
       function pick(){lug=parseInt(g.dataset.l,10);edit=null;clearHits();render();}
@@ -3214,6 +3251,42 @@ summary::before{background:var(--sunk)}
     });
   }
 
+  // 4分の3周の弧に矢じり。時計回りの形で描いておき、反時計回りは左右を返す
+  var TURN_SVG=(function(){
+    var r=20, a0=-150*Math.PI/180, a1=110*Math.PI/180;
+    var x0=r*Math.cos(a0), y0=r*Math.sin(a0), x1=r*Math.cos(a1), y1=r*Math.sin(a1);
+    var tx=-Math.sin(a1), ty=Math.cos(a1), nx=Math.cos(a1), ny=Math.sin(a1);
+    // 見えない円を1つ入れて、回転の中心がラグの真ん中からずれないようにする
+    return '<circle r="27" fill="none" stroke="none"/><path class="ta" d="M'+x0.toFixed(2)+' '+y0.toFixed(2)+'A'+r+' '+r+' 0 1 1 '+x1.toFixed(2)+' '+y1.toFixed(2)
+      +'" fill="none" stroke-width="2.6" stroke-linecap="round"/>'
+      +'<path class="th" d="M'+(x1+tx*6).toFixed(2)+' '+(y1+ty*6).toFixed(2)
+      +'L'+(x1+nx*4.2-tx*1).toFixed(2)+' '+(y1+ny*4.2-ty*1).toFixed(2)
+      +'L'+(x1-nx*4.2-tx*1).toFixed(2)+' '+(y1-ny*4.2-ty*1).toFixed(2)+'Z"/>';
+  })();
+  // いまのラグに、回す向きを見せる。締める＝時計回り、ゆるめる＝反時計回り。
+  // まだ読めていないラグには、聴いている合図の輪を出す
+  function paintTurn(n,isF,cur,tgt,cl,CO){
+    var tr=E("turn"), ls=E("lis");
+    if(isF||!n) return;
+    var q=lugXY(lug,n), k=cur>0?cl(cur):"none";
+    if(ls){
+      var wait=mic.on&&!(cur>0);
+      ls.setAttribute("cx",q.x.toFixed(1)); ls.setAttribute("cy",q.y.toFixed(1));
+      ls.setAttribute("opacity",wait?"0.5":"0"); ls.classList.toggle("on",wait);
+    }
+    if(!tr) return;
+    if(!(cur>0)||!(tgt>0)||k==="good"||k==="none"){ tr.setAttribute("opacity","0"); tr.classList.remove("cw","ccw"); return; }
+    var up=cur<tgt, c=Math.abs(1200*Math.log2(cur/tgt));
+    tr.setAttribute("transform","translate("+q.x.toFixed(1)+","+q.y.toFixed(1)+")"+(up?"":" scale(-1,1)"));
+    tr.setAttribute("opacity","1");
+    tr.classList.toggle("cw",up); tr.classList.toggle("ccw",!up);
+    // 左右を返した側は、回転の向きも見た目で逆になる。どちらも「cw」の動きで足りる
+    tr.classList.remove(up?"ccw":"cw"); tr.classList.add("cw"); tr.classList.remove("ccw");
+    tr.style.setProperty("--tdur",Math.max(0.8,Math.min(2.6,2.8-c/55)).toFixed(2)+"s");
+    var col=CO[k];
+    Array.prototype.forEach.call(tr.querySelectorAll(".ta"),function(e){ e.setAttribute("stroke",col); });
+    Array.prototype.forEach.call(tr.querySelectorAll(".th"),function(e){ e.setAttribute("fill",col); });
+  }
   function paintTicks(cur,tgt,cl){
     var HG={good:cssv("--h-good"),close:cssv("--h-close"),off:cssv("--h-off")};
     var ink=cssv("--head-ink"), k=cl(cur), on=cur>0&&tgt>0, i;
@@ -3525,6 +3598,7 @@ summary::before{background:var(--sunk)}
     var key=d.id+"|"+st.thead+"|"+n+"|"+st.ord+"|"+st.theme;
     if(key!==svgKey){ svgKey=key; buildHead(n,isF); }
     paintHead(n,isF,arr,cl,CO);
+    paintTurn(n,isF,cur,tgt,cl,CO);
     paintTicks(cur,tgt,cl);
     paintReadout(cur,tgt,isF,cl,flat,free);
     var ck=st.drums.map(function(x){return x.id+x.dia+x.dep+x.lugs;}).join()+"|"+st.thead+"|"+st.theme;
@@ -3576,11 +3650,11 @@ summary::before{background:var(--sunk)}
       // 線はマイクが動いているときだけ意味がある
       if(elLvw&&!mic.on) elLvw.hidden=true;
     })();
-    elIn.hidden=mic.on;
+    E("tInRow").hidden=mic.on;
     var ik=d.id+"|"+st.thead+"|"+(isF?"f":lug);
     if(document.activeElement!==elIn||ik!==inKey) elIn.value=cur>0?String(cur):"";
     inKey=ik;
-    elIn.placeholder=isF?"実音の Hz":"測った Hz";
+    elIn.placeholder=isF?"実音 Hz":"Hz";
 
     var dmsg=null;
     if(free){
@@ -3616,26 +3690,37 @@ summary::before{background:var(--sunk)}
     elNext.hidden=!nextAct;
     if(nextAct) elNext.textContent=nlab;
     // いま何をすればいいかを、言葉で1行。数字と色が読めなくても進められるように
-    var gEl=E("guide"), gt="", gs="", gk="", gkk=cur>0?cl(cur):"", hn=st.thead==="top"?"打面":"裏面";
+    var gEl=E("guide"), gt="", gs="", gk="", gdir="", gkk=cur>0?cl(cur):"", hn=st.thead==="top"?"打面":"裏面";
+    var noMic=mic.on?"":"マイクが使えないときは、下のオプションの「手で入力」へ";
     if(edit){ gt=""; }
     else if(isF){
       if(cur>0){ gt="実音を測りました"; gk="good"; }
-      else { gt=mic.on?"ヘッドの真ん中を軽く叩く":"実音の Hz を下の欄に入れる"; gs="表と裏を合わせた、この太鼓そのものの高さを測ります"; }
+      else { gt="ヘッドの真ん中を軽く叩く"; gs=noMic||"表と裏を合わせた、この太鼓そのものの高さを測ります"; }
     } else if(n>0&&gd===n){ gt=hn+"は全部そろいました"; gk="good"; }
     else if(!(cur>0)){
-      gt=mic.on?"ラグ "+(lug+1)+" のすぐ内側を、指で軽くはじく":"ラグ "+(lug+1)+" を測って、Hz を下の欄に入れる";
-      gs=free?"全部のラグを同じ高さにそろえます":"目標は "+tgt+" Hz。数字が 0 に近づくように回します";
+      gt="ラグ "+(lug+1)+" のすぐ内側を、指で軽くはじく";
+      gs=noMic||(free?"全部のラグを同じ高さにそろえます":"目標は "+tgt+" Hz。数字が 0 に近づくように回します");
     } else if(gkk==="good"){
       gt="ラグ "+(lug+1)+" は合いました"; gs=n>1?"点線の輪が付いたラグへ進みます":""; gk="good";
     } else {
       var gdv=cur-tgt;
+      gdir=gdv>0?"ccw":"cw";
       gt="ラグ "+(lug+1)+" を"+(Math.abs(gdv)<tgt*0.035?"少し":"")+(gdv>0?"ゆるめる":"しめる");
-      gs=(free?"まわりの平均まで ":"目標まで ")+"あと "+Math.abs(gdv).toFixed(1)+" Hz"; gk=gkk;
+      gs=(gdv>0?"反時計回りに回す":"時計回りに回す")+"　"+(free?"平均まで":"目標まで")+"あと "+Math.abs(gdv).toFixed(1)+" Hz"; gk=gkk;
     }
+    var gsig=gt+"|"+gk;
     gEl.className="guide"+(gk?" "+gk:"");
-    gEl.textContent=gt;
+    gEl.textContent="";
+    if(gdir){
+      var gi=document.createElement("span"); gi.className="gi "+gdir; gi.setAttribute("aria-hidden","true");
+      gi.innerHTML='<svg viewBox="-12 -12 24 24"><g'+(gdir==="ccw"?' transform="scale(-1,1)"':'')
+        +'><path d="M-6.9 -6.2A9.3 9.3 0 1 1 -8.6 3.6"/><path d="M-11.6 -9.4L-6.9 -6.2L-10.6 -1.9"/></g></svg>';
+      gEl.appendChild(gi);
+    }
+    gEl.appendChild(document.createTextNode(gt));
     if(gs){ var gsm=document.createElement("small"); gsm.textContent=gs; gEl.appendChild(gsm); }
     gEl.hidden=!gt;
+    if(gsig!==guideSig){ guideSig=gsig; if(gt) anim(gEl,"chg",360); }
     elCal.hidden=!(isF&&d.rcal>0);
 
     if(zoom){ zoom=false; anim(elSVG,"zoom",470); }
@@ -3745,7 +3830,7 @@ summary::before{background:var(--sunk)}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261111-043631";
+  var BUILD="20261111-045847";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
