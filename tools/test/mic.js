@@ -69,5 +69,35 @@ const commits = p => p.evaluate(() => window.__c);
     say(Math.abs(cents(hz, tg)) <= 5, `実音の読み ${Math.abs(cents(hz, tg)).toFixed(1)}¢`);
     await o.browser.close();
   }
+  // 7) 掴んだ高さの近くだけを拾う：他のラグが測ってあれば、330Hz が強い打でも 220Hz を読む
+  const T13 = [{ id: 'kick', kind: 'kick', name: 'キック', dia: 22, dep: 16, lugs: 10, iv: 0, deg: 0 }, { id: 'snare', kind: 'snare', name: 'スネア', dia: 14, dep: 5.5, lugs: 10, iv: 5.4929, deg: 0 },
+    { id: 't0', kind: 'tom', name: '', dia: 10, dep: 8, lugs: 6, iv: -3, deg: 0, floor: false }, { id: 't1', kind: 'tom', name: '', dia: 12, dep: 9, lugs: 6, iv: -3, deg: 0, floor: false },
+    { id: 't2', kind: 'tom', name: '', dia: 13, dep: 10, lugs: 6, iv: -3, deg: 0, floor: false }, { id: 't3', kind: 'tom', name: '', dia: 16, dep: 16, lugs: 8, iv: -3, deg: 0, floor: true }];
+  async function seeded(wavf, meas) {
+    const o = await L.open({ wav: wavf, ls: { tuning4: JSON.stringify({ keys: [6], live: 6, mode: 'major', preset: 't13', kitKey: 'p:t13', drums: T13, tid: 't0', thead: 'top', meas }) } });
+    const p = o.page; await L.start(p);
+    await p.evaluate(() => { window.__c = []; const svg = document.getElementById('svg'); let had = false;
+      new MutationObserver(() => { const h = svg.classList.contains('pop'); if (h && !had) { const m = /([\d.]+) Hz/.exec(document.getElementById('roNote').textContent); window.__c.push({ t: performance.now(), hz: m ? +m[1] : 0 }); } had = h; }).observe(svg, { attributes: true, attributeFilter: ['class'] }); });
+    await p.click('#svg .lug[data-l="4"]');
+    return o;
+  }
+  o = await seeded(W + 'modeB.wav', { 't0|top': [220, 221, 219, null, null, null] }); p = o.page;
+  await p.waitForTimeout(9000); c = await commits(p); errs = c.map(x => Math.abs(cents(x.hz, 220)));
+  say(c.length >= 5 && Math.max(...errs) <= 8, `掴んだ高さで読む（他のラグが測定済み・330Hzが強い打）: ${c.length}打、最大誤差 ${errs.length ? Math.max(...errs).toFixed(1) : '-'}¢ [${c.map(x => x.hz).join(' ')}]`);
+  say(/の近くだけを拾っています/.test(await p.textContent('#lockB')), '表示: ' + await p.textContent('#lockB'));
+  await o.browser.close();
+  // 対照：何も測っていない状態で同じ音を流すと、強いほうの 330Hz を読む（＝掴みが効いていた証拠）
+  o = await seeded(W + 'modeB.wav', {}); p = o.page;
+  await p.waitForTimeout(7000); c = await commits(p);
+  say(c.length >= 3 && c.every(x => Math.abs(cents(x.hz, 330)) <= 8), `対照（未測定）: 330Hz を読む [${c.map(x => x.hz).join(' ')}]`);
+  await o.browser.close();
+  // 8) 最初の素直な打で掴めば、そのあと 330Hz が強くなっても 220Hz のまま
+  o = await seeded(W + 'modeAB.wav', {}); p = o.page;
+  await p.waitForTimeout(24000); c = await commits(p); errs = c.map(x => Math.abs(cents(x.hz, 220)));
+  say(c.length >= 14 && Math.max(...errs) <= 8, `1本目で掴んだ高さを保つ: ${c.length}打、最大誤差 ${errs.length ? Math.max(...errs).toFixed(1) : '-'}¢`);
+  // 解除すると、次に読めた音で掴み直す
+  await p.click('#lockB'); await p.waitForTimeout(300);
+  say(await p.isHidden('#lockB'), 'タップで解除できる');
+  await o.browser.close();
   console.log(bad ? 'MIC NG' : 'MIC OK'); process.exit(bad ? 1 : 0);
 })();

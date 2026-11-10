@@ -1,4 +1,4 @@
-var C="taut-20261110-173258";
+var C="taut-20261110-204544";
 var SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png"];
 self.addEventListener("install",function(e){
   self.skipWaiting();
@@ -6,7 +6,8 @@ self.addEventListener("install",function(e){
 });
 self.addEventListener("activate",function(e){
   e.waitUntil(caches.keys().then(function(ks){
-    return Promise.all(ks.map(function(k){if(k!==C)return caches.delete(k);}));
+    // 分離の部品（約33MB）は版が変わっても捨てない。捨てると更新のたびに取り直しになる
+    return Promise.all(ks.map(function(k){if(k!==C&&k.indexOf("taut-sep-")!==0)return caches.delete(k);}));
   }).then(function(){return self.clients.claim();}));
 });
 self.addEventListener("fetch",function(e){
@@ -25,6 +26,8 @@ self.addEventListener("fetch",function(e){
     return;
   }
   if(u.origin!==location.origin) return;
+  // 分離の大きい部品は、ページ側が専用の入れ物に残す。ここでも控えると二重に場所を食う
+  if(u.pathname.indexOf("/sep/")>=0&&/\.(onnx|wasm)$/.test(u.pathname)) return;
   if(u.pathname.indexOf("version.json")>=0){
     e.respondWith(fetch(r,{cache:"no-store"}).catch(function(){return caches.match(r);}));
     return;

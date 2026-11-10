@@ -87,6 +87,16 @@ const T = (p, s) => p.textContent(s);
   await p.click('#modes [data-mode="free"]');
   say(await T(p, '#cards .card .hrv') === '—' && await p.isHidden('#band'), '指定なし：値を出さない');
   await p.click('#modes [data-mode="major"]');
+  // タムの高さ：低め・真ん中・高め
+  const tomTops = () => p.evaluate(() => [...document.querySelectorAll('#cards .card')].filter(c => c.querySelector('.badge.tom')).map(c => parseInt(c.querySelector('.hr.t .hrv').textContent)));
+  const mid = await tomTops();
+  say(await p.getAttribute('#hgts [data-hgt="0"]', 'aria-pressed') === 'true', 'タムの高さは「真ん中」から始まる');
+  await p.click('#hgts [data-hgt="1"]'); const hi = await tomTops();
+  await p.click('#hgts [data-hgt="-1"]'); const lo = await tomTops();
+  say(hi.every((v, i) => v > mid[i]) && lo.every((v, i) => v < mid[i]), `高め ${hi.join('/')} ＞ 真ん中 ${mid.join('/')} ＞ 低め ${lo.join('/')}`);
+  say(/→/.test(await T(p, '#hgts [data-hgt="1"] small')), '各ボタンに実音の範囲が出る：' + await T(p, '#hgts [data-hgt="1"] small'));
+  await p.click('#hgts [data-hgt="0"]');
+  say((await tomTops()).join() === mid.join(), '真ん中に戻すと元の値');
   // 音作りの輪
   await p.click('#cards .card:nth-child(3) .rbtn'); await p.waitForTimeout(350);
   say(!(await p.isHidden('#wheelSheet')), '輪が開く');

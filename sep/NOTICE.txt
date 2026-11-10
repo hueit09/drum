@@ -1,0 +1,10 @@
+このフォルダの部品について
+
+drums.onnx
+  KUIELab MDX-Net のドラム分離モデル（kuielab_b_drums）。
+  https://github.com/kuielab/mdx-net （MIT License）
+  配布元: https://github.com/TRvlvr/model_repo
+
+ort.wasm.min.js / ort-wasm-simd-threaded.mjs / ort-wasm-simd-threaded.wasm
+  ONNX Runtime Web 1.22.0
+  https://github.com/microsoft/onnxruntime （MIT License）

@@ -22,7 +22,7 @@ const WANT = {
       const sum = await p.textContent('#keySum');
       const w = WANT[key]; let ti = 0; const line = [];
       for (const g of got) {
-        const exp = w[g.name] || w.toms[ti++]; const tol = g.name === 'キック' ? 1 : 0;
+        const exp = w[g.name] || w.toms[ti++]; const tol = 0;
         const ok = Math.abs(g.top - exp[0]) <= tol && Math.abs(g.bot - exp[1]) <= tol && !g.warn;
         if (!ok) { bad++; line.push(`NG ${g.name} ${g.top}/${g.bot} want ${exp}${g.warn ? ' (warn)' : ''}`); }
       }
