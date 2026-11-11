@@ -37,7 +37,7 @@ const commits = p => p.evaluate(() => window.__c);
   // 205Hz は1周に2打だけ。回した直後の1打で表示が動けば、205 が毎周2回ずつ出る
   const n205 = c.filter(x => Math.abs(cents(x.hz, 205)) <= 12).length, n220 = c.filter(x => Math.abs(cents(x.hz, 220)) <= 12).length;
   const mid = c.length - n205 - n220;
-  say(n205 >= 3 && n220 >= 12 && mid === 0, `追従: 205Hz の表示 ${n205}回 / 220Hz ${n220}回 / どちらでもない値 ${mid}回（全${c.length}打）`);
+  say(n205 >= 3 && n220 >= 12 && mid === 0, `追従: 205Hz の表示 ${n205}回 / 220Hz ${n220}回 / どちらでもない値 ${mid}回（全${c.length}打）` + (mid ? ' [' + c.map(x => x.hz).join(' ') + ']' : ''));
   await o.browser.close();
   // 4) 何も叩いていないのに数字が出ない
   o = await setup(W + 'idle.wav', 't13', 'テンタム', 'top'); p = o.page;
@@ -99,5 +99,12 @@ const commits = p => p.evaluate(() => window.__c);
   await p.click('#lockB'); await p.waitForTimeout(300);
   say(await p.isHidden('#lockB'), 'タップで解除できる');
   await o.browser.close();
+  // 9) 太鼓ではない音は記録しない
+  for (const [f, nm] of [['voice', '伸ばした声'], ['voiceShort', '短く切った声'], ['guitar', '弾いた弦'], ['whistle', '口笛'], ['clap', '拍手']]) {
+    o = await setup(W + f + '.wav', 't13', 'テンタム', 'top'); p = o.page;
+    await p.waitForTimeout(9000); c = await commits(p);
+    say(c.length === 0, `${nm}：記録 ${c.length}件` + (c.length ? ' [' + c.map(x => x.hz).join(' ') + ']' : ''));
+    await o.browser.close();
+  }
   console.log(bad ? 'MIC NG' : 'MIC OK'); process.exit(bad ? 1 : 0);
 })();

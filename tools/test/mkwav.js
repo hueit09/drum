@@ -18,4 +18,11 @@ const PB = { parts: [[1, 0.55, 1], [1.5, 1.0, 1], [2.14, 0.2, 0.4]] };
 b = mk(12); room(b); for (let t = 0.6; t < 11.5; t += 1.2) L.hit(b, SR, Math.floor(t * SR), 220, 0.05, 0.9, PB); L.wav('wav/modeB.wav', b, SR);
 // 最初の3打は素直、あとは 330 が強い
 b = mk(12); room(b); for (let i = 0; i < 10; i++) L.hit(b, SR, Math.floor((0.6 + i * 1.2) * SR), 220, 0.05, 0.9, i < 3 ? undefined : PB); L.wav('wav/modeAB.wav', b, SR);
+// 太鼓ではない音。どれも 220Hz 前後で、音程としては読めてしまうもの
+function harm(b, at, f, amp, dur, dec, vib) { const n = Math.min(b.length - at, Math.floor(SR * dur)); let ph = 0; for (let i = 0; i < n; i++) { const t = i / SR; ph += 2 * Math.PI * f * (1 + (vib ? 0.012 * Math.sin(2 * Math.PI * 5.5 * t) : 0)) / SR; let v = 0; for (let k = 1; k <= 8; k++) v += Math.sin(k * ph) / k; const env = Math.min(1, t / 0.012) * Math.min(1, (n - i) / (SR * 0.03)) * (dec ? Math.exp(-6.908 * t / dec) : 1); b[at + i] += amp * 0.5 * v * env; } }
+b = mk(12); room(b); for (let t = 0.6; t < 11; t += 1.3) harm(b, Math.floor(t * SR), 215, 0.06, 0.45, 0, true); L.wav('wav/voice.wav', b, SR);          // 伸ばした声
+b = mk(12); room(b); for (let t = 0.6; t < 11; t += 0.9) harm(b, Math.floor(t * SR), 225, 0.06, 0.13, 0, false); L.wav('wav/voiceShort.wav', b, SR);   // 短く切った声
+b = mk(12); room(b); for (let t = 0.6; t < 11; t += 1.3) harm(b, Math.floor(t * SR), 220, 0.07, 1.2, 1.6, false); L.wav('wav/guitar.wav', b, SR);       // 弾いた弦
+b = mk(12); room(b); for (let t = 0.6; t < 11; t += 1.3) { const a = Math.floor(t * SR), n = Math.floor(SR * 0.5); for (let i = 0; i < n; i++) b[a + i] += 0.05 * Math.sin(2 * Math.PI * 220 * i / SR) * Math.min(1, i / 500) * Math.min(1, (n - i) / 1500); } L.wav('wav/whistle.wav', b, SR);   // 口笛
+b = mk(12); room(b); for (let t = 0.6; t < 11; t += 1.1) { const a = Math.floor(t * SR); for (let i = 0; i < 3000; i++) b[a + i] += 0.2 * L.rnd() * Math.exp(-i / 500); } L.wav('wav/clap.wav', b, SR);   // 拍手
 console.log('wav ok');

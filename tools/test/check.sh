@@ -12,5 +12,6 @@ run "画面の崩れ"        node layout.js
 run "通し操作"          node flow.js
 run "マイクで読む"      node mic.js
 run "曲から"            node song.js
+[ -d ../sep/hyd/data/drumkits/GMRockKit ] && run "本物の太鼓の録音"  node realdrum.js
 [ $fail = 0 ] && echo "ALL OK" || echo "FAILED"
 exit $fail
