@@ -71,6 +71,18 @@ const T = (p, s) => p.textContent(s);
   say(/しめる/.test(await T(p, '#guide')) && /時計回り/.test(await T(p, '#guide')) && !/scale/.test(await p.getAttribute('#turn', 'transform')), '低いときは「時計回りにしめる」：' + (await T(p, '#guide')).replace(/\s+/g, ' '));
   await p.fill('#tIn', '175'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(100);
   say(/合いました/.test(await T(p, '#guide')) && await p.getAttribute('#turn', 'opacity') === '0', '合うと矢印が消える：' + (await T(p, '#guide')).replace(/\s+/g, ' '));
+  // 1本だけ大きく外れているとき・実音を拾っているとき
+  for (const [l, v] of [[0, '175'], [1, '176'], [2, '174'], [3, '140']]) { await p.click(`#svg .lug[data-l="${l}"]`); await p.fill('#tIn', v); await p.press('#tIn', 'Enter'); await p.waitForTimeout(60); }
+  say(/ラグ 4 だけ/.test(await T(p, '#tDg')) && /いったん全部のラグを緩め/.test(await T(p, '#tDg')), '1本だけ大きく外れると、緩めてやり直す案内：' + (await T(p, '#tDg')).slice(0, 40));
+  await p.fill('#tIn', '176'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(60);
+  say(await p.isHidden('#tDg') || !/いったん全部/.test(await T(p, '#tDg')), '直すと案内が消える');
+  await p.click('#svg .lug[data-l="4"]'); await p.fill('#tIn', '101'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(60);
+  say(/実音）を拾っている/.test(await T(p, '#tDg')) && !/いったん全部/.test(await T(p, '#tDg')), '目標の0.58倍に出たら、実音を拾っている注意：' + (await T(p, '#tDg')).slice(0, 30));
+  await p.fill('#tIn', '175'); await p.press('#tIn', 'Enter'); await p.waitForTimeout(60);
+  // 数字が真ん中にあるか
+  await p.click('#svg .lug[data-l="5"]'); await p.waitForTimeout(200);
+  const ctr = await p.evaluate(() => { const a = document.getElementById('roDevN').getBoundingClientRect(), h = document.getElementById('rim').getBoundingClientRect(); return (a.left + a.width / 2) - (h.left + h.width / 2); });
+  say(Math.abs(ctr) <= 1.5, '目標の数字がヘッドの真ん中にある（ずれ ' + ctr.toFixed(1) + 'px）');
   // ラグ数をその場で変える
   await p.click('#tLug'); await p.click('#tEdUp'); await p.click('#tEdOk');
   say(await p.locator('#svg .lug').count() === 7 && await T(p, '#tLug') === '7 ラグ', 'ラグ数チップで 6→7');

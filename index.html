@@ -831,6 +831,14 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
 }
 #tInRow .hzin{max-width:none}
 .guide{display:block;min-height:46px}
+
+/* ヘッドの中の数字：ほかの数字と同じ Archivo を、ふつうの字幅・中くらいの太さで。
+   単位は数字の右に張り出させて、数字そのものが真ん中に来るようにする */
+.ro .dev{font-family:"Archivo",var(--mono);font-stretch:100%;font-weight:600;letter-spacing:-.02em;
+  font-size:clamp(38px,12.8vw,52px);line-height:1.1;position:relative;width:max-content;max-width:100%;
+  margin-inline:auto;display:block}
+.ro .dev em{position:absolute;left:100%;bottom:.2em;margin-left:4px;font-weight:600}
+.ro .nn2{font-family:"Archivo",var(--mono);font-stretch:100%;font-weight:500}
 /*</SKIN>*/
 </style>
 
@@ -1103,6 +1111,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
         <p>土台にしているのは「タムのサイズと音域・表裏の音程差 早見表」です。あの表は完全4度から均等まで全列で <code>√(打面 × 裏面) ÷ 基音</code> が 1.73 でほぼ一定になります。表裏を同じ値に張った場合、2枚は同じ状態なので各ヘッドの中央＝ドラムの実音。つまり</p>
         <p><code>中央 ＝ ラグ値 ÷ 1.73</code></p>
         <p>となります。この定義だと、ドラムの実音はちょうど表裏2つの中央ピッチの相乗平均になり、早見表とも矛盾しません。括弧内の数字はこの式で出しています。</p>
+        <p><strong>この 1.73 は目安です。</strong>別の公開されているチューニング資料（tune-bot のガイド）では、表裏を同じに張ったときが 1.75、表裏に差をつけたときは 1.66〜1.67 前後になっています。差をつけた太鼓では、実際の実音がここに出る値より最大で半音の半分ほど高い可能性があります。太鼓ごとに一度「実音」を測っておくと、その太鼓の実際の比で補正されるので、この誤差は消えます。</p>
       </div>
     </details>
 
@@ -1257,6 +1266,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
           <li>手のひらで中央を押し込んでシェルに馴染ませる（シーティング）</li>
           <li>対角線の順に少しずつ締め直し、目標ラグ値まで戻す</li>
         </ul>
+        <p><strong>1本だけ大きく外れているとき</strong>も同じです。他のラグはそろっているのに1か所だけ2半音以上ずれているなら、そのラグだけを回して寄せるより、いったん全部緩めて、指で回せるところまで均等に締め直してから合わせるほうが早く、ヘッドも片寄りません。チューナーがこの状態を見つけると、その場で知らせます。</p>
         <p>新品のヘッドは張り替え直後に特にこれが必要です。それでも残るなら、フロアのレッグ、テンションボルトの緩み、ラグ内部のスプリング、マウント金具、スネアのスナッピー共鳴を順に疑ってください。叩いた瞬間に手で押さえて止まるかどうかで場所が特定できます。</p>
       </div>
     </details>
@@ -1642,15 +1652,17 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     ctx();
     micStart(function(ok){ if(cb) cb(ok); });
   }
+  // 目標音。スマホのスピーカーは 300Hz より下がほとんど出ないので、基音と2・3倍音だけでは
+  // キック（69Hz）やフロアタム（117Hz）がほぼ聞こえない。倍音を 900Hz あたりまで足しておく。
+  // 倍音が等間隔に並んでいれば、耳は基音が鳴っていなくても基音の高さとして聴き取る
   function voice(hz,a){
-    var g=a.createGain(),os=[];
-    [[1,1],[2,0.34],[3,0.16]].forEach(function(p){
-      var o=a.createOscillator(),og=a.createGain();
-      o.type="sine"; o.frequency.value=hz*p[0]; og.gain.value=p[1];
-      o.connect(og); og.connect(g); os.push(o);
-    });
-    g.connect(a.destination);
-    return {g:g,os:os};
+    var g=a.createGain(), o=a.createOscillator();
+    var K=Math.max(3,Math.min(16,Math.ceil(900/hz))), re=new Float32Array(K+1), im=new Float32Array(K+1), k;
+    for(k=1;k<=K;k++) im[k]=1/Math.pow(k,0.85);
+    try{ o.setPeriodicWave(a.createPeriodicWave(re,im)); }catch(e){ o.type="sine"; }
+    o.frequency.value=hz;
+    o.connect(g); g.connect(a.destination);
+    return {g:g,os:[o]};
   }
   function ping(hz,btn){
     var a=ctx(); if(!a||!(hz>0)) return;
@@ -2704,6 +2716,29 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     return "ばらつき "+sp.toFixed(1)+" Hz　もう一周";
   }
 
+  // 1本だけが他から大きく（2半音以上）外れているときは、そのラグを回して寄せる前に、
+  // ヘッドが片寄って乗っていないかを疑う。他のラグどうしは1半音以内に収まっていること
+  var UNEVEN_C=200;
+  function uneven(d,head){
+    var all=measN(d,head), n=d.lugs, idx=[], i, j;
+    for(i=0;i<n;i++) if(all[i]>0) idx.push(i);
+    if(idx.length<3) return null;
+    for(j=0;j<idx.length;j++){
+      var rest=idx.filter(function(x){return x!==idx[j];}).map(function(x){return all[x];}).sort(function(a,b){return a-b;});
+      var md=rest.length%2?rest[(rest.length-1)>>1]:(rest[(rest.length>>1)-1]+rest[rest.length>>1])/2;
+      var c=1200*Math.log2(all[idx[j]]/md);
+      if(Math.abs(c)>=UNEVEN_C&&1200*Math.log2(rest[rest.length-1]/rest[0])<=100){
+        // 他のラグのちょうど 0.58 倍あたりなら、ヘッドの片寄りではなく実音を読んだだけ
+        if(Math.abs(c+1200*Math.log2(rOf(d)))<130)
+          return "ラグ "+(idx[j]+1)+" は、太鼓全体の音（実音）を拾っているようです。フープのすぐ内側、ラグの真横を軽くはじいて測り直してください。";
+        return "ラグ "+(idx[j]+1)+" だけが他より "+(c>0?"+":"−")+Math.abs(all[idx[j]]-md).toFixed(0)
+          +" Hz と大きく外れています。ヘッドが均一に張れていない可能性があります。"
+          +"いったん全部のラグを緩め、指で回せるところまで均等に締めてから、対角線の順に少しずつ上げて合わせ直してください。";
+      }
+    }
+    return null;
+  }
+
   /* ---------- render ---------- */
   function render(){
     Array.prototype.forEach.call(elThm.children,function(b){
@@ -3658,13 +3693,19 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
 
     var dmsg=null;
     if(free){
-      dmsg=isF?null:diag(d,st.thead);
+      dmsg=isF?null:(uneven(d,st.thead)||diag(d,st.thead));
     } else if(isF){
       if(d.rcal>0) dmsg="実測 R "+d.rcal.toFixed(3)+" でこのドラムの目標ラグ値を補正しました"
         +"（早見表の 1.73 から "+(d.rcal>R?"上":"下")+"に "
         +Math.abs(Math.round(1200*Math.log2(d.rcal/R)))+" セント相当）。狙いの音が出る値に動いています。";
       else if(cur>0) dmsg="打面と裏面のラグを全部測ると、R を割り出してレシピに反映できます。";
-    } else dmsg=diag(d,st.thead);
+    } else {
+      dmsg=uneven(d,st.thead)||diag(d,st.thead);
+      // 目標の 0.58 倍あたり（＝この太鼓の実音）に出たときは、ラグの音ではなく太鼓全体の音を読んでいる
+      if(!dmsg&&cur>0&&tgt>0&&Math.abs(1200*Math.log2(cur*rOf(d)/tgt))<130)
+        dmsg="太鼓全体の音（実音）を拾っているようです。フープのすぐ内側、ラグの真横を軽くはじいてください。"
+          +"張り始めで本当にここまで低いときは、そのまま締めて大丈夫です。";
+    }
     if(Date.now()-rejAt<2600) dmsg="読みが安定しません。もう一度叩いてください";
     elDg.hidden=!dmsg;
     if(dmsg) elDg.textContent=dmsg;
@@ -3830,7 +3871,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261111-045847";
+  var BUILD="20261111-115351";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
