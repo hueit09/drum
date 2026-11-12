@@ -1250,7 +1250,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
           <li><strong>落ち着くまで読み続ける</strong>。本物の太鼓は叩いた直後に音程が高く出て、0.3〜0.5秒かけて落ち着きます。1打につき細かく何度も読み、続けて同じ値（12セント以内）が出たところで決めます。最後まで落ち着かなければ、30セント以内でそろった後ろ寄りの値を採ります。部屋の共鳴が混じると読みがばらけるので、そろわなければ記録しません</li>
           <li><strong>卓立度を見る</strong>。山が周囲の平均より3倍以上高くないと採用しません</li>
           <li><strong>太鼓の音だけを読む</strong>。太鼓は叩いた瞬間がいちばん大きく、あとは減っていく一方で、倍音は整数倍に並びません。声・口笛・ギターやピアノの音は、鳴り続けるか、倍音が整数倍にそろっています。どちらかに当てはまった音は、値が読めても記録しません。拍手や物音のように音程のない音は、もともと読みません。ただし完全ではなく、短く切った声などは通ることがあります</li>
-          <li><strong>掴んだ高さの近くだけを拾う</strong>。膜はいくつもの高さで同時に鳴るので、叩き方しだいで別の倍音が強く出て、読みが5度上などに飛ぶことがあります。そこで、そのヘッドで一度読めた高さを掴んでおき、残りのラグもその上下3半音だけを探します。すでに測ってあるラグがあれば、その値から掴みます。「○○ Hz の近くだけを拾っています」と出ているのがそれで、違う高さを掴んでしまったときはタップで外せます。大きく締め上げて音が範囲の外へ動いたときは、2〜3打で自動的に掴み直します</li>
+          <li><strong>1つのラグで固定して、同じ倍音だけを読む</strong>。膜はいくつもの高さで同時に鳴るので、叩き方しだいで別の倍音が強く出て、読みが5度上などに飛ぶことがあります。そこで、そのヘッドで一度読めた高さに固定し、ほかのラグへ移ってもその上下3半音（同じ倍音）だけを読みます。すでに測ってあるラグがあれば、その値に固定します。「○○ Hz に固定中」と出ているのがそれです。固定は自分からは外れません。少しずつ締めたり緩めたりする分には付いていきますが、違う高さに固定してしまったときや、大きく回して読めなくなったときは、その表示をタップして外すと、次に読めた音で固定し直します</li>
           <li><strong>複数打の中央値</strong>。同じラグを叩くたびに直近5回の中央値へ更新されます。ただしボルトを回して音が本当に動いたとき（3回の読みが全部そろった打、または続けて同じ値が出た2打）は、古い値を捨ててすぐ追従します</li>
         </ul>
         <p>合成した打撃音をマイク入力として流し込む検証では、空調のうなりを混ぜた状態でタム・キックとも<strong>誤差3セント以内</strong>で読めています。</p>
@@ -1978,7 +1978,6 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
   // 膜はいくつものモードで鳴るので、叩き方や他の太鼓の残響しだいで
   // 毎回ちがうモードが最強になり、読みが飛ぶ。
   // いちど捉えた基音を覚えておき、次からはその周りだけを探す。
-  // 探す幅は上下4半音。締めても緩めても追えるだけの余裕はある。
   // 幅は上下3半音。同じヘッドのラグどうしはそれより離れないし、隣の倍音（5度上など）は入らない。
   var LOCK_R=1.19, lockHz={}, lockMiss={}, lockCand={}, lockOff={};
   function lockKey(){ return st.tid+"|"+st.thead; }
@@ -2044,13 +2043,9 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     // ふだんから追いかけている暗騒音のほうが小さければ、そちらを使う
     if(!still&&(mic.floor||0)<g.bgR) still=rmsOf(ds.d)>=Math.max(0.0012,2*mic.floor);
     if(!still){ ok=false; }
-    // 掴んだ範囲で読めないことが続いたときだけ、広く探し直す（大きく締め上げて音程が
-    // 範囲の外へ動いた場合）。1打ごとに外へ探しに行くと、たまたま強く鳴った別の倍音に
-    // 飛びついてしまい、掴んでいる意味がなくなる
-    if(!ok&&still&&L>0&&(lockMiss[lk]||0)>=2){
-      var w=detect(ds.d,ds.sr,Math.max(28,tg*0.5),Math.min(600,tg*1.6),g.bg,Math.max(28,tg*0.5),Math.max(160,Math.min(600,tg*1.6)));
-      if(w&&w.hz>0&&isFinite(w.hz)&&w.prom>=PROM){ r=w; ok=true; g.moved=true; }
-    }
+    // いちど固定したら、読めない打が続いても自分からは外へ探しに行かない。
+    // 外へ探すと、たまたま強く鳴った別の倍音に飛びついてしまい、ラグごとに違う倍音を
+    // 比べることになる。外すのは使う人がタップしたときだけ
     g.r.push(ok?r.hz:0);
     if(ok){ g.nv=(g.nv||0)+1; if(r.h2>=0.3&&r.h3>=0.25) g.hm++; }
     var q=g.r, kq=q.length, hz=0, ii, jj;
@@ -2084,19 +2079,18 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     if(!(hz>0)){
       rejAt=Date.now(); rejWhy="";
       clearTimeout(rejT); rejT=setTimeout(render,2700);     // 出した注意は自分で消す
-      // 掴んだ高さのあたりで続けて読めないなら、次の打から広く探し直す
+      // 固定した高さのあたりで続けて読めないときは、外し方を案内する（勝手には外さない）
       if(g.locked) lockMiss[lk]=(lockMiss[lk]||0)+1;
-      if((lockMiss[lk]||0)>=5){ delete lockHz[lk]; delete lockMiss[lk]; delete lockCand[lk]; lockOff[lk]=1; }
+      if(g.locked&&lockMiss[lk]>=3)
+        rejWhy="固定した高さの近くで読めません。大きく回したあとは、下の「固定中」をタップして掴み直してください";
       render(); return;
     }
     // 覚えるのは2打そろってから。1打だけで覚えると、たまたま別のモードが
     // 最強だったときに、その値に居座ってしまう
     // 掴み方。すでに掴んでいれば少しずつ寄せる（締めても緩めても追える）。
-    // 広く探し直して見つけたときは、そこへ掴み直す。
     // 初めてのときは、3回の読みが全部そろった打ならその場で掴む。そろわなかった打は
     // 別の倍音がたまたま強かっただけかもしれないので、もう1打同じ所に出てから掴む
-    if(g.moved){ lockHz[lk]=hz; delete lockCand[lk]; }
-    else if(g.locked){ lockHz[lk]=lockOf(lk)*0.6+hz*0.4; }
+    if(g.locked){ lockHz[lk]=lockOf(lk)*0.6+hz*0.4; }
     else if(g.settled||(lockCand[lk]>0&&Math.abs(1200*Math.log2(hz/lockCand[lk]))<=100)){
       lockHz[lk]=hz; delete lockCand[lk];
     } else lockCand[lk]=hz;
@@ -3732,7 +3726,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
       var lb=document.getElementById("lockB");
       if(!lb) return;
       var L=mic.on?lockOf(st.tid+"|"+st.thead):0;
-      if(L>0){ lb.hidden=false; lb.textContent=L.toFixed(1)+" Hz の近くだけを拾っています　タップで解除"; }
+      if(L>0){ lb.hidden=false; lb.textContent=L.toFixed(1)+" Hz に固定中　タップで解除"; }
       else lb.hidden=true;
       // 線はマイクが動いているときだけ意味がある
       if(elLvw&&!mic.on) elLvw.hidden=true;
@@ -3923,7 +3917,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261111-181414";
+  var BUILD="20261112-140159";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。

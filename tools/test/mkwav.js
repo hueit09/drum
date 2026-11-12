@@ -18,6 +18,9 @@ const PB = { parts: [[1, 0.55, 1], [1.5, 1.0, 1], [2.14, 0.2, 0.4]] };
 b = mk(12); room(b); for (let t = 0.6; t < 11.5; t += 1.2) L.hit(b, SR, Math.floor(t * SR), 220, 0.05, 0.9, PB); L.wav('wav/modeB.wav', b, SR);
 // 最初の3打は素直、あとは 330 が強い
 b = mk(12); room(b); for (let i = 0; i < 10; i++) L.hit(b, SR, Math.floor((0.6 + i * 1.2) * SR), 220, 0.05, 0.9, i < 3 ? undefined : PB); L.wav('wav/modeAB.wav', b, SR);
+// 固定の検証用：330Hz だけの打（固定した 220Hz の範囲の外）と、半音ずつ上がっていく打（締め上げ）
+b = mk(12); room(b); for (let t = 0.6; t < 11.5; t += 1.2) L.hit(b, SR, Math.floor(t * SR), 330, 0.05, 0.9); L.wav('wav/only330.wav', b, SR);
+b = mk(15.5); room(b); [220, 233, 233, 247, 247, 262, 262, 277, 277, 294, 294, 294].forEach((f, i) => L.hit(b, SR, Math.floor((0.6 + i * 1.2) * SR), f, 0.05, 0.9)); L.wav('wav/climb.wav', b, SR);
 // 太鼓ではない音。どれも 220Hz 前後で、音程としては読めてしまうもの
 function harm(b, at, f, amp, dur, dec, vib) { const n = Math.min(b.length - at, Math.floor(SR * dur)); let ph = 0; for (let i = 0; i < n; i++) { const t = i / SR; ph += 2 * Math.PI * f * (1 + (vib ? 0.012 * Math.sin(2 * Math.PI * 5.5 * t) : 0)) / SR; let v = 0; for (let k = 1; k <= 8; k++) v += Math.sin(k * ph) / k; const env = Math.min(1, t / 0.012) * Math.min(1, (n - i) / (SR * 0.03)) * (dec ? Math.exp(-6.908 * t / dec) : 1); b[at + i] += amp * 0.5 * v * env; } }
 b = mk(12); room(b); for (let t = 0.6; t < 11; t += 1.3) harm(b, Math.floor(t * SR), 215, 0.06, 0.45, 0, true); L.wav('wav/voice.wav', b, SR);          // 伸ばした声
