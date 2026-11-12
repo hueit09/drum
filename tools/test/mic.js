@@ -84,7 +84,7 @@ const commits = p => p.evaluate(() => window.__c);
   o = await seeded(W + 'modeB.wav', { 't0|top': [220, 221, 219, null, null, null] }); p = o.page;
   await p.waitForTimeout(9000); c = await commits(p); errs = c.map(x => Math.abs(cents(x.hz, 220)));
   say(c.length >= 5 && Math.max(...errs) <= 8, `掴んだ高さで読む（他のラグが測定済み・330Hzが強い打）: ${c.length}打、最大誤差 ${errs.length ? Math.max(...errs).toFixed(1) : '-'}¢ [${c.map(x => x.hz).join(' ')}]`);
-  say(/の近くだけを拾っています/.test(await p.textContent('#lockB')), '表示: ' + await p.textContent('#lockB'));
+  say(/に固定中/.test(await p.textContent('#lockB')), '表示: ' + await p.textContent('#lockB'));
   await o.browser.close();
   // 対照：何も測っていない状態で同じ音を流すと、強いほうの 330Hz を読む（＝掴みが効いていた証拠）
   o = await seeded(W + 'modeB.wav', {}); p = o.page;
@@ -98,6 +98,24 @@ const commits = p => p.evaluate(() => window.__c);
   // 解除すると、次に読めた音で掴み直す
   await p.click('#lockB'); await p.waitForTimeout(300);
   say(await p.isHidden('#lockB'), 'タップで解除できる');
+  await o.browser.close();
+  // 8b) 固定したら、範囲の外の音が続いても飛びつかない。勝手に外れもしない
+  o = await seeded(W + 'only330.wav', { 't0|top': [220, 221, 219, null, null, null] }); p = o.page;
+  await p.waitForTimeout(6500);
+  const midMsg = await p.textContent('#mn').catch(() => '');
+  const allTxt = await p.evaluate(() => document.getElementById('vTune').innerText);
+  await p.waitForTimeout(5500); c = await commits(p);
+  say(c.length === 0, `固定中は範囲の外（330Hz）を記録しない: ${c.length}打 [${c.map(x => x.hz).join(' ')}]`);
+  say(/固定した高さの近くで読めません/.test(allTxt), '読めない打が続くと外し方を案内する');
+  say(/220\.0 Hz に固定中/.test(await p.textContent('#lockB')), '固定は外れない: ' + await p.textContent('#lockB'));
+  await p.click('#lockB'); await p.waitForTimeout(300);
+  say(await p.isHidden('#lockB'), '案内のとおりタップすると外れる');
+  await o.browser.close();
+  // 8c) 固定したまま締め上げても追える（半音ずつ 220→294Hz）
+  o = await seeded(W + 'climb.wav', { 't0|top': [220, 221, 219, null, null, null] }); p = o.page;
+  await p.waitForTimeout(16500); c = await commits(p);
+  const lastHz = c.length ? c[c.length - 1].hz : 0;
+  say(c.length >= 8 && Math.abs(cents(lastHz, 294)) <= 8, `固定したまま締め上げを追う: ${c.length}打、最後 ${lastHz}Hz [${c.map(x => x.hz).join(' ')}]`);
   await o.browser.close();
   // 9) 太鼓ではない音は記録しない
   for (const [f, nm] of [['voice', '伸ばした声'], ['voiceShort', '短く切った声'], ['guitar', '弾いた弦'], ['whistle', '口笛'], ['clap', '拍手']]) {
