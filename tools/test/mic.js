@@ -124,5 +124,24 @@ const commits = p => p.evaluate(() => window.__c);
     say(c.length === 0, `${nm}：記録 ${c.length}件` + (c.length ? ' [' + c.map(x => x.hz).join(' ') + ']' : ''));
     await o.browser.close();
   }
+  // 10) パーツの範囲だけで拾う：弱いデコピン、範囲の外がうるさい部屋、範囲の外の音だけ
+  const E = __dirname + '/ev/';
+  for (const [f, drum, head, hz, nm, min] of [
+    ['kick_soft0.013', 'キック', 'top', 69, 'キック：弱いデコピン', 6],
+    ['snare_soft0.009', 'スネア', 'top', 233, 'スネア：弱いデコピン', 6],
+    ['floor_soft0.009', 'フロアタム', 'top', 117, 'フロアタム：弱いデコピン', 6],
+    ['snb_hiss0.02', 'スネア', 'bot', 320, 'スネア裏：高い側がうるさい部屋', 6],
+    ['kick_hiss0.02', 'キック', 'top', 69, 'キック：高い側がうるさい部屋', 6],
+    ['tom_buzz', 'テンタム', 'top', 220, 'テンタム：叩くたびにスナッピーがざわつく', 7],
+    ['snare_nohit', 'スネア', 'top', 233, '範囲の外の音だけ（叩いていない）', -1],
+    ['kick_nohit', 'キック', 'top', 69, '範囲の外の音だけ（キック・叩いていない）', -1]]) {
+    o = await setup(E + f + '.wav', 't13', drum, head); p = o.page;
+    await p.waitForTimeout(12500); c = await commits(p);
+    const good = c.filter(x => Math.abs(cents(x.hz, hz)) <= 15).length;
+    if (min < 0) say(c.length === 0, `${nm}：記録 ${c.length}件`);
+    else say(good >= min && good === c.length, `${nm}：${c.length}打を記録、うち正しい値 ${good}`);
+    say(o.errs.length === 0, 'エラーなし ' + o.errs.join('|'));
+    await o.browser.close();
+  }
   console.log(bad ? 'MIC NG' : 'MIC OK'); process.exit(bad ? 1 : 0);
 })();

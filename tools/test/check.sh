@@ -1,8 +1,9 @@
 #!/bin/bash
 # 公開前の全検証。1つでも落ちたら公開しない
 cd "$(dirname "$0")"
-curl -s -o /dev/null http://127.0.0.1:8765/index.html || { (cd "$(pwd)/../.." && nohup python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &); sleep 1; }
+curl -s -o /dev/null http://127.0.0.1:8765/index.html || { (cd /home/claude/drum && nohup python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &); sleep 1; }
 [ -f wav/tom220.wav ] || node mkwav.js >/dev/null
+[ -f ev/kick_nohit.wav ] || node mkev.js >/dev/null
 fail=0
 run(){ local name="$1"; shift; out=$("$@" 2>&1); rc=$?; ng=$(echo "$out" | grep -c '^NG'); ok=$(echo "$out" | grep -c '^ok'); 
   if [ $rc -ne 0 ]; then fail=1; echo "✗ $name  (ok $ok / NG $ng)"; echo "$out" | grep -v '^ok' | head -20; else echo "✓ $name  ($(echo "$out" | tail -1)${ok:+, $ok項目})"; fi; }
