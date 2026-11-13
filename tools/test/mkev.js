@@ -10,7 +10,7 @@ const P = { kick: [69, 0.7, KP, 1.4], snare: [233, 0.6, undefined, 1.2], snb: [3
 for (const k in P) {
   const [f, t60, parts, gap] = P[k];
   // a) 静かな部屋で、ごく弱いデコピン
-  for (const amp of [0.004, 0.006, 0.009, 0.013]) { const b = mk(13); room(b); for (let t = 0.7; t < 12; t += gap) L.hit(b, SR, Math.floor(t * SR), f, amp, t60, parts); L.wav(`ev/${k}_soft${amp}.wav`, b, SR); }
+  for (const amp of [0.0015, 0.0025, 0.004, 0.006, 0.009, 0.013]) { const b = mk(13); room(b); for (let t = 0.7; t < 12; t += gap) L.hit(b, SR, Math.floor(t * SR), f, amp, t60, parts); L.wav(`ev/${k}_soft${amp}.wav`, b, SR); }
   // b) 高い側がざわついた部屋（人の話し声・シンバルの残り）で、ふつうのデコピン
   for (const nz of [0.01, 0.02]) { const b = mk(13); room(b); hissAll(b, nz); for (let t = 0.7; t < 12; t += gap) L.hit(b, SR, Math.floor(t * SR), f, 0.03, t60, parts); L.wav(`ev/${k}_hiss${nz}.wav`, b, SR); }
   // c) 叩くたびにスナッピーがざわつく

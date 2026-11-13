@@ -1250,7 +1250,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
           <li><strong>落ち着くまで読み続ける</strong>。本物の太鼓は叩いた直後に音程が高く出て、0.3〜0.5秒かけて落ち着きます。1打につき細かく何度も読み、続けて同じ値（12セント以内）が出たところで決めます。最後まで落ち着かなければ、30セント以内でそろった後ろ寄りの値を採ります。部屋の共鳴が混じると読みがばらけるので、そろわなければ記録しません</li>
           <li><strong>卓立度を見る</strong>。山が周囲の平均より3倍以上高くないと採用しません</li>
           <li><strong>太鼓の音だけを読む</strong>。太鼓は叩いた瞬間がいちばん大きく、あとは減っていく一方で、倍音は整数倍に並びません。声・口笛・ギターやピアノの音は、鳴り続けるか、倍音が整数倍にそろっています。どちらかに当てはまった音は、値が読めても記録しません。拍手や物音のように音程のない音は、もともと読みません。ただし完全ではなく、短く切った声などは通ることがあります</li>
-          <li><strong>選んだパーツの高さの範囲だけを聞く</strong>。キックを選んでいるときはキックの低い範囲、スネアならスネアの範囲というように、目標の1オクターブ下から約1.6倍までの音だけで「叩いたかどうか」を判断します。範囲の外の音（話し声、シンバルの残り、スナッピーのざわつき）が大きくても、その太鼓の高さの音が立ち上がれば拾います。弱いデコピンも、これまでの半分ほどの大きさから読めます</li>
+          <li><strong>選んだパーツの高さの範囲だけを聞く</strong>。キックを選んでいるときはキックの低い範囲、スネアならスネアの範囲というように、目標の1オクターブ下から約1.6倍までの音だけで「叩いたかどうか」を判断します。範囲の外の音（話し声、シンバルの残り、スナッピーのざわつき）が大きくても、その太鼓の高さの音が立ち上がれば拾います。空調のうなりのように鳴りっぱなしの音は、高さごとに覚えておいて差し引きます。そのぶん弱いデコピンまで読めます。小さな音に反応して読めなかったときは、注意を出さずに黙って捨てます</li>
           <li><strong>1つのラグで固定して、同じ倍音だけを読む</strong>。膜はいくつもの高さで同時に鳴るので、叩き方しだいで別の倍音が強く出て、読みが5度上などに飛ぶことがあります。そこで、そのヘッドで一度読めた高さに固定し、ほかのラグへ移ってもその上下3半音（同じ倍音）だけを読みます。すでに測ってあるラグがあれば、その値に固定します。「○○ Hz に固定中」と出ているのがそれです。固定は自分からは外れません。少しずつ締めたり緩めたりする分には付いていきますが、違う高さに固定してしまったときや、大きく回して読めなくなったときは、その表示をタップして外すと、次に読めた音で固定し直します</li>
           <li><strong>複数打の中央値</strong>。同じラグを叩くたびに直近5回の中央値へ更新されます。ただしボルトを回して音が本当に動いたとき（3回の読みが全部そろった打、または続けて同じ値が出た2打）は、古い値を捨ててすぐ追従します</li>
         </ul>
@@ -1761,13 +1761,14 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     for(i=0;i<n;i++) m+=buf[i];
     m/=n;
     var e=0; for(i=0;i<n;i++){v=buf[i]-m;e+=v*v;}
-    if(Math.sqrt(e/n)<0.0012) return null;
+    if(Math.sqrt(e/n)<0.0003) return null;
     var mag=magOf(buf), N=(mag.length-2)<<1;
     var df=sr/N, lo=Math.max(1,Math.round(fmin/df)), hi=Math.min((N>>1)-2,Math.round(fmax/df));
     if(hi<=lo) return null;
     var be=0,bge=0,hasBg=bg&&bg.length===mag.length;
     for(i=lo;i<=hi;i++){ be+=mag[i]*mag[i]; if(hasBg) bge+=bg[i]*bg[i]; }
     be=Math.sqrt(be); bge=hasBg?Math.sqrt(bge):0;
+    var raw=hasBg?mag.slice(lo,hi+1):null;
     if(hasBg){ for(i=0;i<mag.length;i++) mag[i]=Math.max(0,mag[i]-BGA*bg[i]); }
     var bi=-1,bv=0,sum=0;
     for(i=lo;i<=hi;i++){ if(mag[i]>bv){bv=mag[i];bi=i;} }
@@ -1793,7 +1794,11 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
       for(q=a;q<=b;q++) if(mag[q]>mx&&mag[q]>=mag[q-1]&&mag[q]>=mag[q+1]) mx=mag[q];
       return mx/bv;
     }
-    return {hz:(bi+dd)*df, prom:prom, h2:near(2), h3:near(3), be:be, bge:bge};
+    // 山の高さを、叩く直前に同じ高さ（とその両隣）で鳴っていた音と比べる。
+    // 空調のうなりは叩く前から同じ高さにあるので、この比は1のまま。叩いた音なら大きく上がる
+    var pk0=0,bgp=0;
+    if(hasBg){ pk0=raw[bi-lo]; for(i=Math.max(lo,bi-6);i<=Math.min(hi,bi+6);i++) if(bg[i]>bgp) bgp=bg[i]; }
+    return {hz:(bi+dd)*df, prom:prom, h2:near(2), h3:near(3), be:be, bge:bge, pk0:pk0, bgp:bgp};
   }
   function micMsg(){
     elMn.hidden=false;
@@ -1881,7 +1886,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     PB.at=now;
     var d=byId(st.tid), c=d?calc(st.live,st.mode,st.ser,st.nudge,d):null;
     var tg=c?(st.thead==="fund"?c.fund:(st.thead==="top"?c.top:c.bot)):0;
-    if(PB.key!==k){ mic.bfloor=0; mic.bhist=[]; mic.bloudT=0; mic.bt0=now; }   // パーツを替えたら測り直す
+    if(PB.key!==k){ mic.bfloor=0; mic.bhist=[]; mic.bloudT=0; mic.bt0=now; pbBg=null; }   // パーツを替えたら測り直す
     PB.key=k;
     if(tg>0){ PB.lo=Math.max(28,tg*0.5); PB.hi=Math.min(600,tg*1.6); } else { PB.lo=0; PB.hi=0; }
     return PB;
@@ -1894,10 +1899,15 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     }
     for(i=0;i<n;i++){ pbRe[i]=b[i]*pbW[i]; pbIm[i]=0; }
     fft(pbRe,pbIm);
-    var df=sr/n, k0=Math.max(1,Math.floor(lo/df)), k1=Math.min((n>>1)-1,Math.ceil(hi/df)), e=0;
-    for(i=k0;i<=k1;i++) e+=pbRe[i]*pbRe[i]+pbIm[i]*pbIm[i];
+    var df=sr/n, k0=Math.max(1,Math.floor(lo/df)), k1=Math.min((n>>1)-1,Math.ceil(hi/df)), e=0, pw;
+    // 空調のうなりのように鳴りっぱなしの音は、高さごとに覚えておいて引く。
+    // 引かないと、範囲の中にうなりが1本あるだけで線がその4倍まで上がり、弱いデコピンが届かない
+    if(!pbBg||pbBg.length!==k1-k0+1||pbK0!==k0){ pbBg=new Float64Array(k1-k0+1); pbP=new Float64Array(k1-k0+1); pbK0=k0; }
+    for(i=k0;i<=k1;i++){ pw=pbRe[i]*pbRe[i]+pbIm[i]*pbIm[i]; pbP[i-k0]=pw; pw-=PBS*pbBg[i-k0]; if(pw>0) e+=pw; }
     return Math.sqrt(2*e/(n*pbWs));
   }
+  var pbBg=null, pbP=null, pbK0=0, PBS=1.6, PBK=0.25;
+  function bandLearn(a){ if(!pbBg) return; for(var i=0;i<pbBg.length;i++) pbBg[i]=pbBg[i]*(1-a)+pbP[i]*a; }
   var elLvw=document.getElementById("lvw"),
       elLvl=document.getElementById("lvl"), elLvlI=document.getElementById("lvlI"),
       elLvlT=document.getElementById("lvlT"), elLvlW=document.getElementById("lvlW");
@@ -1959,6 +1969,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     var thr=sensThr();
     // 立ち上がりを見るために、少し前の静かさを覚えておく
     // 画面の更新回数は端末で違う（60回・120回・30回）ので、回数ではなく時刻で持つ
+    var warmB0=(now-(mic.bt0||mic.t0))<500;
     var H=mic.hist||(mic.hist=[]);
     H.push([now,rms]); while(H.length&&now-H[0][0]>450) H.shift();
     // 部屋の音と線を同じ物差しで重ねる。届いているかどうかがそのまま見える
@@ -1966,8 +1977,9 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
       if(elLvw.hidden) elLvw.hidden=false;
       if(now-lvlAt>60){
         lvlAt=now;
-        elLvlI.style.width=(lpos(rms)*100).toFixed(1)+"%";
-        elLvlI.className=rms>thr?"hot":"";
+        var shown=Math.max(rms,warmB0?0:bl/PBK);
+        elLvlI.style.width=(lpos(shown)*100).toFixed(1)+"%";
+        elLvlI.className=shown>thr?"hot":"";
         if(!sdrag) elLvlT.style.left=(lpos(thr)*100).toFixed(1)+"%";
         if(elLvlW) elLvlW.textContent=sensWord(thr);
         elLvlT.setAttribute("aria-valuenow",String(Math.round(lpos(thr)*100)));
@@ -1990,11 +2002,11 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
       rise = rms > Math.max(q[q.length>>1]*2.0, thr);
     }
     var warm=(now-mic.t0)<500;            // 立ち上げ直後は暗騒音がまだ掴めていない
-    // パーツの範囲だけで見た立ち上がり。線は半分の高さまで下げてよい：範囲の中の暗騒音は
-    // 全体よりずっと小さく、4倍の余裕を取ってもまだ弱いデコピンが届く
+    // パーツの範囲だけで見た立ち上がり。線は4分の1の高さまで下げてよい：鳴りっぱなしの音を
+    // 引いたあとの暗騒音は全体よりずっと小さく、4倍の余裕を取ってもまだ弱いデコピンが届く
     var HB=mic.bhist||(mic.bhist=[]);
     HB.push([now,bl]); while(HB.length&&now-HB[0][0]>450) HB.shift();
-    var thrB=Math.max((st.sensT>0?Math.max(SMIN,Math.min(SMAX,st.sensT)):0.0045)*0.5,(mic.bfloor||0)*4);
+    var thrB=Math.max((st.sensT>0?Math.max(SMIN,Math.min(SMAX,st.sensT)):0.0045)*PBK,(mic.bfloor||0)*4);
     var qb=[], riseB=false, warmB=(now-(mic.bt0||mic.t0))<500;
     for(i=0;i<HB.length;i++) if(now-HB[i][0]>=100&&now-HB[i][0]<=250) qb.push(HB[i][1]);
     if(qb.length>=3){
@@ -2010,11 +2022,13 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
       var tg0=d0?calc(st.live,st.mode,st.ser,st.nudge,d0):null;
       if(st.thead==="fund"&&d0) decStart(tg0.fund,d0.id,now);
       grabStart(d0,tg0);
+      if(GC) GC.weak=!hitA;
     }
     if(held){ mic.bloudT=0; }
-    else if(bl<thrB){ mic.bfloor=(mic.bfloor||0)*(warmB?0.85:0.985)+bl*(warmB?0.15:0.015); mic.bloudT=0; }
+    else if(warmB){ bandLearn(0.25); mic.bfloor=0; mic.bloudT=0; }
+    else if(bl<thrB){ bandLearn(0.04); mic.bfloor=(mic.bfloor||0)*0.985+bl*0.015; mic.bloudT=0; }
     else if(!mic.bloudT) mic.bloudT=now;
-    else if(now-mic.bloudT>2500) mic.bfloor=(mic.bfloor||0)*0.985+bl*0.015;
+    else if(now-mic.bloudT>2500){ bandLearn(0.04); mic.bfloor=(mic.bfloor||0)*0.985+bl*0.015; }
     if(held){ mic.loudT=0; }
     else if(rms<thr){ mic.floor=mic.floor*(warm?0.85:0.985)+rms*(warm?0.15:0.015); mic.loudT=0; }
     else if(!mic.loudT) mic.loudT=now;
@@ -2093,7 +2107,14 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     // ふだんから追いかけている暗騒音のほうが小さければ、そちらを使う
     if(!still&&(mic.floor||0)<g.bgR) still=rmsOf(ds.d)>=Math.max(0.0012,2*mic.floor);
     // 全体の音量では部屋の音に埋もれていても、そのパーツの範囲だけを見れば叩いた音が残っている
-    if(!still&&r&&r.be>0) still=r.be>=2*r.bge;
+    // ただしこの2つの見方を使うのは、鳴った音の大半がそのパーツの範囲に入っていて（太鼓の
+    // デコピンはそうなる。物音や雑音は範囲の外が大半）、山がはっきり立っているとき（まわりの5倍以上）に限る。
+    // 物音や雑音はたまたま山ができても低く、ここで落ちる
+    var inband=g.weak||g.pkB>=0.3*g.pk;
+    if(!still&&inband&&r&&r.be>0&&r.prom>=5) still=r.be>=2*r.bge;
+    // 範囲の中にうなりがあると上の比べ方でも埋もれる。読んだ山そのものが、叩く前の同じ高さの
+    // 音の3倍あれば、叩いた音が残っていると見てよい
+    if(!still&&inband&&r&&r.bgp>0&&r.prom>=5) still=r.pk0>=4*r.bgp;
     if(!still){ ok=false; }
     // いちど固定したら、読めない打が続いても自分からは外へ探しに行かない。
     // 外へ探すと、たまたま強く鳴った別の倍音に飛びついてしまい、ラグごとに違う倍音を
@@ -2125,6 +2146,8 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
     var fl=mic.floor||0, sus=(g.pk>fl*1.5)?((mic.lvNow||0)-fl)/(g.pk-fl):0;
     var flB=mic.bfloor||0;
     if(!(g.pk>fl*1.5)&&g.pkB>flB*1.5) sus=((mic.blNow||0)-flB)/(g.pkB-flB);
+    // 弱い音で反応した打は、読めなければ黙って捨てる。小さな物音のたびに注意を出さない
+    if(g.weak&&(!(hz>0)||sus>0.7||(g.hm>=2&&g.hm>=(g.nv||0)*0.6))){ render(); return; }
     if(sus>0.7||(g.hm>=2&&g.hm>=(g.nv||0)*0.6)){
       rejAt=Date.now(); rejWhy="太鼓の音ではないようです。声や楽器の音は読みません";
       clearTimeout(rejT); rejT=setTimeout(render,2700);
@@ -3971,7 +3994,7 @@ svg.hd .lis{pointer-events:none;transform-box:fill-box;transform-origin:center}
   });
 
   // ウェブサイトとして置いた場合、新しい版が出ていれば自動で読み直す
-  var BUILD="20261113-152153";
+  var BUILD="20261114-020444";
 
   /* ---------- 音作りの輪 ---------- */
   // 三重の輪。外＝実音、中＝裏面、内＝打面。
